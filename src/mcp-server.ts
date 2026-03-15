@@ -30,6 +30,7 @@ import {
   invalidateVaultGraphCache,
   traverseVaultGraph,
 } from './core/vault-graph';
+import { readVaultConfig, updateVaultConfig } from './core/vault-config';
 import { resolveVaultRoot } from './core/vault-files';
 import { initVault } from './scaffold/init';
 import { scanProject } from './scaffold/scan';
@@ -64,6 +65,7 @@ export async function startServer(): Promise<void> {
     async ({ project_root }) => {
       const root = project_root || process.cwd();
       const result = await initVault(root);
+      const config = await readVaultConfig(result.vaultRoot);
       return {
         content: [{
           type: 'text',
@@ -71,6 +73,7 @@ export async function startServer(): Promise<void> {
             vaultRoot: result.vaultRoot,
             created: result.created,
             filesWritten: result.filesWritten,
+            config,
             scan: result.scan,
           }, null, 2),
         }],
@@ -171,7 +174,8 @@ export async function startServer(): Promise<void> {
       '- Depth controls how many hops away from the root note are included.',
       '- Filters narrow the returned notes without including unresolved links.',
       '- TOON is the default output format for token-efficient structured context.',
-      '- resolver "obsidian" is optional and falls back to filesystem links if unavailable.',
+      '- The resolver defaults to the vault config (obsidian when available, filesystem otherwise).',
+      '- Obsidian CLI provides richer link resolution; filesystem is the automatic fallback.',
     ].join('\n'),
     {
       root: z.string().describe('Starting note path or wiki target, e.g. "02_Phases/Phase_01_Foundation/Phase"'),
@@ -182,11 +186,13 @@ export async function startServer(): Promise<void> {
       note_type: z.array(z.string()).optional().describe('Optional note_type filter for returned notes'),
       status: z.array(z.string()).optional().describe('Optional status filter for returned notes'),
       max_notes: z.number().int().min(1).max(5000).default(500).describe('Safety cap for returned notes'),
-      resolver: z.enum(['filesystem', 'obsidian']).default('filesystem').describe('Link resolver to use'),
+      resolver: z.enum(['filesystem', 'obsidian']).optional().describe('Link resolver override. Defaults to vault config.'),
     },
     async ({ root, depth, direction, format, include_content, note_type, status, max_notes, resolver }) => {
       const vaultRoot = resolveVaultRoot(process.cwd());
-      const { graph, warnings } = await ensureVaultGraph(vaultRoot, resolver);
+      const config = await readVaultConfig(vaultRoot);
+      const effectiveResolver = resolver ?? config.resolver;
+      const { graph, warnings } = await ensureVaultGraph(vaultRoot, effectiveResolver);
       const result = traverseVaultGraph(graph, {
         root,
         depth,
@@ -195,7 +201,7 @@ export async function startServer(): Promise<void> {
         noteTypes: note_type,
         statuses: status,
         maxNotes: max_notes,
-        resolver,
+        resolver: effectiveResolver,
       }, warnings);
 
       const text = format === 'json'
@@ -299,6 +305,29 @@ export async function startServer(): Promise<void> {
         case 'orphans': return noArgs(handleDetectOrphansCommand);
         case 'doctor': return noArgs(handleVaultDoctorCommand);
       }
+    },
+  );
+
+  // ── vault_config ────────────────────────────────────────────────────
+  server.tool(
+    'vault_config',
+    [
+      'View or update vault configuration (.agent-vault/.config.json).',
+      '- With no parameters: returns current config.',
+      '- resolver: set the default link resolver ("obsidian" or "filesystem").',
+      '  Obsidian CLI is preferred when available and provides richer link resolution.',
+    ].join('\n'),
+    {
+      resolver: z.enum(['filesystem', 'obsidian']).optional().describe('Set the default link resolver'),
+    },
+    async ({ resolver }) => {
+      const vaultRoot = resolveVaultRoot(process.cwd());
+      if (resolver) {
+        const config = await updateVaultConfig(vaultRoot, { resolver });
+        return { content: [{ type: 'text', text: JSON.stringify(config, null, 2) }] };
+      }
+      const config = await readVaultConfig(vaultRoot);
+      return { content: [{ type: 'text', text: JSON.stringify(config, null, 2) }] };
     },
   );
 
