@@ -131,15 +131,15 @@ const padNumber = (value: string, digits: number, label: string): string => {
 const formatDate = (date: Date): string => date.toISOString().slice(0, 10);
 
 const formatTime = (date: Date): string => {
-  const hh = String(date.getHours()).padStart(2, '0');
-  const mm = String(date.getMinutes()).padStart(2, '0');
+  const hh = String(date.getUTCHours()).padStart(2, '0');
+  const mm = String(date.getUTCMinutes()).padStart(2, '0');
   return `${hh}:${mm}`;
 };
 
 const formatTimestamp = (date: Date): string => {
-  const hh = String(date.getHours()).padStart(2, '0');
-  const mm = String(date.getMinutes()).padStart(2, '0');
-  const ss = String(date.getSeconds()).padStart(2, '0');
+  const hh = String(date.getUTCHours()).padStart(2, '0');
+  const mm = String(date.getUTCMinutes()).padStart(2, '0');
+  const ss = String(date.getUTCSeconds()).padStart(2, '0');
   return `${formatDate(date)}-${hh}${mm}${ss}`;
 };
 
@@ -519,9 +519,8 @@ const resolveStepReference = async (vaultRoot: string, reference: string): Promi
   }
 
   const notePath = matchingPaths[0] ?? (await (async () => {
-    const files = await listMarkdownFiles(join(vaultRoot, '02_Phases'));
     const matches: string[] = [];
-    for (const filePath of files) {
+    for (const filePath of stepFiles) {
       const frontmatter = await tryReadNoteFrontmatter(filePath);
       if (frontmatter === null) {
         continue;

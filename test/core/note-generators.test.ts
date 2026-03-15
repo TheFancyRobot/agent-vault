@@ -20,10 +20,10 @@ import { copyTemplate, copyHomeNote, makeIo } from '../helpers';
 
 const FIXED_NOW = new Date('2026-03-14T15:09:26Z');
 
-// Compute expected timestamp using local time (matches formatTimestamp in note-generators)
+// Compute expected timestamp using UTC (matches formatTimestamp in note-generators)
 const pad2 = (n: number) => String(n).padStart(2, '0');
-const EXPECTED_DATE = `${FIXED_NOW.getFullYear()}-${pad2(FIXED_NOW.getMonth() + 1)}-${pad2(FIXED_NOW.getDate())}`;
-const EXPECTED_TIMESTAMP = `${EXPECTED_DATE}-${pad2(FIXED_NOW.getHours())}${pad2(FIXED_NOW.getMinutes())}${pad2(FIXED_NOW.getSeconds())}`;
+const EXPECTED_DATE = `${FIXED_NOW.getUTCFullYear()}-${pad2(FIXED_NOW.getUTCMonth() + 1)}-${pad2(FIXED_NOW.getUTCDate())}`;
+const EXPECTED_TIMESTAMP = `${EXPECTED_DATE}-${pad2(FIXED_NOW.getUTCHours())}${pad2(FIXED_NOW.getUTCMinutes())}${pad2(FIXED_NOW.getUTCSeconds())}`;
 const EXPECTED_SESSION_ID = `SESSION-${EXPECTED_TIMESTAMP}`;
 
 const tempRoots: string[] = [];
