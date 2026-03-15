@@ -1,6 +1,6 @@
 {
   "name": "agent-vault",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "type": "module",
   "description": "Durable project memory for coding agents. Obsidian-compatible vault with MCP server integration for Claude Code, OpenCode, and Codex.",
   "bin": {
