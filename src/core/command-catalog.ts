@@ -348,5 +348,6 @@ export const formatCommandCatalog = (): string => {
   }
 
   lines.push('For command-specific help, use the vault_help MCP tool with `command` set to the command name.');
+  lines.push('For graph-based context loading, use the `vault_traverse` MCP tool.');
   return lines.join('\n');
 };

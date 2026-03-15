@@ -4,6 +4,7 @@ import { tmpdir } from 'os';
 import { join } from 'path';
 import { parseYamlFrontmatter } from '../../src/core/note-mutations';
 import {
+  handleAppendSectionCommand,
   handleCreateBugCommand,
   handleCreateDecisionCommand,
   handleCreatePhaseCommand,
@@ -13,6 +14,7 @@ import {
   handleRefreshActiveContextCommand,
   handleRebuildBugsIndexCommand,
   handleRebuildDecisionsIndexCommand,
+  handleUpdateFrontmatterCommand,
 } from '../../src/core/note-generators';
 import { copyTemplate, copyHomeNote, makeIo } from '../helpers';
 
@@ -197,6 +199,24 @@ describe('Agent Vault note generators', () => {
 
     const phaseContent = await readFile(join(vaultRoot, '02_Phases', 'Phase_01_Foundation', 'Phase.md'), 'utf-8');
     expect(phaseContent).toContain('- [ ] [[02_Phases/Phase_01_Foundation/Steps/Step_02_add-agent-vault-generators|STEP-01-02 Add Agent Vault generators]]');
+  });
+
+  it('rejects mutation paths that escape the vault root', async () => {
+    const vaultRoot = await createTempVault();
+    const harness = makeIo();
+
+    const updateExitCode = await handleUpdateFrontmatterCommand(
+      ['../outside.md', '--set', 'status=active'],
+      { vaultRoot, io: harness.io },
+    );
+    const appendExitCode = await handleAppendSectionCommand(
+      ['../outside.md', '--heading', 'Notes', '--content', 'oops'],
+      { vaultRoot, io: harness.io },
+    );
+
+    expect(updateExitCode).toBe(1);
+    expect(appendExitCode).toBe(1);
+    expect(harness.stderr.some((line) => line.includes('escapes the vault root'))).toBe(true);
   });
 
   it('create-session resolves a step by id and creates a timestamped session note', async () => {

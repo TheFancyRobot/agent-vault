@@ -1,9 +1,9 @@
-import { existsSync } from 'fs';
-import { readFile, readdir } from 'fs/promises';
-import { basename, dirname, extname, join, relative, resolve } from 'path';
+import { readFile } from 'fs/promises';
 import { formatCommandHelp } from './command-catalog';
 import type { AgentVaultCommandEnvironment, AgentVaultCommandIO } from './note-generators';
 import { AgentVaultMutationError, parseYamlFrontmatter } from './note-mutations';
+import { collectLinks } from './vault-graph';
+import { getRelativeNotePath, listMarkdownFiles, resolveVaultRoot } from './vault-files';
 
 type FrontmatterNoteType =
   | 'architecture'
@@ -95,47 +95,9 @@ const FRONTMATTER_NOTE_TYPES = new Set<FrontmatterNoteType>([
 
 const MARKER_LINE_PATTERN = /^<!-- AGENT-(START|END):([A-Za-z0-9._-]+) -->$/;
 const HEADING_PATTERN = /^( {0,3})(#{1,6})[ \t]+(.+?)(?:[ \t]+#+[ \t]*)?[ \t]*$/;
-const WIKI_LINK_PATTERN = /\[\[([^\]]+)\]\]/g;
-const MARKDOWN_LINK_PATTERN = /\[[^\]]+\]\(([^)]+)\)/g;
-
-const resolveVaultRoot = (startDir: string): string => {
-  let current = resolve(startDir);
-
-  while (true) {
-    const directVault = basename(current) === '.agent-vault' ? current : join(current, '.agent-vault');
-    if (existsSync(directVault)) {
-      return directVault;
-    }
-
-    const parent = dirname(current);
-    if (parent === current) {
-      throw new Error('Could not find .agent-vault from the current working directory.');
-    }
-    current = parent;
-  }
-};
 
 const getVaultRoot = (environment: AgentVaultCommandEnvironment): string =>
   environment.vaultRoot ?? resolveVaultRoot(environment.cwd?.() ?? process.cwd());
-
-const getRelativeNotePath = (vaultRoot: string, absolutePath: string): string =>
-  relative(vaultRoot, absolutePath).replace(/\\/g, '/');
-
-const listMarkdownFiles = async (directory: string): Promise<string[]> => {
-  const entries = await readdir(directory, { withFileTypes: true });
-  const files = await Promise.all(entries.map(async (entry) => {
-    const nextPath = join(directory, entry.name);
-    if (entry.isDirectory()) {
-      return listMarkdownFiles(nextPath);
-    }
-    if (entry.isFile() && extname(entry.name).toLowerCase() === '.md') {
-      return [nextPath];
-    }
-    return [] as string[];
-  }));
-
-  return files.flat().sort();
-};
 
 const classifyNotePath = (relativePath: string): NoteClassification => {
   if (relativePath === '00_Home/Active_Context.md') {
@@ -298,52 +260,8 @@ const validateGeneratedBlocks = (note: ParsedNote): ValidationIssue[] => {
   return issues;
 };
 
-const normalizeLinkTarget = (currentRelativePath: string, rawTarget: string): string | undefined => {
-  const withoutAlias = rawTarget.split('|')[0]?.trim() ?? '';
-  const withoutHeading = withoutAlias.split('#')[0]?.trim() ?? '';
-  if (withoutHeading.length === 0) {
-    return undefined;
-  }
-  if (withoutHeading.includes('<') || withoutHeading.includes('>')) {
-    return undefined;
-  }
-  if (/^(?:https?:|mailto:|obsidian:)/i.test(withoutHeading) || withoutHeading.startsWith('#')) {
-    return undefined;
-  }
-  if (withoutHeading.startsWith('./') || withoutHeading.startsWith('../')) {
-    return join(dirname(currentRelativePath), withoutHeading).replace(/\\/g, '/').replace(/\.md$/i, '');
-  }
-  return withoutHeading.replace(/\\/g, '/').replace(/\.md$/i, '');
-};
-
-const collectLinks = (note: ParsedNote): ReadonlySet<string> => {
-  const links = new Set<string>();
-  const addTarget = (rawTarget: string): void => {
-    const normalized = normalizeLinkTarget(note.relativePath, rawTarget);
-    if (!normalized) {
-      return;
-    }
-    if (normalized === note.relativePath.replace(/\.md$/i, '')) {
-      return;
-    }
-    links.add(normalized);
-  };
-
-  WIKI_LINK_PATTERN.lastIndex = 0;
-  for (const match of note.content.matchAll(WIKI_LINK_PATTERN)) {
-    addTarget(match[1]);
-  }
-
-  MARKDOWN_LINK_PATTERN.lastIndex = 0;
-  for (const match of note.content.matchAll(MARKDOWN_LINK_PATTERN)) {
-    addTarget(match[1]);
-  }
-
-  return links;
-};
-
 const hasLinkTo = (note: ParsedNote, predicate: (target: string) => boolean): boolean => {
-  for (const target of collectLinks(note)) {
+  for (const target of collectLinks(note.relativePath, note.content)) {
     if (predicate(target)) {
       return true;
     }
@@ -513,7 +431,7 @@ const detectOrphans = (notes: readonly ParsedNote[]): ValidationSummary => {
     .filter((note) => !note.relativePath.startsWith('.obsidian/'))
     .map((note) => ({
       ...note,
-      outboundLinks: collectLinks(note),
+      outboundLinks: collectLinks(note.relativePath, note.content),
       canonicalTarget: note.relativePath.replace(/\.md$/i, ''),
     }));
 

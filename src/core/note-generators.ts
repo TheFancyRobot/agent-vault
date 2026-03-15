@@ -1,6 +1,6 @@
 import { existsSync } from 'fs';
 import { mkdir, readFile, readdir, writeFile } from 'fs/promises';
-import { basename, dirname, extname, join, relative, resolve } from 'path';
+import { basename, dirname, join, relative, resolve } from 'path';
 import {
   appendToAppendOnlySection,
   parseYamlFrontmatter,
@@ -10,6 +10,13 @@ import {
   updateFrontmatter,
 } from './note-mutations';
 import { formatCommandHelp, formatCommandUsage } from './command-catalog';
+import {
+  assertWithinVaultRoot,
+  getRelativeNotePath,
+  listMarkdownFiles,
+  resolveVaultRelativePath,
+  resolveVaultRoot,
+} from './vault-files';
 
 export interface AgentVaultCommandIO {
   stdout: (message: string) => void;
@@ -175,28 +182,8 @@ const getRequiredOption = (options: Record<string, string | true>, name: string)
   return undefined;
 };
 
-const resolveVaultRoot = (startDir: string): string => {
-  let current = resolve(startDir);
-
-  while (true) {
-    const directVault = basename(current) === '.agent-vault' ? current : join(current, '.agent-vault');
-    if (existsSync(directVault)) {
-      return directVault;
-    }
-
-    const parent = dirname(current);
-    if (parent === current) {
-      throw new Error('Could not find .agent-vault from the current working directory.');
-    }
-    current = parent;
-  }
-};
-
 const getVaultRoot = (environment: AgentVaultCommandEnvironment): string =>
   environment.vaultRoot ?? resolveVaultRoot(environment.cwd?.() ?? process.cwd());
-
-const getRelativeNotePath = (vaultRoot: string, absolutePath: string): string =>
-  relative(vaultRoot, absolutePath).replace(/\\/g, '/');
 
 const toWikiTarget = (vaultRelativePath: string): string => vaultRelativePath.replace(/\.md$/i, '');
 
@@ -211,26 +198,6 @@ const resolvePhaseNotePathFromLink = (vaultRoot: string, phaseLink: string): str
   const relativeTarget = `${match[1]}.md`;
   const absolutePath = join(vaultRoot, relativeTarget);
   return existsSync(absolutePath) ? absolutePath : undefined;
-};
-
-const listMarkdownFiles = async (directory: string): Promise<string[]> => {
-  if (!existsSync(directory)) {
-    return [];
-  }
-
-  const entries = await readdir(directory, { withFileTypes: true });
-  const files = await Promise.all(entries.map(async (entry) => {
-    const nextPath = join(directory, entry.name);
-    if (entry.isDirectory()) {
-      return listMarkdownFiles(nextPath);
-    }
-    if (entry.isFile() && extname(entry.name).toLowerCase() === '.md') {
-      return [nextPath];
-    }
-    return [] as string[];
-  }));
-
-  return files.flat().sort();
 };
 
 const parseStringField = (notePath: string, key: string, value: unknown): string => {
@@ -520,8 +487,15 @@ const resolveDirectNotePath = (vaultRoot: string, reference: string): string | n
   ];
 
   for (const candidate of candidates) {
-    if (candidate.endsWith('.md') && existsSync(candidate)) {
+    if (!candidate.endsWith('.md') || !existsSync(candidate)) {
+      continue;
+    }
+
+    try {
+      assertWithinVaultRoot(vaultRoot, candidate);
       return candidate;
+    } catch {
+      continue;
     }
   }
 
@@ -1945,7 +1919,7 @@ export async function handleUpdateFrontmatterCommand(
     }
 
     const vaultRoot = getVaultRoot(environment);
-    const absolutePath = resolve(join(vaultRoot, notePath));
+    const absolutePath = resolveVaultRelativePath(vaultRoot, notePath);
     if (!existsSync(absolutePath)) {
       throw new Error(`Note does not exist: ${notePath}`);
     }
@@ -2017,7 +1991,7 @@ export async function handleAppendSectionCommand(
     }
 
     const vaultRoot = getVaultRoot(environment);
-    const absolutePath = resolve(join(vaultRoot, notePath));
+    const absolutePath = resolveVaultRelativePath(vaultRoot, notePath);
     if (!existsSync(absolutePath)) {
       throw new Error(`Note does not exist: ${notePath}`);
     }

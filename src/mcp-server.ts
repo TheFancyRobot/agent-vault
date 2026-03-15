@@ -23,23 +23,18 @@ import {
   handleVaultDoctorCommand,
 } from './core/note-validators';
 import { formatCommandCatalog, formatCommandHelp } from './core/command-catalog';
+import {
+  ensureVaultGraph,
+  formatVaultTraverseResultAsJson,
+  formatVaultTraverseResultAsToon,
+  invalidateVaultGraphCache,
+  traverseVaultGraph,
+} from './core/vault-graph';
+import { resolveVaultRoot } from './core/vault-files';
 import { initVault } from './scaffold/init';
 import { scanProject } from './scaffold/scan';
-import { existsSync } from 'fs';
-import { basename, dirname, join, resolve } from 'path';
 
 type CommandHandler = (argv: string[], environment?: AgentVaultCommandEnvironment) => Promise<number>;
-
-const resolveVaultRoot = (): string => {
-  let current = resolve(process.cwd());
-  while (true) {
-    const directVault = basename(current) === '.agent-vault' ? current : join(current, '.agent-vault');
-    if (existsSync(directVault)) return directVault;
-    const parent = dirname(current);
-    if (parent === current) throw new Error('Could not find .agent-vault. Run vault_init first.');
-    current = parent;
-  }
-};
 
 const captureOutput = async (handler: CommandHandler, argv: string[], vaultRoot: string) => {
   const stdout: string[] = [];
@@ -56,7 +51,7 @@ const captureOutput = async (handler: CommandHandler, argv: string[], vaultRoot:
   };
 };
 
-const noArgs = (handler: CommandHandler) => captureOutput(handler, [], resolveVaultRoot());
+const noArgs = (handler: CommandHandler) => captureOutput(handler, [], resolveVaultRoot(process.cwd()));
 
 export async function startServer(): Promise<void> {
   const server = new McpServer({ name: 'agent-vault', version: '0.0.1' });
@@ -121,7 +116,7 @@ export async function startServer(): Promise<void> {
       step: z.string().optional().describe('Related step ID (bug only)'),
     },
     async (input) => {
-      const vaultRoot = resolveVaultRoot();
+      const vaultRoot = resolveVaultRoot(process.cwd());
 
       switch (input.type) {
         case 'phase': {
@@ -168,6 +163,49 @@ export async function startServer(): Promise<void> {
     },
   );
 
+  // ── vault_traverse ──────────────────────────────────────────────────
+  server.tool(
+    'vault_traverse',
+    [
+      'Traverse connected vault notes for agent context loading.',
+      '- Depth controls how many hops away from the root note are included.',
+      '- Filters narrow the returned notes without including unresolved links.',
+      '- TOON is the default output format for token-efficient structured context.',
+      '- resolver "obsidian" is optional and falls back to filesystem links if unavailable.',
+    ].join('\n'),
+    {
+      root: z.string().describe('Starting note path or wiki target, e.g. "02_Phases/Phase_01_Foundation/Phase"'),
+      depth: z.number().int().min(0).max(10).describe('Traversal depth from the root note'),
+      direction: z.enum(['outgoing', 'incoming', 'both']).default('outgoing').describe('Traversal direction'),
+      format: z.enum(['toon', 'json']).default('toon').describe('Response format'),
+      include_content: z.boolean().default(false).describe('Include bounded note content excerpts'),
+      note_type: z.array(z.string()).optional().describe('Optional note_type filter for returned notes'),
+      status: z.array(z.string()).optional().describe('Optional status filter for returned notes'),
+      max_notes: z.number().int().min(1).max(5000).default(500).describe('Safety cap for returned notes'),
+      resolver: z.enum(['filesystem', 'obsidian']).default('filesystem').describe('Link resolver to use'),
+    },
+    async ({ root, depth, direction, format, include_content, note_type, status, max_notes, resolver }) => {
+      const vaultRoot = resolveVaultRoot(process.cwd());
+      const { graph, warnings } = await ensureVaultGraph(vaultRoot, resolver);
+      const result = traverseVaultGraph(graph, {
+        root,
+        depth,
+        direction,
+        includeContent: include_content,
+        noteTypes: note_type,
+        statuses: status,
+        maxNotes: max_notes,
+        resolver,
+      }, warnings);
+
+      const text = format === 'json'
+        ? formatVaultTraverseResultAsJson(result)
+        : formatVaultTraverseResultAsToon(result);
+
+      return { content: [{ type: 'text', text }] };
+    },
+  );
+
   // ── vault_mutate ────────────────────────────────────────────────────
   server.tool(
     'vault_mutate',
@@ -184,7 +222,7 @@ export async function startServer(): Promise<void> {
       content: z.string().optional().describe('Content to append (append_section)'),
     },
     async (input) => {
-      const vaultRoot = resolveVaultRoot();
+      const vaultRoot = resolveVaultRoot(process.cwd());
 
       switch (input.action) {
         case 'update_frontmatter': {
@@ -195,18 +233,22 @@ export async function startServer(): Promise<void> {
           for (const [key, value] of Object.entries(input.updates)) {
             argv.push('--set', `${key}=${value}`);
           }
-          return captureOutput(handleUpdateFrontmatterCommand, argv, vaultRoot);
+          const result = await captureOutput(handleUpdateFrontmatterCommand, argv, vaultRoot);
+          invalidateVaultGraphCache(vaultRoot);
+          return result;
         }
 
         case 'append_section': {
           if (!input.heading || !input.content) {
             return { content: [{ type: 'text', text: 'heading and content are required for append_section' }], isError: true };
           }
-          return captureOutput(
+          const result = await captureOutput(
             handleAppendSectionCommand,
             [input.note_path, '--heading', input.heading, '--content', input.content],
             vaultRoot,
           );
+          invalidateVaultGraphCache(vaultRoot);
+          return result;
         }
       }
     },

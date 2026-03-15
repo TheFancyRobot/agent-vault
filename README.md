@@ -4,6 +4,8 @@ Durable project memory for coding agents. An Obsidian-compatible vault that prov
 
 Agent Vault creates a `.agent-vault/` directory in your project with templates, architecture stubs, and shared knowledge files. It integrates with **Claude Code**, **OpenCode**, and **Codex** via MCP (Model Context Protocol).
 
+Obsidian is optional: the vault uses plain Markdown and wikilinks, so agents can work directly from the filesystem while humans can still use Obsidian's graph, plugins, and CLI when they want to.
+
 ## Quick Start
 
 ```bash
@@ -33,17 +35,38 @@ Agent Vault stores durable planning, architecture, bug, decision, and session co
 └── .obsidian/        # Graph and plugin config for Obsidian
 ```
 
-## MCP Tools (7 tools)
+## MCP Tools (8 tools)
 
 | Tool | Description |
 |---|---|
 | `vault_init` | Initialize vault scaffold and scan project |
 | `vault_scan` | Analyze project filesystem |
 | `vault_create` | Create notes — `type`: `phase`, `step`, `session`, `bug`, `decision` |
+| `vault_traverse` | Load a connected subgraph for agent context — `root`, `depth`, `direction`, optional filters, `format`: `toon` or `json` |
 | `vault_mutate` | Edit notes — `action`: `update_frontmatter`, `append_section` |
 | `vault_refresh` | Refresh home notes — `target`: `all`, `indexes`, `active_context` |
 | `vault_validate` | Check integrity — `target`: `all`, `frontmatter`, `structure`, `links`, `orphans`, `doctor` |
 | `vault_help` | List commands or show help for one |
+
+### `vault_traverse`
+
+- Default output is `TOON` for token-efficient agent context loading
+- Traversal is driven by vault links, not by loading the full vault into context
+- `resolver=filesystem` is the default; `resolver=obsidian` is optional and falls back cleanly if the Obsidian CLI is unavailable
+- Included note content is bounded and truncated to keep MCP responses safe
+
+Example:
+
+```json
+{
+  "root": "02_Phases/Phase_01_Foundation/Phase",
+  "depth": 2,
+  "direction": "both",
+  "format": "toon",
+  "note_type": ["phase", "step", "architecture", "decision"],
+  "status": ["active", "planned"]
+}
+```
 
 ## Install
 
