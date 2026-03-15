@@ -1211,11 +1211,11 @@ const collectIndexedNotes = async (
   const notes: IndexedVaultNote[] = [];
   const skipped: string[] = [];
 
-  for (const filePath of files) {
+  await Promise.all(files.map(async (filePath) => {
     try {
       const frontmatter = await readNoteFrontmatter(filePath);
       if (frontmatter.note_type !== expectedNoteType) {
-        continue;
+        return;
       }
 
       notes.push({
@@ -1226,7 +1226,7 @@ const collectIndexedNotes = async (
     } catch {
       skipped.push(getRelativeNotePath(vaultRoot, filePath));
     }
-  }
+  }));
 
   return { notes, skipped: skipped.sort() };
 };
