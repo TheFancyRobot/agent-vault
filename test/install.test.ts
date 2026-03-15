@@ -3,6 +3,13 @@ import { existsSync } from 'fs';
 import { mkdtemp, readFile, rm, writeFile, mkdir } from 'fs/promises';
 import { tmpdir } from 'os';
 import { join } from 'path';
+import {
+  buildInstallTarget,
+  buildMcpServerConfig,
+  parseInstallScope,
+  renderToolCommand,
+  resolveInstallRoot,
+} from '../src/install';
 
 // We test the JSON config merge logic directly since the install module
 // depends on actual home directory paths. These tests verify the core
@@ -21,6 +28,11 @@ afterEach(async () => {
 });
 
 describe('install config merge', () => {
+  const runtimeConfig = buildMcpServerConfig(
+    buildInstallTarget('global', '/workspace/repo', '/home/alice'),
+    '/usr/bin/node',
+  );
+
   it('adds mcpServers key to empty config', async () => {
     const dir = await createTempDir('empty');
     const configPath = join(dir, 'settings.json');
@@ -28,20 +40,12 @@ describe('install config merge', () => {
 
     const config = JSON.parse(await readFile(configPath, 'utf-8'));
     const mcpServers = (config.mcpServers ?? {}) as Record<string, unknown>;
-    mcpServers['agent-vault'] = {
-      type: 'stdio',
-      command: 'npx',
-      args: ['-y', '@fancyrobot/agent-vault', 'serve'],
-    };
+    mcpServers['agent-vault'] = runtimeConfig;
     config.mcpServers = mcpServers;
     await writeFile(configPath, JSON.stringify(config, null, 2), 'utf-8');
 
     const result = JSON.parse(await readFile(configPath, 'utf-8'));
-    expect(result.mcpServers['agent-vault']).toEqual({
-      type: 'stdio',
-      command: 'npx',
-      args: ['-y', '@fancyrobot/agent-vault', 'serve'],
-    });
+    expect(result.mcpServers['agent-vault']).toEqual(runtimeConfig);
   });
 
   it('preserves existing mcpServers when adding agent-vault', async () => {
@@ -55,11 +59,7 @@ describe('install config merge', () => {
 
     const config = JSON.parse(await readFile(configPath, 'utf-8'));
     const mcpServers = config.mcpServers as Record<string, unknown>;
-    mcpServers['agent-vault'] = {
-      type: 'stdio',
-      command: 'npx',
-      args: ['-y', '@fancyrobot/agent-vault', 'serve'],
-    };
+    mcpServers['agent-vault'] = runtimeConfig;
     await writeFile(configPath, JSON.stringify(config, null, 2), 'utf-8');
 
     const result = JSON.parse(await readFile(configPath, 'utf-8'));
@@ -73,7 +73,7 @@ describe('install config merge', () => {
     await writeFile(configPath, JSON.stringify({
       mcpServers: {
         'other-server': { type: 'stdio', command: 'other' },
-        'agent-vault': { type: 'stdio', command: 'npx', args: ['-y', '@fancyrobot/agent-vault', 'serve'] },
+        'agent-vault': runtimeConfig,
       },
     }), 'utf-8');
 
@@ -84,5 +84,82 @@ describe('install config merge', () => {
     const result = JSON.parse(await readFile(configPath, 'utf-8'));
     expect(result.mcpServers['other-server']).toBeTruthy();
     expect(result.mcpServers['agent-vault']).toBeUndefined();
+  });
+});
+
+describe('renderToolCommand', () => {
+  const template = {
+    sourceFilename: 'vault:create-phase.md',
+    sourceCommandName: 'vault:create-phase',
+    content: `Create a new phase in the vault.
+
+Usage: /vault:create-phase <title> [--phase-number N] [--previous PHASE-ID]
+
+Call the \`vault_create_phase\` MCP tool. The phase number is auto-generated if omitted.
+
+Example: /vault:create-phase "Workflow Adoption"
+`,
+  };
+
+  it('keeps Claude Code commands unchanged', () => {
+    expect(renderToolCommand(template, 'claude')).toEqual({
+      filename: 'vault:create-phase.md',
+      slashCommand: 'vault:create-phase',
+      content: template.content,
+    });
+  });
+
+  it('renders OpenCode commands with description frontmatter', () => {
+    const rendered = renderToolCommand(template, 'opencode');
+
+    expect(rendered.filename).toBe('vault:create-phase.md');
+    expect(rendered.slashCommand).toBe('vault:create-phase');
+    expect(rendered.content).toContain('description: "Create a new phase in the vault."');
+    expect(rendered.content).toContain('Usage: /vault:create-phase <title> [--phase-number N] [--previous PHASE-ID]');
+    expect(rendered.content).not.toContain('\nCreate a new phase in the vault.\n\nUsage:');
+  });
+
+  it('renders Codex prompts with prompts: namespace', () => {
+    const rendered = renderToolCommand(template, 'codex');
+
+    expect(rendered.filename).toBe('vault-create-phase.md');
+    expect(rendered.slashCommand).toBe('prompts:vault-create-phase');
+    expect(rendered.content).toContain('description: "Create a new phase in the vault."');
+    expect(rendered.content).toContain('Usage: /prompts:vault-create-phase <title> [--phase-number N] [--previous PHASE-ID]');
+    expect(rendered.content).toContain('Example: /prompts:vault-create-phase "Workflow Adoption"');
+  });
+});
+
+describe('install target helpers', () => {
+  it('parses explicit install scope flags', () => {
+    expect(parseInstallScope(['--global'])).toBe('global');
+    expect(parseInstallScope(['--cwd'])).toBe('cwd');
+    expect(parseInstallScope([])).toBeNull();
+  });
+
+  it('resolves install roots for global and cwd scopes', () => {
+    expect(resolveInstallRoot('global', '/workspace/repo', '/home/alice')).toBe('/home/alice/.agent-vault');
+    expect(resolveInstallRoot('cwd', '/workspace/repo', '/home/alice')).toBe('/workspace/repo/.agent-vault');
+  });
+
+  it('builds runtime target paths under the chosen root', () => {
+    const target = buildInstallTarget('cwd', '/workspace/repo', '/home/alice');
+
+    expect(target.rootPath).toBe('/workspace/repo/.agent-vault');
+    expect(target.runtimePath).toBe('/workspace/repo/.agent-vault/.runtime');
+    expect(target.cliPath).toBe('/workspace/repo/.agent-vault/.runtime/node_modules/@fancyrobot/agent-vault/dist/cli.mjs');
+  });
+
+  it('points MCP config at the installed runtime CLI', () => {
+    const config = buildMcpServerConfig(
+      buildInstallTarget('global', '/workspace/repo', '/home/alice'),
+      '/usr/bin/node',
+    );
+
+    expect(config).toEqual({
+      type: 'stdio',
+      command: '/usr/bin/node',
+      args: ['/home/alice/.agent-vault/.runtime/node_modules/@fancyrobot/agent-vault/dist/cli.mjs', 'serve'],
+    });
   });
 });

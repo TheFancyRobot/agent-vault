@@ -10,23 +10,31 @@ Obsidian is optional: the vault uses plain Markdown and wikilinks, so agents can
 
 ```bash
 # 1. Install and configure for your agent tools
-npx @fancyrobot/agent-vault install
+npx @fancyrobot/agent-vault
 
-# 2. Inside your agent tool (Claude Code, OpenCode, or Codex),
-#    initialize a vault in your project:
-#    /vault:init
+# Or with Bun:
+bunx @fancyrobot/agent-vault
+
+# 2. Inside your agent tool, initialize a vault in your project:
+#    Claude Code / OpenCode: /vault:init
+#    Codex: /prompts:vault-init
 #
 # This creates the .agent-vault/ scaffold, scans your project,
 # and populates architecture stubs with detected metadata.
 
 # 3. Start working — create phases, log bugs, record decisions:
-#    /vault:create-phase "Foundation"
-#    /vault:create-bug "Login timeout on slow connections"
-#    /vault:create-decision "Choose PostgreSQL over MongoDB"
+#    Claude Code / OpenCode: /vault:create-phase "Foundation"
+#    Codex: /prompts:vault-create-phase "Foundation"
+#    Claude Code / OpenCode: /vault:create-bug "Login timeout on slow connections"
+#    Codex: /prompts:vault-create-bug "Login timeout on slow connections"
+#    Claude Code / OpenCode: /vault:create-decision "Choose PostgreSQL over MongoDB"
+#    Codex: /prompts:vault-create-decision "Choose PostgreSQL over MongoDB"
 
 # 4. Validate and refresh:
-#    /vault:validate    — checks vault integrity
-#    /vault:refresh     — updates home notes from metadata
+#    Claude Code / OpenCode: /vault:validate    — checks vault integrity
+#    Codex: /prompts:vault-validate
+#    Claude Code / OpenCode: /vault:refresh     — updates home notes from metadata
+#    Codex: /prompts:vault-refresh
 ```
 
 ## What It Does
@@ -51,37 +59,45 @@ Each note type has a canonical template with structured YAML frontmatter (note t
 ## Install
 
 ```bash
-npx @fancyrobot/agent-vault install            # Auto-detect and configure
-npx @fancyrobot/agent-vault install --dry-run   # Preview changes without modifying files
+npx @fancyrobot/agent-vault                     # Prompt for global or cwd-scoped install
+bunx @fancyrobot/agent-vault                    # Same flow with Bun
+npx @fancyrobot/agent-vault --global            # Install/update in ~/.agent-vault
+npx @fancyrobot/agent-vault --cwd               # Install/update in $PWD/.agent-vault
+npx @fancyrobot/agent-vault --dry-run           # Preview changes without modifying files
 npx @fancyrobot/agent-vault uninstall           # Remove configuration
 ```
 
-### What `install` does
+### What the installer does
 
-The installer auto-detects which agent tools you have and configures each one:
+The installer first asks whether Agent Vault should live in `~/.agent-vault` or in `$PWD/.agent-vault`, then installs or updates the package inside `.runtime/` under that root.
+
+After that it auto-detects which agent tools you have and configures each one:
 
 - **Claude Code**: Adds MCP server to `~/.claude/settings.json`, copies 8 slash commands to `~/.claude/commands/`
-- **OpenCode**: Adds MCP server to `~/.config/opencode/config.json`
-- **Codex**: Adds MCP server to `~/.codex/config.json`
+- **OpenCode**: Adds MCP server to `~/.config/opencode/config.json`, copies 8 slash commands to `~/.config/opencode/commands/`
+- **Codex**: Adds MCP server to `~/.codex/config.json`, copies 8 custom prompt commands to `~/.codex/prompts/` (invoked as `/prompts:vault-init`, `/prompts:vault-create-phase`, etc.)
 
-The MCP server configuration points to:
+The MCP server configuration points at the installed runtime instead of using `npx` every time. In practice that means the detected Node or Bun executable runs:
 
 ```json
 {
   "type": "stdio",
-  "command": "npx",
-  "args": ["-y", "@fancyrobot/agent-vault", "serve"]
+  "command": "/absolute/path/to/node-or-bun",
+  "args": ["/absolute/path/to/.agent-vault/.runtime/node_modules/@fancyrobot/agent-vault/dist/cli.mjs", "serve"]
 }
 ```
 
+Global installs keep runtime files in `~/.agent-vault`; `vault:init` still creates a project-specific `.agent-vault/` in the repo you are working on.
+
 ### What `uninstall` does
 
-Removes the MCP server entry from all detected tool configs and deletes the slash command files from `~/.claude/commands/`.
+Removes the MCP server entry from all detected tool configs, deletes the installed command files from `~/.claude/commands/`, `~/.config/opencode/commands/`, and `~/.codex/prompts/`, and removes installed runtime files from `~/.agent-vault/.runtime` and `$PWD/.agent-vault/.runtime` when present.
 
 ## CLI Commands
 
 ```bash
-npx @fancyrobot/agent-vault install     # Configure MCP server in agent tools
+npx @fancyrobot/agent-vault             # Install/update Agent Vault and configure agent tools
+bunx @fancyrobot/agent-vault            # Same install/update flow via Bun
 npx @fancyrobot/agent-vault uninstall   # Remove MCP server configuration
 npx @fancyrobot/agent-vault serve       # Start MCP stdio server (used by agent tools)
 npx @fancyrobot/agent-vault --help      # Show usage
@@ -91,18 +107,18 @@ The `serve` command is called automatically by agent tools via MCP — you don't
 
 ## Slash Commands
 
-After installation, these slash commands are available in Claude Code, OpenCode, and Codex:
+After installation, these commands are available in each tool:
 
-| Command | Description |
-|---|---|
-| `/vault:init` | Initialize vault scaffold and scan the project |
-| `/vault:create-phase` | Create a new phase (auto-generates phase number) |
-| `/vault:create-step` | Create a step inside a phase |
-| `/vault:create-session` | Create a timestamped session linked to a step |
-| `/vault:create-bug` | Create a bug note (auto-generates bug ID) |
-| `/vault:create-decision` | Create a decision note (auto-generates decision ID) |
-| `/vault:validate` | Run vault integrity checks |
-| `/vault:refresh` | Refresh all home notes from metadata |
+| Claude Code / OpenCode | Codex | Description |
+|---|---|---|
+| `/vault:init` | `/prompts:vault-init` | Initialize vault scaffold and scan the project |
+| `/vault:create-phase` | `/prompts:vault-create-phase` | Create a new phase (auto-generates phase number) |
+| `/vault:create-step` | `/prompts:vault-create-step` | Create a step inside a phase |
+| `/vault:create-session` | `/prompts:vault-create-session` | Create a timestamped session linked to a step |
+| `/vault:create-bug` | `/prompts:vault-create-bug` | Create a bug note (auto-generates bug ID) |
+| `/vault:create-decision` | `/prompts:vault-create-decision` | Create a decision note (auto-generates decision ID) |
+| `/vault:validate` | `/prompts:vault-validate` | Run vault integrity checks |
+| `/vault:refresh` | `/prompts:vault-refresh` | Refresh all home notes from metadata |
 
 ## MCP Tools (9 tools)
 

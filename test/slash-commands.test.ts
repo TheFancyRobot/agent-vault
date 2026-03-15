@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { readdir, readFile } from 'fs/promises';
 import { join } from 'path';
+import { renderToolCommand } from '../src/install';
 
 const COMMANDS_DIR = join(import.meta.dirname, '..', 'claude-commands');
 
@@ -40,11 +41,19 @@ describe('slash commands', () => {
     }
   });
 
-  it('uninstall list covers every command file', async () => {
+  it('command rendering covers every source command file', async () => {
     const files = await listCommandFiles();
-    const installSrc = await readFile(join(import.meta.dirname, '..', 'src', 'install.ts'), 'utf-8');
     for (const file of files) {
-      expect(installSrc, `${file} missing from uninstall list`).toContain(`'${file}'`);
+      const content = await readFile(join(COMMANDS_DIR, file), 'utf-8');
+      const template = {
+        sourceFilename: file,
+        sourceCommandName: file.replace('.md', ''),
+        content,
+      };
+
+      expect(renderToolCommand(template, 'claude').filename, `${file} missing from Claude rendering`).toBe(file);
+      expect(renderToolCommand(template, 'opencode').filename, `${file} missing from OpenCode rendering`).toBe(file);
+      expect(renderToolCommand(template, 'codex').slashCommand, `${file} missing Codex prompts namespace`).toMatch(/^prompts:vault-/);
     }
   });
 
