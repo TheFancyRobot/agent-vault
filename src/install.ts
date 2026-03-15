@@ -62,10 +62,9 @@ const writeJsonSafe = async (path: string, data: unknown): Promise<void> => {
   await writeFile(path, JSON.stringify(data, null, 2) + '\n', 'utf-8');
 };
 
-const installClaudeCode = async (tool: DetectedTool, dryRun: boolean): Promise<InstallAction[]> => {
+const installMcpServer = async (tool: DetectedTool, dryRun: boolean): Promise<InstallAction[]> => {
   const actions: InstallAction[] = [];
 
-  // Add MCP server config
   const config = await readJsonSafe(tool.configPath);
   const mcpServers = (config.mcpServers ?? {}) as Record<string, unknown>;
 
@@ -84,7 +83,11 @@ const installClaudeCode = async (tool: DetectedTool, dryRun: boolean): Promise<I
     });
   }
 
-  // Copy slash commands
+  return actions;
+};
+
+const installClaudeCodeCommands = async (tool: DetectedTool, dryRun: boolean): Promise<InstallAction[]> => {
+  const actions: InstallAction[] = [];
   const commandsDir = join(homedir(), '.claude', 'commands');
   if (existsSync(CLAUDE_COMMANDS_DIR)) {
     const { readdir } = await import('fs/promises');
@@ -110,53 +113,6 @@ const installClaudeCode = async (tool: DetectedTool, dryRun: boolean): Promise<I
       // claude-commands dir may not exist in dev
     }
   }
-
-  return actions;
-};
-
-const installOpenCode = async (tool: DetectedTool, dryRun: boolean): Promise<InstallAction[]> => {
-  const actions: InstallAction[] = [];
-  const config = await readJsonSafe(tool.configPath);
-  const mcpServers = (config.mcpServers ?? {}) as Record<string, unknown>;
-
-  if (!mcpServers['agent-vault']) {
-    mcpServers['agent-vault'] = MCP_SERVER_CONFIG;
-    config.mcpServers = mcpServers;
-
-    if (!dryRun) {
-      await writeJsonSafe(tool.configPath, config);
-    }
-    actions.push({
-      tool: tool.name,
-      action: 'add_mcp_server',
-      path: tool.configPath,
-      detail: 'Added agent-vault MCP server to mcpServers',
-    });
-  }
-
-  return actions;
-};
-
-const installCodex = async (tool: DetectedTool, dryRun: boolean): Promise<InstallAction[]> => {
-  const actions: InstallAction[] = [];
-  const config = await readJsonSafe(tool.configPath);
-  const mcpServers = (config.mcpServers ?? {}) as Record<string, unknown>;
-
-  if (!mcpServers['agent-vault']) {
-    mcpServers['agent-vault'] = MCP_SERVER_CONFIG;
-    config.mcpServers = mcpServers;
-
-    if (!dryRun) {
-      await writeJsonSafe(tool.configPath, config);
-    }
-    actions.push({
-      tool: tool.name,
-      action: 'add_mcp_server',
-      path: tool.configPath,
-      detail: 'Added agent-vault MCP server to mcpServers',
-    });
-  }
-
   return actions;
 };
 
@@ -184,6 +140,10 @@ const uninstallTool = async (tool: DetectedTool, dryRun: boolean): Promise<Insta
   if (tool.name === 'Claude Code') {
     const commandsDir = join(homedir(), '.claude', 'commands');
     const vaultCommands = [
+      'vault:init.md', 'vault:create-step.md', 'vault:create-bug.md',
+      'vault:create-session.md', 'vault:create-decision.md', 'vault:create-phase.md',
+      'vault:validate.md', 'vault:refresh.md',
+      // Legacy names (pre-namespace) for cleanup
       'vault-init.md', 'vault-create-step.md', 'vault-create-bug.md',
       'vault-create-session.md', 'vault-create-decision.md', 'vault-create-phase.md',
       'vault-validate.md', 'vault-refresh.md',
@@ -225,19 +185,9 @@ export async function runInstall(args: string[]): Promise<void> {
   const allActions: InstallAction[] = [];
 
   for (const tool of detected) {
-    let actions: InstallAction[];
-    switch (tool.name) {
-      case 'Claude Code':
-        actions = await installClaudeCode(tool, dryRun);
-        break;
-      case 'OpenCode':
-        actions = await installOpenCode(tool, dryRun);
-        break;
-      case 'Codex':
-        actions = await installCodex(tool, dryRun);
-        break;
-      default:
-        actions = [];
+    const actions = await installMcpServer(tool, dryRun);
+    if (tool.name === 'Claude Code') {
+      actions.push(...await installClaudeCodeCommands(tool, dryRun));
     }
     allActions.push(...actions);
   }
@@ -253,7 +203,7 @@ export async function runInstall(args: string[]): Promise<void> {
 
   if (!dryRun) {
     console.log(`\nInstalled agent-vault for ${detected.map((t) => t.name).join(', ')}.`);
-    console.log('Use /vault-init in your agent tool to initialize a vault in any project.');
+    console.log('Use /vault:init in your agent tool to initialize a vault in any project.');
   }
 }
 
