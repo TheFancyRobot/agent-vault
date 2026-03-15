@@ -1,7 +1,9 @@
 import { existsSync } from 'fs';
-import { mkdir, writeFile } from 'fs/promises';
+import { mkdir, readFile, writeFile } from 'fs/promises';
 import { join } from 'path';
+import { probeObsidianCli, readVaultConfig, writeVaultConfig } from '../core/vault-config';
 import { scanProject, type ScanResult } from './scan';
+import { AGENT_VAULT_MARKER, ROOT_AGENTS_MD_SECTION } from '../templates/root-agents-md';
 
 // Templates
 import {
@@ -71,11 +73,15 @@ const fillPlaceholders = (content: string, scan: ScanResult): string => {
 };
 
 const writeIfNotExists = async (filePath: string, content: string): Promise<boolean> => {
-  if (existsSync(filePath)) {
-    return false;
+  try {
+    await writeFile(filePath, content, { encoding: 'utf-8', flag: 'wx' });
+    return true;
+  } catch (error) {
+    if (error instanceof Error && 'code' in error && (error as NodeJS.ErrnoException).code === 'EEXIST') {
+      return false;
+    }
+    throw error;
   }
-  await writeFile(filePath, content, 'utf-8');
-  return true;
 };
 
 export async function initVault(projectRoot: string): Promise<InitResult> {
@@ -174,6 +180,29 @@ export async function initVault(projectRoot: string): Promise<InitResult> {
 
   for (const [path, config] of obsidianConfigs) {
     if (await writeIfNotExists(join(vaultRoot, path), JSON.stringify(config, null, 2) + '\n')) filesWritten++;
+  }
+
+  // Write or append Agent Vault section to project-root AGENTS.md
+  const rootAgentsPath = join(projectRoot, 'AGENTS.md');
+  if (existsSync(rootAgentsPath)) {
+    const existing = await readFile(rootAgentsPath, 'utf-8');
+    if (!existing.includes(AGENT_VAULT_MARKER)) {
+      const separator = existing.endsWith('\n') ? '\n' : '\n\n';
+      await writeFile(rootAgentsPath, existing + separator + ROOT_AGENTS_MD_SECTION, 'utf-8');
+      filesWritten++;
+    }
+  } else {
+    await writeFile(rootAgentsPath, `# AGENTS\n\n${ROOT_AGENTS_MD_SECTION}`, 'utf-8');
+    filesWritten++;
+  }
+
+  // Configure resolver — prefer obsidian CLI when available
+  const existingConfig = await readVaultConfig(vaultRoot);
+  if (existingConfig.resolver === 'filesystem') {
+    const obsidianAvailable = await probeObsidianCli();
+    if (obsidianAvailable) {
+      await writeVaultConfig(vaultRoot, { ...existingConfig, resolver: 'obsidian' });
+    }
   }
 
   return {
