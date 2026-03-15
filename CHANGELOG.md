@@ -1,4 +1,4 @@
-# agent-vault
+# @fancyrobot/agent-vault
 
 ## 0.0.1
 
