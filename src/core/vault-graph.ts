@@ -1,4 +1,5 @@
 import { execFile as execFileCallback } from 'child_process';
+import { createHash } from 'crypto';
 import { encode } from '@toon-format/toon';
 import { basename, dirname, join } from 'path';
 import { promisify } from 'util';
@@ -100,7 +101,19 @@ interface ParsedVaultNote {
   readonly updated?: string;
 }
 
+const GRAPH_CACHE_MAX_SIZE = 4;
 const graphCache = new Map<string, CachedVaultGraph>();
+
+const setGraphCache = (key: string, value: CachedVaultGraph): void => {
+  graphCache.delete(key);
+  if (graphCache.size >= GRAPH_CACHE_MAX_SIZE) {
+    const oldest = graphCache.keys().next().value;
+    if (oldest !== undefined) {
+      graphCache.delete(oldest);
+    }
+  }
+  graphCache.set(key, value);
+};
 
 const normalizePathLikeValue = (value: string): string => value.replace(/\\/g, '/').replace(/\.md$/i, '');
 
@@ -202,8 +215,13 @@ const loadParsedVaultNotes = async (files: readonly VaultFileRecord[]): Promise<
     } satisfies ParsedVaultNote;
   }));
 
-const buildSignature = (files: readonly VaultFileRecord[]): string =>
-  files.map((file) => `${file.relativePath}:${file.mtimeMs}`).join('\n');
+const buildSignature = (files: readonly VaultFileRecord[]): string => {
+  const hash = createHash('sha256');
+  for (const file of files) {
+    hash.update(`${file.relativePath}:${file.mtimeMs}\n`);
+  }
+  return hash.digest('hex');
+};
 
 const extractObsidianPaths = (value: unknown): string[] => {
   if (typeof value === 'string') {
@@ -340,7 +358,8 @@ const buildObsidianGraph = async (vaultRoot: string, notes: readonly ParsedVault
 
 export const invalidateVaultGraphCache = (vaultRoot?: string): void => {
   if (vaultRoot) {
-    graphCache.delete(vaultRoot);
+    graphCache.delete(`${vaultRoot}:filesystem`);
+    graphCache.delete(`${vaultRoot}:obsidian`);
     return;
   }
   graphCache.clear();
@@ -352,21 +371,22 @@ export const ensureVaultGraph = async (
 ): Promise<{ graph: VaultGraph; warnings: string[] }> => {
   const files = await scanVaultMarkdownFiles(vaultRoot);
   const signature = buildSignature(files);
-  const parsedNotes = await loadParsedVaultNotes(files);
   const cacheKey = `${vaultRoot}:${resolver}`;
   const cached = graphCache.get(cacheKey);
   if (cached && cached.signature === signature) {
     return { graph: cached.graph, warnings: [] };
   }
 
+  const parsedNotes = await loadParsedVaultNotes(files);
+
   if (resolver === 'obsidian') {
     try {
       const graph = await buildObsidianGraph(vaultRoot, parsedNotes, signature);
-      graphCache.set(cacheKey, { signature, graph });
+      setGraphCache(cacheKey, { signature, graph });
       return { graph, warnings: [] };
     } catch (error) {
       const fallbackGraph = buildFilesystemGraph(vaultRoot, parsedNotes, signature);
-      graphCache.set(`${vaultRoot}:filesystem`, { signature, graph: fallbackGraph });
+      setGraphCache(`${vaultRoot}:filesystem`, { signature, graph: fallbackGraph });
       return {
         graph: fallbackGraph,
         warnings: [
@@ -377,7 +397,7 @@ export const ensureVaultGraph = async (
   }
 
   const graph = buildFilesystemGraph(vaultRoot, parsedNotes, signature);
-  graphCache.set(cacheKey, { signature, graph });
+  setGraphCache(cacheKey, { signature, graph });
   return { graph, warnings: [] };
 };
 
@@ -535,7 +555,7 @@ export const traverseVaultGraph = (graph: VaultGraph, params: VaultTraverseParam
     const forwardEdges = (params.direction === 'outgoing' || params.direction === 'both')
       ? node.outgoingLinks
       : [];
-    const backwardEdges = params.direction === 'incoming'
+    const backwardEdges = (params.direction === 'incoming' || params.direction === 'both')
       ? node.incomingLinks
       : [];
 
