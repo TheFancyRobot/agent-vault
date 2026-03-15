@@ -1,0 +1,49 @@
+{
+  "name": "agent-vault",
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Durable project memory for coding agents. Obsidian-compatible vault with MCP server integration for Claude Code, OpenCode, and Codex.",
+  "bin": {
+    "agent-vault": "./dist/cli.mjs"
+  },
+  "files": [
+    "dist/",
+    "claude-commands/",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "changeset": "changeset",
+    "version": "changeset version",
+    "release": "bun run build && changeset publish"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.0",
+    "js-yaml": "^4.1.0",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "@changesets/changelog-github": "^0.6.0",
+    "@changesets/cli": "^2.30.0",
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^22.0.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.7.0",
+    "vitest": "^3.0.0"
+  },
+  "keywords": [
+    "agent",
+    "vault",
+    "mcp",
+    "obsidian",
+    "claude-code",
+    "opencode",
+    "codex",
+    "project-memory"
+  ],
+  "license": "MIT"
+}
