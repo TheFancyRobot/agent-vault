@@ -191,8 +191,8 @@ const scanHeadings = (content: string): string[] => {
     const fenceMatch = /^(?:```+|~~~+)/.exec(trimmed);
     if (fenceMatch) {
       if (activeFence === null) {
-        activeFence = fenceMatch[0][0];
-      } else if (activeFence === fenceMatch[0][0]) {
+        activeFence = fenceMatch[0];
+      } else if (fenceMatch[0][0] === activeFence[0] && fenceMatch[0].length >= activeFence.length) {
         activeFence = null;
       }
       continue;

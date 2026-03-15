@@ -296,8 +296,8 @@ const scanHeadings = (content: string, bodyStart: number): HeadingMatch[] => {
 
     if (fenceMatch !== null) {
       if (activeFence === null) {
-        activeFence = fenceMatch[0][0];
-      } else if (fenceMatch[0][0] === activeFence) {
+        activeFence = fenceMatch[0];
+      } else if (fenceMatch[0][0] === activeFence[0] && fenceMatch[0].length >= activeFence.length) {
         activeFence = null;
       }
     } else if (activeFence === null) {
