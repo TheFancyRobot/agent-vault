@@ -1,5 +1,5 @@
 {
-  "name": "agent-vault",
+  "name": "@fancyrobot/agent-vault",
   "version": "0.0.1",
   "type": "module",
   "description": "Durable project memory for coding agents. Obsidian-compatible vault with MCP server integration for Claude Code, OpenCode, and Codex.",

@@ -31,7 +31,7 @@ describe('install config merge', () => {
     mcpServers['agent-vault'] = {
       type: 'stdio',
       command: 'npx',
-      args: ['-y', 'agent-vault', 'serve'],
+      args: ['-y', '@fancyrobot/agent-vault', 'serve'],
     };
     config.mcpServers = mcpServers;
     await writeFile(configPath, JSON.stringify(config, null, 2), 'utf-8');
@@ -40,7 +40,7 @@ describe('install config merge', () => {
     expect(result.mcpServers['agent-vault']).toEqual({
       type: 'stdio',
       command: 'npx',
-      args: ['-y', 'agent-vault', 'serve'],
+      args: ['-y', '@fancyrobot/agent-vault', 'serve'],
     });
   });
 
@@ -58,7 +58,7 @@ describe('install config merge', () => {
     mcpServers['agent-vault'] = {
       type: 'stdio',
       command: 'npx',
-      args: ['-y', 'agent-vault', 'serve'],
+      args: ['-y', '@fancyrobot/agent-vault', 'serve'],
     };
     await writeFile(configPath, JSON.stringify(config, null, 2), 'utf-8');
 
@@ -73,7 +73,7 @@ describe('install config merge', () => {
     await writeFile(configPath, JSON.stringify({
       mcpServers: {
         'other-server': { type: 'stdio', command: 'other' },
-        'agent-vault': { type: 'stdio', command: 'npx', args: ['-y', 'agent-vault', 'serve'] },
+        'agent-vault': { type: 'stdio', command: 'npx', args: ['-y', '@fancyrobot/agent-vault', 'serve'] },
       },
     }), 'utf-8');
 

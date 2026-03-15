@@ -19,7 +19,7 @@ interface InstallAction {
 const MCP_SERVER_CONFIG = {
   type: 'stdio' as const,
   command: 'npx',
-  args: ['-y', 'agent-vault', 'serve'],
+  args: ['-y', '@fancyrobot/agent-vault', 'serve'],
 };
 
 const CLAUDE_COMMANDS_DIR = join(dirname(new URL(import.meta.url).pathname), '..', 'claude-commands');
@@ -215,7 +215,7 @@ export async function runInstall(args: string[]): Promise<void> {
 
   if (detected.length === 0) {
     console.log('No supported agent tools detected (Claude Code, OpenCode, Codex).');
-    console.log('Install one of these tools first, then run `npx agent-vault install` again.');
+    console.log('Install one of these tools first, then run `npx @fancyrobot/agent-vault install` again.');
     return;
   }
 

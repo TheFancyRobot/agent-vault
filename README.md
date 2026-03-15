@@ -8,7 +8,7 @@ Agent Vault creates a `.agent-vault/` directory in your project with templates, 
 
 ```bash
 # Install and configure for your agent tools
-npx agent-vault install
+npx @fancyrobot/agent-vault install
 
 # Inside Claude Code (or other supported tools):
 # /vault-init    — creates .agent-vault/ scaffold and scans the project
@@ -48,9 +48,9 @@ Agent Vault stores durable planning, architecture, bug, decision, and session co
 ## Install
 
 ```bash
-npx agent-vault install          # Auto-detect and configure
-npx agent-vault install --dry-run  # Preview changes
-npx agent-vault uninstall        # Remove configuration
+npx @fancyrobot/agent-vault install          # Auto-detect and configure
+npx @fancyrobot/agent-vault install --dry-run  # Preview changes
+npx @fancyrobot/agent-vault uninstall        # Remove configuration
 ```
 
 ### What `install` does

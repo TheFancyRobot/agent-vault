@@ -15,9 +15,9 @@ async function main(): Promise<void> {
     console.log(`agent-vault - Durable project memory for coding agents
 
 Usage:
-  npx agent-vault install     Configure MCP server in Claude Code, OpenCode, Codex
-  npx agent-vault uninstall   Remove MCP server configuration
-  npx agent-vault serve       Start MCP stdio server (used by agent tools)
+  npx @fancyrobot/agent-vault install     Configure MCP server in Claude Code, OpenCode, Codex
+  npx @fancyrobot/agent-vault uninstall   Remove MCP server configuration
+  npx @fancyrobot/agent-vault serve       Start MCP stdio server (used by agent tools)
 
 Options:
   --dry-run                   Show what would change without modifying files
