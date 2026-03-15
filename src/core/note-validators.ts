@@ -540,37 +540,35 @@ export async function handleValidateAllCommand(
     return 0;
   }
 
-  const stdout: string[] = [];
-  const stderr: string[] = [];
-  const nestedEnvironment: AgentVaultCommandEnvironment = {
-    ...environment,
-    io: {
-      stdout: (message) => stdout.push(message),
-      stderr: (message) => stderr.push(message),
-    },
-  };
+  try {
+    const vaultRoot = getVaultRoot(environment);
+    const notes = await readAllNotes(vaultRoot);
 
-  const exitCodes = [
-    await handleValidateFrontmatterCommand([], nestedEnvironment),
-    await handleValidateNoteStructureCommand([], nestedEnvironment),
-    await handleValidateRequiredLinksCommand([], nestedEnvironment),
-    await handleDetectOrphansCommand([], nestedEnvironment),
-  ];
+    const summaries = [
+      validateFrontmatter(notes),
+      validateStructure(notes),
+      validateRequiredLinks(notes),
+      detectOrphans(notes),
+    ];
 
-  for (const message of stdout) {
-    io.stdout(message);
-  }
+    let hasErrors = false;
+    for (const summary of summaries) {
+      const exitCode = writeSummary(summary, io);
+      if (exitCode !== 0) {
+        hasErrors = true;
+      }
+    }
 
-  for (const message of stderr) {
-    io.stderr(message);
-  }
+    if (hasErrors) {
+      return 1;
+    }
 
-  if (exitCodes.some((code) => code !== 0)) {
+    io.stdout('Validated all Agent Vault note integrity checks.');
+    return 0;
+  } catch (error) {
+    io.stderr(error instanceof Error ? error.message : String(error));
     return 1;
   }
-
-  io.stdout('Validated all Agent Vault note integrity checks.');
-  return 0;
 }
 
 export async function handleVaultDoctorCommand(
@@ -583,11 +581,10 @@ export async function handleVaultDoctorCommand(
     return 0;
   }
 
+  const strict = argv.includes('--strict');
+
   try {
     const vaultRoot = getVaultRoot(environment);
-    // In standalone package mode, we skip wrapper script checks since
-    // commands are accessed via MCP tools, not shell wrappers.
-    // Just run validation.
 
     const stdout: string[] = [];
     const stderr: string[] = [];
@@ -613,8 +610,13 @@ export async function handleVaultDoctorCommand(
       io.stderr(message);
     }
 
-    if (hasValidationWarnings || hasValidationErrors) {
-      io.stderr('Agent Vault doctor found issues that should be fixed before handoff.');
+    if (hasValidationErrors) {
+      io.stderr('Agent Vault doctor found errors that should be fixed before handoff.');
+      return 1;
+    }
+
+    if (strict && hasValidationWarnings) {
+      io.stderr('Agent Vault doctor found warnings (strict mode). Pass without --strict to allow warnings.');
       return 1;
     }
 
