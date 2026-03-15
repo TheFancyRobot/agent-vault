@@ -1601,11 +1601,15 @@ const ensureParentDirectory = async (filePath: string): Promise<void> => {
 };
 
 const writeNewNote = async (filePath: string, content: string): Promise<void> => {
-  if (existsSync(filePath)) {
-    throw new Error(`Refusing to overwrite existing note: ${filePath}`);
-  }
   await ensureParentDirectory(filePath);
-  await writeFile(filePath, content, 'utf-8');
+  try {
+    await writeFile(filePath, content, { encoding: 'utf-8', flag: 'wx' });
+  } catch (error) {
+    if (error instanceof Error && 'code' in error && (error as NodeJS.ErrnoException).code === 'EEXIST') {
+      throw new Error(`Refusing to overwrite existing note: ${filePath}`);
+    }
+    throw error;
+  }
 };
 
 const emitCreatedNote = (io: AgentVaultCommandIO, vaultRoot: string, notePath: string): void => {
