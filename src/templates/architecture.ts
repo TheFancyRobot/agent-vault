@@ -78,6 +78,7 @@ created: "YYYY-MM-DD"
 updated: "YYYY-MM-DD"
 related_notes:
   - "[[01_Architecture/System_Overview|System Overview]]"
+  - "[[01_Architecture/Code_Graph|Code Graph]]"
 tags:
   - agent-vault
   - architecture
@@ -117,6 +118,7 @@ tags:
 
 <!-- AGENT-START:architecture-related-notes -->
 - [[01_Architecture/System_Overview|System Overview]]
+- [[01_Architecture/Code_Graph|Code Graph]]
 <!-- AGENT-END:architecture-related-notes -->
 ` as string;
 
