@@ -34,6 +34,7 @@ import { readVaultConfig, updateVaultConfig } from './core/vault-config';
 import { resolveVaultRoot } from './core/vault-files';
 import { initVault } from './scaffold/init';
 import { scanProject } from './scaffold/scan';
+import { writeCodeGraph } from './scaffold/code-graph';
 
 type CommandHandler = (argv: string[], environment?: AgentVaultCommandEnvironment) => Promise<number>;
 
@@ -60,7 +61,7 @@ export async function startServer(): Promise<void> {
   // ── vault_init ──────────────────────────────────────────────────────
   server.tool(
     'vault_init',
-    'Initialize an Agent Vault in the project. Creates .agent-vault/ scaffold with templates, home notes, architecture stubs, and .obsidian config. Runs a filesystem scan and returns structured project metadata.',
+    'Initialize an Agent Vault in the project. Creates .agent-vault/ scaffold with templates, home notes, architecture stubs, and .obsidian config. Runs a filesystem scan and returns structured project metadata. If a .planning/ directory (GSD) exists, backfills phases, steps, decisions, and project context into the vault.',
     { project_root: z.string().optional().describe('Project root directory. Defaults to cwd.') },
     async ({ project_root }) => {
       const root = project_root || process.cwd();
@@ -75,6 +76,8 @@ export async function startServer(): Promise<void> {
             filesWritten: result.filesWritten,
             config,
             scan: result.scan,
+            ...(result.planningBackfill?.found ? { planningBackfill: result.planningBackfill } : {}),
+            ...(result.codeGraph ? { codeGraph: result.codeGraph } : {}),
           }, null, 2),
         }],
       };
@@ -268,15 +271,28 @@ export async function startServer(): Promise<void> {
       '- target "all" (default): rebuild indexes + refresh active context.',
       '- target "indexes": rebuild bugs and decisions index tables only.',
       '- target "active_context": refresh focus, blockers, and critical bugs only.',
+      '- target "code_graph": re-scan source files and regenerate the code graph architecture note.',
     ].join('\n'),
     {
-      target: z.enum(['all', 'indexes', 'active_context']).default('all').describe('What to refresh'),
+      target: z.enum(['all', 'indexes', 'active_context', 'code_graph']).default('all').describe('What to refresh'),
     },
     async ({ target }) => {
       switch (target) {
         case 'all': return noArgs(handleRefreshAllHomeNotesCommand);
         case 'indexes': return noArgs(handleRebuildIndexesCommand);
         case 'active_context': return noArgs(handleRefreshActiveContextCommand);
+        case 'code_graph': {
+          const root = process.cwd();
+          const vaultRoot = resolveVaultRoot(root);
+          const scan = await scanProject(root);
+          const graph = await writeCodeGraph(root, vaultRoot, scan.repoName);
+          return {
+            content: [{
+              type: 'text',
+              text: `Code graph refreshed: ${graph.totalFiles} files, ${graph.totalSymbols} symbols indexed.`,
+            }],
+          };
+        }
       }
     },
   );

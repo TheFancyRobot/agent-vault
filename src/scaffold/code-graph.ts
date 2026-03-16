@@ -1,4 +1,3 @@
-import { existsSync } from 'fs';
 import { readFile, readdir, writeFile } from 'fs/promises';
 import { extname, join, relative } from 'path';
 
@@ -59,7 +58,7 @@ const parseNamesFromBraces = (braceContent: string): string[] => {
       const asMatch = /(\w+)\s+as\s+(\w+)/.exec(part);
       return asMatch ? asMatch[2] : part.replace(/[^a-zA-Z0-9_$]/g, '');
     })
-    .filter((name) => name.length > 0 && /^\w+$/.test(name));
+    .filter((name) => name.length > 0 && /^[\w$]+$/.test(name));
 };
 
 // ── Language-specific symbol extractors ──────────────────────────────────
@@ -412,7 +411,7 @@ export function renderCodeGraphMarkdown(graph: CodeGraphResult, repoName: string
     ``,
     `- Map exported symbols (functions, classes, types, interfaces) to their source files.`,
     `- Enable agents and engineers to locate relevant code by symbol name without searching.`,
-    `- Auto-generated during vault initialization; refresh with \`vault_refresh\` target \`code-graph\`.`,
+    `- Auto-generated during vault initialization; refresh by re-running \`vault init\`.`,
     ``,
     `## Overview`,
     ``,
