@@ -197,8 +197,6 @@ const scanPlanningPhases = async (planningDir: string): Promise<GsdPhase[]> => {
 
     const plans: GsdPlan[] = [];
     const summaries: GsdSummary[] = [];
-    let hasCompletedSummary = false;
-
     for (const file of phaseFiles) {
       const filePath = join(phaseDir, file);
 
@@ -243,7 +241,6 @@ const scanPlanningPhases = async (planningDir: string): Promise<GsdPhase[]> => {
             filePath, keyDecisions, completed, patternsEstablished,
             subsystem, techStackAdded, keyFilesCreated, keyFilesModified,
           });
-          if (completed) hasCompletedSummary = true;
         } catch {
           // skip unreadable summaries
         }

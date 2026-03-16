@@ -3,6 +3,8 @@ import { mkdir, readFile, writeFile } from 'fs/promises';
 import { join } from 'path';
 import { probeObsidianCli, readVaultConfig, writeVaultConfig } from '../core/vault-config';
 import { scanProject, type ScanResult } from './scan';
+import { backfillFromPlanning, type PlanningBackfillResult } from './backfill-planning';
+import { writeCodeGraph } from './code-graph';
 import { AGENT_VAULT_MARKER, ROOT_AGENTS_MD_SECTION } from '../templates/root-agents-md';
 
 // Templates
@@ -52,6 +54,8 @@ export interface InitResult {
   readonly created: boolean;
   readonly scan: ScanResult;
   readonly filesWritten: number;
+  readonly planningBackfill?: PlanningBackfillResult;
+  readonly codeGraph?: { totalFiles: number; totalSymbols: number };
 }
 
 const fillPlaceholders = (content: string, scan: ScanResult): string => {
@@ -205,10 +209,35 @@ export async function initVault(projectRoot: string): Promise<InitResult> {
     }
   }
 
+  // Backfill from .planning/ directory if present (only on fresh init)
+  let planningBackfill: PlanningBackfillResult | undefined;
+  if (!alreadyExists) {
+    planningBackfill = await backfillFromPlanning(projectRoot, vaultRoot);
+    if (planningBackfill.found) {
+      filesWritten += planningBackfill.phasesImported
+        + planningBackfill.stepsImported
+        + planningBackfill.decisionsImported
+        + (planningBackfill.roadmapBackfilled ? 1 : 0)
+        + (planningBackfill.projectContextBackfilled ? 1 : 0);
+    }
+  }
+
+  // Build code graph (always, even on re-init — code changes)
+  let codeGraph: { totalFiles: number; totalSymbols: number } | undefined;
+  try {
+    const graph = await writeCodeGraph(projectRoot, vaultRoot, scan.repoName);
+    codeGraph = { totalFiles: graph.totalFiles, totalSymbols: graph.totalSymbols };
+    filesWritten++; // Code_Graph.md
+  } catch {
+    // Non-fatal — code graph is supplementary
+  }
+
   return {
     vaultRoot,
     created: !alreadyExists,
     scan,
     filesWritten,
+    planningBackfill,
+    codeGraph,
   };
 }
