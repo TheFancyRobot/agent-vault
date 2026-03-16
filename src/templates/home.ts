@@ -307,4 +307,9 @@ This roadmap tracks the evolution of the vault itself and the operational habits
 - Link bug records to external trackers.
 - Generate note skeletons from CLI scripts.
 - Validate required sections and stale indexes automatically.
+
+## Related Notes
+
+- [[00_Home/Dashboard|Dashboard]]
+- [[00_Home/Active_Context|Active Context]]
 ` as string;
