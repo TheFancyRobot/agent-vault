@@ -115,9 +115,13 @@ const extractTypeScript: SymbolExtractor = (content) => {
     const exportEnum = /^export\s+enum\s+(\w+)/.exec(line);
     if (exportEnum) { symbols.push({ name: exportEnum[1], kind: 'enum', line: lineNum, exported: true }); continue; }
 
-    // export default function name / export default class name
-    const exportDefault = /^export\s+default\s+(?:(?:async\s+)?function|class)\s+(\w+)/.exec(line);
-    if (exportDefault) { symbols.push({ name: exportDefault[1], kind: 'function', line: lineNum, exported: true }); continue; }
+    // export default function name
+    const exportDefaultFn = /^export\s+default\s+(?:async\s+)?function\s+(\w+)/.exec(line);
+    if (exportDefaultFn) { symbols.push({ name: exportDefaultFn[1], kind: 'function', line: lineNum, exported: true }); continue; }
+
+    // export default class name
+    const exportDefaultClass = /^export\s+default\s+class\s+(\w+)/.exec(line);
+    if (exportDefaultClass) { symbols.push({ name: exportDefaultClass[1], kind: 'class', line: lineNum, exported: true }); continue; }
 
     // export { foo, bar } or export { foo as bar } (with or without 'from')
     const reExport = /^export\s+\{([^}]+)\}/.exec(line);

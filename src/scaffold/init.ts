@@ -56,6 +56,7 @@ export interface InitResult {
   readonly filesWritten: number;
   readonly planningBackfill?: PlanningBackfillResult;
   readonly codeGraph?: { totalFiles: number; totalSymbols: number };
+  readonly codeGraphWarning?: string;
 }
 
 const fillPlaceholders = (content: string, scan: ScanResult): string => {
@@ -224,12 +225,13 @@ export async function initVault(projectRoot: string): Promise<InitResult> {
 
   // Build code graph (always, even on re-init — code changes)
   let codeGraph: { totalFiles: number; totalSymbols: number } | undefined;
+  let codeGraphWarning: string | undefined;
   try {
     const graph = await writeCodeGraph(projectRoot, vaultRoot, scan.repoName);
     codeGraph = { totalFiles: graph.totalFiles, totalSymbols: graph.totalSymbols };
     filesWritten++; // Code_Graph.md
-  } catch {
-    // Non-fatal — code graph is supplementary
+  } catch (err) {
+    codeGraphWarning = `Code graph generation failed: ${err instanceof Error ? err.message : String(err)}`;
   }
 
   return {
@@ -239,5 +241,6 @@ export async function initVault(projectRoot: string): Promise<InitResult> {
     filesWritten,
     planningBackfill,
     codeGraph,
+    codeGraphWarning,
   };
 }
