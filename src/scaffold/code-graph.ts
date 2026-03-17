@@ -356,7 +356,7 @@ const walkSourceFiles = async (
 
       const symbols = extractor(content);
       if (symbols.length > 0) {
-        const relativePath = relative(projectRoot, fullPath);
+        const relativePath = relative(projectRoot, fullPath).replace(/\\/g, '/');
         results.push({ path: relativePath, language, symbols });
       }
     } catch {
@@ -430,7 +430,7 @@ export function renderCodeGraphMarkdown(graph: CodeGraphResult, repoName: string
     `## Constraints`,
     ``,
     `- Auto-generated during vault initialization; do not hand-edit.`,
-    `- Refresh with \`vault_refresh\` target \`code-graph\`.`,
+    `- Refresh by re-running \`vault init\`.`,
     `- Files larger than 500 KB and common generated/test files are excluded.`,
     ``,
     `## Failure Modes`,
