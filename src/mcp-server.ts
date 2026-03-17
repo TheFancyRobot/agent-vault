@@ -78,6 +78,7 @@ export async function startServer(): Promise<void> {
             scan: result.scan,
             ...(result.planningBackfill?.found ? { planningBackfill: result.planningBackfill } : {}),
             ...(result.codeGraph ? { codeGraph: result.codeGraph } : {}),
+            ...(result.codeGraphWarning ? { codeGraphWarning: result.codeGraphWarning } : {}),
           }, null, 2),
         }],
       };
@@ -282,16 +283,26 @@ export async function startServer(): Promise<void> {
         case 'indexes': return noArgs(handleRebuildIndexesCommand);
         case 'active_context': return noArgs(handleRefreshActiveContextCommand);
         case 'code_graph': {
-          const root = process.cwd();
-          const vaultRoot = resolveVaultRoot(root);
-          const scan = await scanProject(root);
-          const graph = await writeCodeGraph(root, vaultRoot, scan.repoName);
-          return {
-            content: [{
-              type: 'text',
-              text: `Code graph refreshed: ${graph.totalFiles} files, ${graph.totalSymbols} symbols indexed.`,
-            }],
-          };
+          try {
+            const vaultRoot = resolveVaultRoot(process.cwd());
+            const projectRoot = vaultRoot.replace(/[\\/]\.agent-vault$/, '');
+            const scan = await scanProject(projectRoot);
+            const graph = await writeCodeGraph(projectRoot, vaultRoot, scan.repoName);
+            return {
+              content: [{
+                type: 'text',
+                text: `Code graph refreshed: ${graph.totalFiles} files, ${graph.totalSymbols} symbols indexed.`,
+              }],
+            };
+          } catch (err) {
+            return {
+              isError: true,
+              content: [{
+                type: 'text',
+                text: `Failed to refresh code graph: ${err instanceof Error ? err.message : String(err)}`,
+              }],
+            };
+          }
         }
       }
     },
