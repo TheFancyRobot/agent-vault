@@ -12,7 +12,7 @@ Usage:
   npx @fancyrobot/agent-vault serve         Start MCP stdio server (used by agent tools)
 
 Options:
-  --global                    Install runtime in ~/.agent-vault
+  --global                    Install runtime in ~/.agent-vault without agent prompts
   --cwd                       Install runtime in $PWD/.agent-vault
   --dry-run                   Show what would change without modifying files
   --help                      Show this help message
@@ -37,7 +37,7 @@ Usage:
   npx @fancyrobot/agent-vault serve         Start MCP stdio server (used by agent tools)
 
 Options:
-  --global                    Install runtime in ~/.agent-vault
+  --global                    Install runtime in ~/.agent-vault without agent prompts
   --cwd                       Install runtime in $PWD/.agent-vault
   --dry-run                   Show what would change without modifying files
   --help                      Show this help message
