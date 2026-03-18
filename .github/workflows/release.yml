@@ -34,6 +34,30 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
+      - name: Verify npm publish access
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          npm ping --registry https://registry.npmjs.org >/dev/null
+          npm_user="$(npm whoami --registry https://registry.npmjs.org)"
+          package_name="$(node -p "require('./package.json').name")"
+          package_scope="${package_name%%/*}"
+
+          echo "Authenticated to npm as ${npm_user}"
+          echo "Release package is ${package_name}"
+
+          if [[ "${package_scope}" == @* && "${package_scope#@}" != "${npm_user}" ]]; then
+            scope_name="${package_scope#@}"
+            if ! npm org ls "${scope_name}" >/dev/null 2>&1; then
+              echo "::error::NPM token authenticated as '${npm_user}', but could not verify access to npm scope '@${scope_name}'. Ensure the scope exists and this npm account has publish access."
+              exit 1
+            fi
+
+            echo "Verified access to npm org @${scope_name}"
+          fi
+
       - name: Create release PR or publish release
         uses: changesets/action@v1
         with:
