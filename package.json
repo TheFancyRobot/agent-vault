@@ -16,6 +16,9 @@
     "build": "tsup",
     "test": "vitest run",
     "test:watch": "vitest",
+    "e2e:local": "bun run scripts/e2e-local.ts",
+    "e2e:home": "bun run scripts/e2e-home.ts",
+    "e2e:uninstall": "bun run scripts/e2e-uninstall.ts",
     "typecheck": "tsc --noEmit",
     "changeset": "changeset",
     "version": "changeset version",
@@ -34,6 +37,7 @@
     "@types/node": "^22.0.0",
     "tsup": "^8.0.0",
     "typescript": "^5.7.0",
+    "verdaccio": "^6.3.2",
     "vitest": "^3.0.0"
   },
   "keywords": [

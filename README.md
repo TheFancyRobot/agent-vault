@@ -223,15 +223,9 @@ A typical workflow:
 
 Agents can resume across sessions by traversing from the active phase or reading the Active Context home note, which tracks the current objective, blockers, and next actions.
 
-## Development
+## Contributing
 
-```bash
-bun install          # Install dependencies
-bun test             # Run tests (vitest)
-bun run test:watch   # Run tests in watch mode
-bun run build        # Build (tsup)
-bun run typecheck    # Type-check without emitting
-```
+Development setup and contributor workflow live in `CONTRIBUTING.md`.
 
 ## License
 
