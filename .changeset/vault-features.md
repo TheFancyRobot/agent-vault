@@ -1,5 +1,5 @@
 ---
-"@fancyrobot/agent-vault": minor
+"@fancyrobot/agent-vault": patch
 ---
 
 ### Features
