@@ -1,5 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import { dirname, join, resolve } from 'path';
 import { z } from 'zod';
 import type { AgentVaultCommandEnvironment, AgentVaultCommandIO } from './core/note-generators';
 import {
@@ -284,8 +285,19 @@ export async function startServer(): Promise<void> {
         case 'active_context': return noArgs(handleRefreshActiveContextCommand);
         case 'code_graph': {
           try {
-            const vaultRoot = resolveVaultRoot(process.cwd());
-            const projectRoot = vaultRoot.replace(/[\\/]\.agent-vault$/, '');
+            const cwd = process.cwd();
+            const vaultRoot = resolveVaultRoot(cwd);
+            const projectRoot = dirname(vaultRoot);
+            const expectedVault = resolve(join(cwd, '.agent-vault'));
+            if (resolve(vaultRoot) !== expectedVault && !cwd.startsWith(projectRoot)) {
+              return {
+                isError: true,
+                content: [{
+                  type: 'text',
+                  text: `No project vault found in current directory. Resolved vault at ${vaultRoot} does not belong to ${cwd}. Run vault_init first.`,
+                }],
+              };
+            }
             const scan = await scanProject(projectRoot);
             const graph = await writeCodeGraph(projectRoot, vaultRoot, scan.repoName);
             return {
