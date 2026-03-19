@@ -2,6 +2,9 @@
   "name": "@fancyrobot/agent-vault",
   "version": "0.2.0",
   "type": "module",
+  "publishConfig": {
+    "access": "public"
+  },
   "description": "Durable project memory for coding agents. Obsidian-compatible vault with MCP server integration for Claude Code, OpenCode, and Codex.",
   "bin": {
     "agent-vault": "./dist/cli.mjs"
