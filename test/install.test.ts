@@ -6,6 +6,8 @@ import { join } from 'path';
 import {
   buildInstallTarget,
   buildMcpServerConfig,
+  buildOpenCodeMcpServerConfig,
+  parseNumberedSelection,
   parseInstallScope,
   renderToolCommand,
   resolveInstallRoot,
@@ -137,6 +139,17 @@ describe('install target helpers', () => {
     expect(parseInstallScope([])).toBeNull();
   });
 
+  it('parses numbered interactive agent selections', () => {
+    const options = ['Claude Code', 'OpenCode', 'Codex'];
+
+    expect(parseNumberedSelection('', options)).toEqual(options);
+    expect(parseNumberedSelection('2, 1', options)).toEqual(['Claude Code', 'OpenCode']);
+    expect(parseNumberedSelection('0', options)).toEqual([]);
+    expect(parseNumberedSelection('all', options)).toEqual(options);
+    expect(parseNumberedSelection('4', options)).toBeNull();
+    expect(parseNumberedSelection('abc', options)).toBeNull();
+  });
+
   it('resolves install roots for global and cwd scopes', () => {
     expect(resolveInstallRoot('global', '/workspace/repo', '/home/alice')).toBe('/home/alice/.agent-vault');
     expect(resolveInstallRoot('cwd', '/workspace/repo', '/home/alice')).toBe('/workspace/repo/.agent-vault');
@@ -160,6 +173,19 @@ describe('install target helpers', () => {
       type: 'stdio',
       command: '/usr/bin/node',
       args: ['/home/alice/.agent-vault/.runtime/node_modules/@fancyrobot/agent-vault/dist/cli.mjs', 'serve'],
+    });
+  });
+
+  it('builds OpenCode MCP config using local command array format', () => {
+    const config = buildOpenCodeMcpServerConfig(
+      buildInstallTarget('global', '/workspace/repo', '/home/alice'),
+      '/usr/bin/node',
+    );
+
+    expect(config).toEqual({
+      type: 'local',
+      command: ['/usr/bin/node', '/home/alice/.agent-vault/.runtime/node_modules/@fancyrobot/agent-vault/dist/cli.mjs', 'serve'],
+      enabled: true,
     });
   });
 });

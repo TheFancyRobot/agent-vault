@@ -59,9 +59,9 @@ Each note type has a canonical template with structured YAML frontmatter (note t
 ## Install
 
 ```bash
-npx @fancyrobot/agent-vault                     # Prompt for global or cwd-scoped install
+npx @fancyrobot/agent-vault                     # Prompt for global/cwd install and which agents to configure
 bunx @fancyrobot/agent-vault                    # Same flow with Bun
-npx @fancyrobot/agent-vault --global            # Install/update in ~/.agent-vault
+npx @fancyrobot/agent-vault --global            # Install/update in ~/.agent-vault without agent prompts
 npx @fancyrobot/agent-vault --cwd               # Install/update in $PWD/.agent-vault
 npx @fancyrobot/agent-vault --dry-run           # Preview changes without modifying files
 npx @fancyrobot/agent-vault uninstall           # Remove configuration
@@ -69,12 +69,12 @@ npx @fancyrobot/agent-vault uninstall           # Remove configuration
 
 ### What the installer does
 
-The installer first asks whether Agent Vault should live in `~/.agent-vault` or in `$PWD/.agent-vault`, then installs or updates the package inside `.runtime/` under that root.
+Without `--global`, the installer first asks whether Agent Vault should live in `~/.agent-vault` or in `$PWD/.agent-vault`, then prompts for which detected agent tools should be configured. After that it installs or updates the package inside `.runtime/` under the chosen root.
 
-After that it auto-detects which agent tools you have and configures each one:
+Detected agent tools can include:
 
-- **Claude Code**: Adds MCP server to `~/.claude/settings.json`, copies 8 slash commands to `~/.claude/commands/`
-- **OpenCode**: Adds MCP server to `~/.config/opencode/config.json`, copies 8 slash commands to `~/.config/opencode/commands/`
+- **Claude Code**: Adds MCP server to `~/.claude.json`, copies 8 slash commands to `~/.claude/commands/`
+- **OpenCode**: Adds MCP server to `~/.config/opencode/config.json` under `mcp`, copies 8 slash commands to `~/.config/opencode/commands/`
 - **Codex**: Adds MCP server to `~/.codex/config.json`, copies 8 custom prompt commands to `~/.codex/prompts/` (invoked as `/prompts:vault-init`, `/prompts:vault-create-phase`, etc.)
 
 The MCP server configuration points at the installed runtime instead of using `npx` every time. In practice that means the detected Node or Bun executable runs:
@@ -223,15 +223,9 @@ A typical workflow:
 
 Agents can resume across sessions by traversing from the active phase or reading the Active Context home note, which tracks the current objective, blockers, and next actions.
 
-## Development
+## Contributing
 
-```bash
-bun install          # Install dependencies
-bun test             # Run tests (vitest)
-bun run test:watch   # Run tests in watch mode
-bun run build        # Build (tsup)
-bun run typecheck    # Type-check without emitting
-```
+Development setup and contributor workflow live in `CONTRIBUTING.md`.
 
 ## License
 

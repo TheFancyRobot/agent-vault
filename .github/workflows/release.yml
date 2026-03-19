@@ -4,6 +4,12 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
+    inputs:
+      skip_version:
+        description: "Skip version bump (publish current version as-is)"
+        type: boolean
+        default: true
 
 concurrency:
   group: release-${{ github.ref }}
@@ -34,7 +40,32 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
+      - name: Verify npm publish access
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          npm ping --registry https://registry.npmjs.org >/dev/null
+          npm_user="$(npm whoami --registry https://registry.npmjs.org)"
+          package_name="$(node -p "require('./package.json').name")"
+          package_scope="${package_name%%/*}"
+
+          echo "Authenticated to npm as ${npm_user}"
+          echo "Release package is ${package_name}"
+
+          if [[ "${package_scope}" == @* && "${package_scope#@}" != "${npm_user}" ]]; then
+            scope_name="${package_scope#@}"
+            if ! npm org ls "${scope_name}" >/dev/null 2>&1; then
+              echo "::error::NPM token authenticated as '${npm_user}', but could not verify access to npm scope '@${scope_name}'. Ensure the scope exists and this npm account has publish access."
+              exit 1
+            fi
+
+            echo "Verified access to npm org @${scope_name}"
+          fi
+
       - name: Create release PR or publish release
+        if: ${{ github.event_name == 'push' || !inputs.skip_version }}
         uses: changesets/action@v1
         with:
           version: bun run version
@@ -45,3 +76,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish release (skip version bump)
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.skip_version }}
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: bun run release
