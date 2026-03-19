@@ -8,6 +8,13 @@ export interface VaultFileRecord {
   readonly mtimeMs: number;
 }
 
+/**
+ * Check whether a .agent-vault directory is a project vault (created by vault_init)
+ * rather than a global runtime install directory.
+ */
+export const isProjectVault = (vaultRoot: string): boolean =>
+  existsSync(join(vaultRoot, '00_Home', 'Active_Context.md'));
+
 export const resolveVaultRoot = (startDir: string): string => {
   let current = resolve(startDir);
 

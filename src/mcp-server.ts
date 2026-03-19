@@ -1,6 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import { dirname, join, resolve } from 'path';
+import { dirname } from 'path';
 import { z } from 'zod';
 import type { AgentVaultCommandEnvironment, AgentVaultCommandIO } from './core/note-generators';
 import {
@@ -32,7 +32,7 @@ import {
   traverseVaultGraph,
 } from './core/vault-graph';
 import { readVaultConfig, updateVaultConfig } from './core/vault-config';
-import { resolveVaultRoot } from './core/vault-files';
+import { isProjectVault, resolveVaultRoot } from './core/vault-files';
 import { initVault } from './scaffold/init';
 import { scanProject } from './scaffold/scan';
 import { writeCodeGraph } from './scaffold/code-graph';
@@ -285,19 +285,17 @@ export async function startServer(): Promise<void> {
         case 'active_context': return noArgs(handleRefreshActiveContextCommand);
         case 'code_graph': {
           try {
-            const cwd = process.cwd();
-            const vaultRoot = resolveVaultRoot(cwd);
-            const projectRoot = dirname(vaultRoot);
-            const expectedVault = resolve(join(cwd, '.agent-vault'));
-            if (resolve(vaultRoot) !== expectedVault && !cwd.startsWith(projectRoot)) {
+            const vaultRoot = resolveVaultRoot(process.cwd());
+            if (!isProjectVault(vaultRoot)) {
               return {
                 isError: true,
                 content: [{
                   type: 'text',
-                  text: `No project vault found in current directory. Resolved vault at ${vaultRoot} does not belong to ${cwd}. Run vault_init first.`,
+                  text: `No project vault found. Resolved ${vaultRoot} is not a vault created by vault_init. Run vault_init first.`,
                 }],
               };
             }
+            const projectRoot = dirname(vaultRoot);
             const scan = await scanProject(projectRoot);
             const graph = await writeCodeGraph(projectRoot, vaultRoot, scan.repoName);
             return {
