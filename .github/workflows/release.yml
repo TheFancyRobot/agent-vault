@@ -4,6 +4,12 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
+    inputs:
+      skip_version:
+        description: "Skip version bump (publish current version as-is)"
+        type: boolean
+        default: true
 
 concurrency:
   group: release-${{ github.ref }}
@@ -59,6 +65,7 @@ jobs:
           fi
 
       - name: Create release PR or publish release
+        if: ${{ github.event_name == 'push' || !inputs.skip_version }}
         uses: changesets/action@v1
         with:
           version: bun run version
@@ -69,3 +76,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish release (skip version bump)
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.skip_version }}
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: bun run release
