@@ -4,6 +4,8 @@ Durable project memory for coding agents. An Obsidian-compatible vault that prov
 
 Agent Vault creates a `.agent-vault/` directory in your project with templates, architecture stubs, and shared knowledge files. It integrates with **Claude Code**, **OpenCode**, and **Codex** via MCP (Model Context Protocol).
 
+For larger work, the intended flow is: use `/vault:plan` to turn a request into researched phases and step notes, `/vault:refine` to make the steps execution-ready, `/vault:execute` to implement them with checkpointed feature validation plus regression testing, and `/vault:resume` to pick up where the last session left off across agent restarts.
+
 Obsidian is optional: the vault uses plain Markdown and wikilinks, so agents can work directly from the filesystem while humans can still use Obsidian's graph, plugins, and CLI when they want to.
 
 ## Quick Start
@@ -22,20 +24,39 @@ bunx @fancyrobot/agent-vault
 # This creates the .agent-vault/ scaffold, scans your project,
 # and populates architecture stubs with detected metadata.
 
-# 3. Start working — create phases, log bugs, record decisions:
-#    Claude Code / OpenCode: /vault:create-phase "Foundation"
-#    Codex: /prompts:vault-create-phase "Foundation"
+# 3. Turn a request into phased vault notes:
+#    Claude Code / OpenCode: /vault:plan "Add organization-wide SSO and SCIM provisioning"
+#    Codex: /prompts:vault-plan "Add organization-wide SSO and SCIM provisioning"
+
+# 4. Refine a planned phase into junior-friendly steps when needed:
+#    Claude Code / OpenCode: /vault:refine PHASE-01
+#    Codex: /prompts:vault-refine PHASE-01
+
+# 5. Execute a planned phase or step:
+#    Claude Code / OpenCode: /vault:execute PHASE-01
+#    Claude Code / OpenCode: /vault:execute PHASE-01 STEP-01-02
+#    Claude Code / OpenCode: /vault:execute              # infer what to continue, then ask you to confirm
+#    Codex: /prompts:vault-execute PHASE-01
+
+# 6. Resume work from a previous session:
+#    Claude Code / OpenCode: /vault:resume               # continue from the most recent session
+#    Claude Code / OpenCode: /vault:resume --session SESSION-2026-03-25-143022
+#    Codex: /prompts:vault-resume
+
+# 7. Record bugs or decisions when execution uncovers them:
 #    Claude Code / OpenCode: /vault:create-bug "Login timeout on slow connections"
 #    Codex: /prompts:vault-create-bug "Login timeout on slow connections"
 #    Claude Code / OpenCode: /vault:create-decision "Choose PostgreSQL over MongoDB"
 #    Codex: /prompts:vault-create-decision "Choose PostgreSQL over MongoDB"
 
-# 4. Validate and refresh:
+# 8. Validate and refresh:
 #    Claude Code / OpenCode: /vault:validate    — checks vault integrity
 #    Codex: /prompts:vault-validate
 #    Claude Code / OpenCode: /vault:refresh     — updates home notes from metadata
 #    Codex: /prompts:vault-refresh
 ```
+
+For ad hoc or manual workflows, the lower-level create commands such as `/vault:create-phase`, `/vault:create-step`, and `/vault:create-session` are still available.
 
 ## What It Does
 
@@ -73,9 +94,9 @@ Without `--global`, the installer first asks whether Agent Vault should live in 
 
 Detected agent tools can include:
 
-- **Claude Code**: Adds MCP server to `~/.claude.json`, copies 8 slash commands to `~/.claude/commands/`
-- **OpenCode**: Adds MCP server to `~/.config/opencode/config.json` under `mcp`, copies 8 slash commands to `~/.config/opencode/commands/`
-- **Codex**: Adds MCP server to `~/.codex/config.json`, copies 8 custom prompt commands to `~/.codex/prompts/` (invoked as `/prompts:vault-init`, `/prompts:vault-create-phase`, etc.)
+- **Claude Code**: Adds MCP server to `~/.claude.json`, copies 12 slash commands to `~/.claude/commands/`
+- **OpenCode**: Adds MCP server to `~/.config/opencode/config.json` under `mcp`, copies 12 slash commands to `~/.config/opencode/commands/`
+- **Codex**: Adds MCP server to `~/.codex/config.json`, copies 12 custom prompt commands to `~/.codex/prompts/` (invoked as `/prompts:vault-init`, `/prompts:vault-create-phase`, etc.)
 
 The MCP server configuration points at the installed runtime instead of using `npx` every time. In practice that means the detected Node or Bun executable runs:
 
@@ -117,8 +138,23 @@ After installation, these commands are available in each tool:
 | `/vault:create-session` | `/prompts:vault-create-session` | Create a timestamped session linked to a step |
 | `/vault:create-bug` | `/prompts:vault-create-bug` | Create a bug note (auto-generates bug ID) |
 | `/vault:create-decision` | `/prompts:vault-create-decision` | Create a decision note (auto-generates decision ID) |
+| `/vault:plan` | `/prompts:vault-plan` | Turn a freeform request into researched phases, executable step notes, and parallelism guidance |
+| `/vault:refine` | `/prompts:vault-refine` | Refine all steps in a phase with research, clarifying questions, and a readiness checklist |
+| `/vault:execute` | `/prompts:vault-execute` | Execute a planned phase or step, or resume inferred next work, with readiness checks and checkpoint-based feature plus regression validation |
+| `/vault:resume` | `/prompts:vault-resume` | Resume work from the most recent session checkpoint, or a specific session, with full handoff context |
 | `/vault:validate` | `/prompts:vault-validate` | Run vault integrity checks |
 | `/vault:refresh` | `/prompts:vault-refresh` | Refresh all home notes from metadata |
+
+### Recommended Workflow
+
+For non-trivial work, use the commands in this order:
+
+1. `/vault:plan` — turn a request into researched phases and concrete steps.
+2. `/vault:refine` — make every step specific enough for safe execution.
+3. `/vault:execute PHASE-01` or `/vault:execute PHASE-01 STEP-01-02` — execute a selected target.
+4. `/vault:resume` — when returning to work in a new agent session, resume from the last session checkpoint with full handoff context.
+
+During execution, the agent maintains a single session note for the entire conversation. The session is updated continuously — after each implementation change, test run, or step transition — so that `/vault:resume` always has a current handoff to work from. The agent also works in checkpoints: after each meaningful implementation increment it validates the feature that was just built, then runs regression coverage for the rest of the application before moving on.
 
 ## MCP Tools (9 tools)
 
@@ -214,14 +250,21 @@ The scan results are returned so the agent can immediately begin populating arch
 A typical workflow:
 
 1. **Initialize** — `/vault:init` scans the project and creates the scaffold
-2. **Plan** — `/vault:create-phase` to define phases, `/vault:create-step` for steps within each phase
-3. **Work** — `/vault:create-session` to log each work session, linking it to the current step
-4. **Record** — `/vault:create-bug` and `/vault:create-decision` as issues and choices arise
-5. **Navigate** — `vault_traverse` to load relevant context before starting work
-6. **Update** — `vault_mutate` to update frontmatter (status, timestamps) and append notes to sections
-7. **Maintain** — `/vault:refresh` to rebuild indexes and active context, `/vault:validate` to check integrity
+2. **Plan** — `/vault:plan` turns a freeform request into researched phases, executable step notes, and parallelism guidance; use `/vault:create-phase` and `/vault:create-step` when you want to manage the plan manually
+3. **Refine** — `/vault:refine` researches the whole phase, reviews each step, and asks clarifying questions until the steps are junior-friendly and execution-ready
+4. **Execute** — `/vault:execute` runs a phase or step only after a readiness-checklist preflight; if no target is supplied it proposes the most likely continuation and asks for confirmation, then executes in checkpoints with feature-level validation plus regression testing after each meaningful increment
+5. **Resume** — `/vault:resume` picks up where the last session left off; it reads the previous session's handoff state, determines the continuation target, creates a new session with full context, and transitions into execution
+6. **Work** — `/vault:create-session` still works for manual session logging or ad hoc runs outside the execute workflow, but execute creates and updates session notes automatically for the work it performs
+7. **Record** — `/vault:create-bug` and `/vault:create-decision` as issues and choices arise
+8. **Navigate** — `vault_traverse` to load relevant context before starting work
+9. **Update** — `vault_mutate` to update frontmatter (status, timestamps) and append notes to sections
+10. **Maintain** — `/vault:refresh` to rebuild indexes and active context, `/vault:validate` to check integrity
 
-Agents can resume across sessions by traversing from the active phase or reading the Active Context home note, which tracks the current objective, blockers, and next actions.
+### Session Persistence
+
+Each agent conversation uses a single session note that persists for the entire conversation. The session is created when execution begins (via `/vault:execute` or `/vault:resume`) and is updated continuously as work progresses — after each implementation change, test run, step transition, and command execution. The session's Execution Log, Follow-Up Work, and Completion Summary serve as the handoff for the next `/vault:resume`. A new session is only created when the agent starts a new conversation or the user explicitly requests one via `/vault:create-session`.
+
+The execute workflow is intentionally checkpointed: after each meaningful implementation increment, the agent should verify the functionality it just built and run regression coverage for the rest of the application, adding or strengthening tests when current coverage is not enough to prove the app still works.
 
 ## Contributing
 

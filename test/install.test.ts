@@ -130,6 +130,54 @@ Example: /vault:create-phase "Workflow Adoption"
     expect(rendered.content).toContain('Usage: /prompts:vault-create-phase <title> [--phase-number N] [--previous PHASE-ID]');
     expect(rendered.content).toContain('Example: /prompts:vault-create-phase "Workflow Adoption"');
   });
+
+  it('rewrites cross-command references for Codex prompts', () => {
+    const rendered = renderToolCommand({
+      sourceFilename: 'vault:resume.md',
+      sourceCommandName: 'vault:resume',
+      content: `Resume work from the last saved session checkpoint.
+
+Usage: /vault:resume [--session <session-id>]
+
+If no sessions exist, suggest /vault:execute instead. Do not create a new session unless the user explicitly requests one via /vault:create-session.
+`,
+    }, 'codex');
+
+    expect(rendered.content).toContain('Usage: /prompts:vault-resume [--session <session-id>]');
+    expect(rendered.content).toContain('/prompts:vault-execute');
+    expect(rendered.content).toContain('/prompts:vault-create-session');
+    expect(rendered.content).not.toContain('/vault:');
+  });
+
+  it('renders rich workflow commands for OpenCode', async () => {
+    for (const file of ['vault:plan.md', 'vault:refine.md', 'vault:execute.md', 'vault:resume.md']) {
+      const content = await readFile(join(import.meta.dirname, '..', 'claude-commands', file), 'utf-8');
+      const rendered = renderToolCommand({
+        sourceFilename: file,
+        sourceCommandName: file.replace('.md', ''),
+        content,
+      }, 'opencode');
+
+      expect(rendered.filename).toBe(file);
+      expect(rendered.slashCommand).toBe(file.replace('.md', ''));
+      expect(rendered.content).toMatch(/^---\ndescription: /);
+      expect(rendered.content).toContain(`Usage: /${file.replace('.md', '')}`);
+    }
+  });
+
+  it('renders rich workflow commands for Codex', async () => {
+    for (const file of ['vault:plan.md', 'vault:refine.md', 'vault:execute.md', 'vault:resume.md']) {
+      const sourceCommandName = file.replace('.md', '');
+      const content = await readFile(join(import.meta.dirname, '..', 'claude-commands', file), 'utf-8');
+      const rendered = renderToolCommand({ sourceFilename: file, sourceCommandName, content }, 'codex');
+
+      expect(rendered.filename).toBe(file.replace(':', '-'));
+      expect(rendered.slashCommand).toBe(`prompts:${sourceCommandName.replace(':', '-')}`);
+      expect(rendered.content).toMatch(/^---\ndescription: /);
+      expect(rendered.content).toContain(`Usage: /prompts:${sourceCommandName.replace(':', '-')}`);
+      expect(rendered.content).not.toContain('/vault:');
+    }
+  });
 });
 
 describe('install target helpers', () => {

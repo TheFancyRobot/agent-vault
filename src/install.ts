@@ -361,6 +361,14 @@ const withDescriptionFrontmatter = (description: string, body: string): string =
   return body.length > 0 ? `${frontmatter}\n${body}` : `${frontmatter}\n`;
 };
 
+const renderSlashCommandReference = (commandName: string, format: CommandFormat): string => {
+  if (format === 'codex') {
+    return `/prompts:${toCodexPromptName(commandName)}`;
+  }
+
+  return `/${commandName}`;
+};
+
 export const renderToolCommand = (template: CommandTemplate, format: CommandFormat): RenderedCommand => {
   if (format === 'claude') {
     return {
@@ -377,10 +385,9 @@ export const renderToolCommand = (template: CommandTemplate, format: CommandForm
   const slashCommand = format === 'codex'
     ? `prompts:${baseCommandName}`
     : baseCommandName;
-  const body = getCommandBody(template.content).replaceAll(
-    `/${template.sourceCommandName}`,
-    `/${slashCommand}`,
-  );
+  const body = getCommandBody(template.content).replace(/\/vault:[a-z0-9:-]+/gi, (match) => (
+    renderSlashCommandReference(match.slice(1), format)
+  ));
 
   return {
     filename: `${baseCommandName}.md`,
