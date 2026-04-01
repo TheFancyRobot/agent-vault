@@ -6,10 +6,11 @@ async function main(): Promise<void> {
     console.log(`agent-vault - Durable project memory for coding agents
 
 Usage:
-  npx @fancyrobot/agent-vault               Install/update Agent Vault and configure detected agent tools
-  bunx @fancyrobot/agent-vault              Same install/update flow via Bun
-  npx @fancyrobot/agent-vault uninstall     Remove MCP server configuration
-  npx @fancyrobot/agent-vault serve         Start MCP stdio server (used by agent tools)
+  npx @fancyrobot/agent-vault                   Install/update Agent Vault and configure detected agent tools
+  bunx @fancyrobot/agent-vault                  Same install/update flow via Bun
+  npx @fancyrobot/agent-vault uninstall         Remove MCP server configuration
+  npx @fancyrobot/agent-vault serve             Start MCP stdio server (used by agent tools)
+  npx @fancyrobot/agent-vault orchestrate       Execute phase steps with context clearing between steps
 
 Options:
   --global                    Install runtime in ~/.agent-vault without agent prompts
@@ -21,6 +22,9 @@ Options:
   } else if (command === 'serve') {
     const { startServer } = await import('./mcp-server.js');
     await startServer();
+  } else if (command === 'orchestrate') {
+    const { orchestrate } = await import('./orchestrate.js');
+    await orchestrate(args.slice(1));
   } else if (command === 'uninstall') {
     const { runUninstall } = await import('./install.js');
     await runUninstall(args.slice(1));
@@ -31,10 +35,11 @@ Options:
     console.log(`agent-vault - Durable project memory for coding agents
 
 Usage:
-  npx @fancyrobot/agent-vault               Install/update Agent Vault and configure detected agent tools
-  bunx @fancyrobot/agent-vault              Same install/update flow via Bun
-  npx @fancyrobot/agent-vault uninstall     Remove MCP server configuration
-  npx @fancyrobot/agent-vault serve         Start MCP stdio server (used by agent tools)
+  npx @fancyrobot/agent-vault                   Install/update Agent Vault and configure detected agent tools
+  bunx @fancyrobot/agent-vault                  Same install/update flow via Bun
+  npx @fancyrobot/agent-vault uninstall         Remove MCP server configuration
+  npx @fancyrobot/agent-vault serve             Start MCP stdio server (used by agent tools)
+  npx @fancyrobot/agent-vault orchestrate       Execute phase steps with context clearing between steps
 
 Options:
   --global                    Install runtime in ~/.agent-vault without agent prompts

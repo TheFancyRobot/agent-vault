@@ -94,9 +94,9 @@ Without `--global`, the installer first asks whether Agent Vault should live in 
 
 Detected agent tools can include:
 
-- **Claude Code**: Adds MCP server to `~/.claude.json`, copies 12 slash commands to `~/.claude/commands/`
-- **OpenCode**: Adds MCP server to `~/.config/opencode/config.json` under `mcp`, copies 12 slash commands to `~/.config/opencode/commands/`
-- **Codex**: Adds MCP server to `~/.codex/config.json`, copies 12 custom prompt commands to `~/.codex/prompts/` (invoked as `/prompts:vault-init`, `/prompts:vault-create-phase`, etc.)
+- **Claude Code**: Adds MCP server to `~/.claude.json`, copies 14 slash commands to `~/.claude/commands/`
+- **OpenCode**: Adds MCP server to `~/.config/opencode/config.json` under `mcp`, copies 14 slash commands to `~/.config/opencode/commands/`
+- **Codex**: Adds MCP server to `~/.codex/config.json`, copies 14 custom prompt commands to `~/.codex/prompts/` (invoked as `/prompts:vault-init`, `/prompts:vault-create-phase`, etc.)
 
 The MCP server configuration points at the installed runtime instead of using `npx` every time. In practice that means the detected Node or Bun executable runs:
 
@@ -117,14 +117,40 @@ Removes the MCP server entry from all detected tool configs, deletes the install
 ## CLI Commands
 
 ```bash
-npx @fancyrobot/agent-vault             # Install/update Agent Vault and configure agent tools
-bunx @fancyrobot/agent-vault            # Same install/update flow via Bun
-npx @fancyrobot/agent-vault uninstall   # Remove MCP server configuration
-npx @fancyrobot/agent-vault serve       # Start MCP stdio server (used by agent tools)
-npx @fancyrobot/agent-vault --help      # Show usage
+npx @fancyrobot/agent-vault                                     # Install/update Agent Vault and configure agent tools
+bunx @fancyrobot/agent-vault                                    # Same install/update flow via Bun
+npx @fancyrobot/agent-vault uninstall                           # Remove MCP server configuration
+npx @fancyrobot/agent-vault serve                               # Start MCP stdio server (used by agent tools)
+npx @fancyrobot/agent-vault orchestrate <phase> [options]       # Execute phase steps with context clearing
+npx @fancyrobot/agent-vault --help                              # Show usage
 ```
 
 The `serve` command is called automatically by agent tools via MCP — you don't need to run it manually.
+
+### `orchestrate`
+
+Executes each step in a phase by spawning a fresh agent CLI process per step, clearing context between steps automatically. After each agent process exits, the orchestrator re-reads the step's frontmatter status from disk to determine whether the step completed successfully.
+
+```bash
+agent-vault orchestrate <phase> [--agent opencode|claude|codex] [--confirm] [--retry <n>]
+```
+
+| Option | Default | Description |
+|---|---|---|
+| `--agent` | auto-detect (prefers opencode > claude > codex) | Which agent CLI to spawn for each step |
+| `--confirm` | off | Pause for confirmation between steps |
+| `--retry` | 3 | Max retry attempts per step if not completed |
+
+The orchestrator can also be invoked from inside an agent session via the `/vault:orchestrate` slash command, which locates the CLI binary and runs it through the shell.
+
+```bash
+# Run from terminal directly
+agent-vault orchestrate PHASE-01 --agent opencode
+
+# Or from inside an agent session
+/vault:orchestrate PHASE-01
+/vault:orchestrate 2 --agent claude --confirm --retry 5
+```
 
 ## Slash Commands
 
@@ -142,6 +168,7 @@ After installation, these commands are available in each tool:
 | `/vault:refine` | `/prompts:vault-refine` | Refine all steps in a phase with research, clarifying questions, and a readiness checklist |
 | `/vault:execute` | `/prompts:vault-execute` | Execute a planned phase or step, or resume inferred next work, with readiness checks and checkpoint-based feature plus regression validation |
 | `/vault:resume` | `/prompts:vault-resume` | Resume work from the most recent session checkpoint, or a specific session, with full handoff context |
+| `/vault:orchestrate` | `/prompts:vault-orchestrate` | Execute a phase with automatic context clearing between steps — spawns a fresh agent process per step |
 | `/vault:validate` | `/prompts:vault-validate` | Run vault integrity checks |
 | `/vault:refresh` | `/prompts:vault-refresh` | Refresh all home notes from metadata |
 
@@ -152,7 +179,8 @@ For non-trivial work, use the commands in this order:
 1. `/vault:plan` — turn a request into researched phases and concrete steps.
 2. `/vault:refine` — make every step specific enough for safe execution.
 3. `/vault:execute PHASE-01` or `/vault:execute PHASE-01 STEP-01-02` — execute a selected target.
-4. `/vault:resume` — when returning to work in a new agent session, resume from the last session checkpoint with full handoff context.
+4. `/vault:orchestrate PHASE-01` — execute an entire phase with automatic context clearing between steps (each step runs in a fresh agent process).
+5. `/vault:resume` — when returning to work in a new agent session, resume from the last session checkpoint with full handoff context.
 
 During execution, the agent maintains a single session note for the entire conversation. The session is updated continuously — after each implementation change, test run, or step transition — so that `/vault:resume` always has a current handoff to work from. The agent also works in checkpoints: after each meaningful implementation increment it validates the feature that was just built, then runs regression coverage for the rest of the application before moving on.
 
