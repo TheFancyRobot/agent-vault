@@ -12,9 +12,9 @@ Arguments:
 - --agent: Which agent CLI to spawn (default: auto-detect, prefers opencode > claude > codex)
 - --confirm: Pause between units for user confirmation (default: auto-advance)
 - --retry: Max retry attempts per incomplete unit (default: 3)
-- --severity: (bugs mode) Only fix bugs at this severity or higher (e.g., "sev-2" fixes sev-1 and sev-2)
+- --severity: (bugs mode) Only fix bugs at this severity or more severe (e.g., "sev-2" fixes sev-1 and sev-2)
 
-This command orchestrates work by spawning a fresh agent CLI process for each unit (step or bug), ensuring complete context clearing between units. The orchestrator monitors completion by checking vault frontmatter status after each agent process exits.
+This command orchestrates work by spawning a fresh agent CLI process for each unit (step or bug), ensuring complete context clearing between units. The orchestrator monitors completion by checking vault frontmatter status after each agent process exits. Each spawned agent uses `vault_traverse` and `vault_mutate` to read context and update note status.
 
 Workflow (phase mode):
 
