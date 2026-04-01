@@ -4,7 +4,7 @@ Durable project memory for coding agents. An Obsidian-compatible vault that prov
 
 Agent Vault creates a `.agent-vault/` directory in your project with templates, architecture stubs, and shared knowledge files. It integrates with **Claude Code**, **OpenCode**, and **Codex** via MCP (Model Context Protocol).
 
-For larger work, the intended flow is: use `/vault:plan` to turn a request into researched phases and step notes, `/vault:refine` to make the steps execution-ready, `/vault:execute` to implement them with checkpointed feature validation plus regression testing, and `/vault:resume` to pick up where the last session left off across agent restarts.
+For larger work, the intended flow is: use `/vault:plan` to turn a request into researched phases and step notes, `/vault:refine` to make the steps execution-ready, `/vault:execute` to implement them with checkpointed feature validation plus regression testing, `/vault:orchestrate` to run an entire phase with automatic context clearing between steps (or to triage and fix open bugs on dedicated branches), `/vault:enrich` to audit and strengthen the wikilink graph so traversals return complete context, and `/vault:resume` to pick up where the last session left off across agent restarts.
 
 Obsidian is optional: the vault uses plain Markdown and wikilinks, so agents can work directly from the filesystem while humans can still use Obsidian's graph, plugins, and CLI when they want to.
 
@@ -43,17 +43,31 @@ bunx @fancyrobot/agent-vault
 #    Claude Code / OpenCode: /vault:resume --session SESSION-2026-03-25-143022
 #    Codex: /prompts:vault-resume
 
-# 7. Record bugs or decisions when execution uncovers them:
+# 7. Orchestrate a full phase with automatic context clearing:
+#    Claude Code / OpenCode: /vault:orchestrate PHASE-01
+#    Codex: /prompts:vault-orchestrate PHASE-01
+#
+# Or triage and fix open bugs on dedicated branches:
+#    Claude Code / OpenCode: /vault:orchestrate bugs
+#    Claude Code / OpenCode: /vault:orchestrate bugs --severity sev-2
+#    Claude Code / OpenCode: /vault:orchestrate bugs BUG-0001 BUG-0003
+
+# 8. Enrich the wikilink graph with missing connections:
+#    Claude Code / OpenCode: /vault:enrich
+#    Claude Code / OpenCode: /vault:enrich PHASE-01
+#    Codex: /prompts:vault-enrich
+
+# 9. Record bugs or decisions when execution uncovers them:
 #    Claude Code / OpenCode: /vault:create-bug "Login timeout on slow connections"
 #    Codex: /prompts:vault-create-bug "Login timeout on slow connections"
 #    Claude Code / OpenCode: /vault:create-decision "Choose PostgreSQL over MongoDB"
 #    Codex: /prompts:vault-create-decision "Choose PostgreSQL over MongoDB"
 
-# 8. Validate and refresh:
-#    Claude Code / OpenCode: /vault:validate    — checks vault integrity
-#    Codex: /prompts:vault-validate
-#    Claude Code / OpenCode: /vault:refresh     — updates home notes from metadata
-#    Codex: /prompts:vault-refresh
+# 10. Validate and refresh:
+#     Claude Code / OpenCode: /vault:validate    — checks vault integrity
+#     Codex: /prompts:vault-validate
+#     Claude Code / OpenCode: /vault:refresh     — updates home notes from metadata
+#     Codex: /prompts:vault-refresh
 ```
 
 For ad hoc or manual workflows, the lower-level create commands such as `/vault:create-phase`, `/vault:create-step`, and `/vault:create-session` are still available.
@@ -121,7 +135,7 @@ npx @fancyrobot/agent-vault                                     # Install/update
 bunx @fancyrobot/agent-vault                                    # Same install/update flow via Bun
 npx @fancyrobot/agent-vault uninstall                           # Remove MCP server configuration
 npx @fancyrobot/agent-vault serve                               # Start MCP stdio server (used by agent tools)
-npx @fancyrobot/agent-vault orchestrate <phase> [options]       # Execute phase steps with context clearing
+npx @fancyrobot/agent-vault orchestrate <phase|bugs> [options]  # Execute phase steps or fix bugs with context clearing
 npx @fancyrobot/agent-vault --help                              # Show usage
 ```
 
@@ -129,27 +143,60 @@ The `serve` command is called automatically by agent tools via MCP — you don't
 
 ### `orchestrate`
 
-Executes each step in a phase by spawning a fresh agent CLI process per step, clearing context between steps automatically. After each agent process exits, the orchestrator re-reads the step's frontmatter status from disk to determine whether the step completed successfully.
+Spawns a fresh agent CLI process per work unit (step or bug), clearing context between units automatically. After each agent process exits, the orchestrator re-reads the unit's frontmatter status from disk to determine whether it completed successfully.
+
+#### Phase mode
+
+Executes each pending step in a phase sequentially.
 
 ```bash
 agent-vault orchestrate <phase> [--agent opencode|claude|codex] [--confirm] [--retry <n>]
 ```
 
+The phase argument accepts `1`, `01`, or `PHASE-01` formats. Steps with statuses like `done`, `completed`, `closed`, `cancelled`, `blocked`, `on-hold`, or `waiting` are skipped. If a step is not completed after all retry attempts, the orchestrator stops with a non-zero exit code.
+
+#### Bug mode
+
+Triages and fixes open bugs, each on a dedicated git branch.
+
+```bash
+agent-vault orchestrate bugs [BUG-XXXX...] [--severity <sev-N>] [--agent opencode|claude|codex] [--confirm] [--retry <n>]
+```
+
+Bug mode requires a clean git working tree. The orchestrator scans `03_Bugs/` for open bug notes, sorts them by severity (most severe first), and for each bug:
+
+1. Creates a `fix/<bug-id>-<slug>` branch (or resumes an existing one)
+2. Spawns a fresh agent process with a bug-fix prompt including the bug note context
+3. The agent investigates, implements a fix, commits incrementally referencing the bug ID, and updates the bug note status
+4. Returns to the original branch before moving to the next bug
+
+Unlike phase mode, bug mode continues to the next bug even if one fails, and prints a summary of fixed and failed bugs with their branch names at the end.
+
+Filter bugs with `--severity sev-2` (fixes sev-1 and sev-2 only) or pass specific bug IDs.
+
+#### Shared options
+
 | Option | Default | Description |
 |---|---|---|
-| `--agent` | auto-detect (prefers opencode > claude > codex) | Which agent CLI to spawn for each step |
-| `--confirm` | off | Pause for confirmation between steps |
-| `--retry` | 3 | Max retry attempts per step if not completed |
+| `--agent` | auto-detect (prefers opencode > claude > codex) | Which agent CLI to spawn |
+| `--confirm` | off | Pause for confirmation between units |
+| `--retry` | 3 | Max retry attempts per incomplete unit |
+| `--severity` | all | (bugs mode only) Only fix bugs at this severity or higher |
 
 The orchestrator can also be invoked from inside an agent session via the `/vault:orchestrate` slash command, which locates the CLI binary and runs it through the shell.
 
 ```bash
-# Run from terminal directly
+# Phase mode — from terminal or inside an agent session
 agent-vault orchestrate PHASE-01 --agent opencode
-
-# Or from inside an agent session
-/vault:orchestrate PHASE-01
 /vault:orchestrate 2 --agent claude --confirm --retry 5
+
+# Bug mode — fix all open bugs
+agent-vault orchestrate bugs
+/vault:orchestrate bugs --severity sev-2
+
+# Bug mode — fix specific bugs
+agent-vault orchestrate bugs BUG-0001 BUG-0003 --agent opencode
+/vault:orchestrate bugs BUG-0001 --confirm
 ```
 
 ## Slash Commands
@@ -168,7 +215,8 @@ After installation, these commands are available in each tool:
 | `/vault:refine` | `/prompts:vault-refine` | Refine all steps in a phase with research, clarifying questions, and a readiness checklist |
 | `/vault:execute` | `/prompts:vault-execute` | Execute a planned phase or step, or resume inferred next work, with readiness checks and checkpoint-based feature plus regression validation |
 | `/vault:resume` | `/prompts:vault-resume` | Resume work from the most recent session checkpoint, or a specific session, with full handoff context |
-| `/vault:orchestrate` | `/prompts:vault-orchestrate` | Execute a phase with automatic context clearing between steps — spawns a fresh agent process per step |
+| `/vault:orchestrate` | `/prompts:vault-orchestrate` | Execute a phase with context clearing between steps, or triage and fix open bugs on dedicated branches |
+| `/vault:enrich` | `/prompts:vault-enrich` | Audit the wikilink graph and apply missing connections for complete traversal context |
 | `/vault:validate` | `/prompts:vault-validate` | Run vault integrity checks |
 | `/vault:refresh` | `/prompts:vault-refresh` | Refresh all home notes from metadata |
 
@@ -180,7 +228,10 @@ For non-trivial work, use the commands in this order:
 2. `/vault:refine` — make every step specific enough for safe execution.
 3. `/vault:execute PHASE-01` or `/vault:execute PHASE-01 STEP-01-02` — execute a selected target.
 4. `/vault:orchestrate PHASE-01` — execute an entire phase with automatic context clearing between steps (each step runs in a fresh agent process).
-5. `/vault:resume` — when returning to work in a new agent session, resume from the last session checkpoint with full handoff context.
+5. `/vault:enrich` — after execution, audit and strengthen the wikilink graph so future traversals return complete, relevant context.
+6. `/vault:resume` — when returning to work in a new agent session, resume from the last session checkpoint with full handoff context.
+
+For bug triage, use `/vault:orchestrate bugs` to fix all open bugs (or filter by severity or specific IDs). Each bug gets its own `fix/<bug-id>-<slug>` branch with incremental commits.
 
 During execution, the agent maintains a single session note for the entire conversation. The session is updated continuously — after each implementation change, test run, or step transition — so that `/vault:resume` always has a current handoff to work from. The agent also works in checkpoints: after each meaningful implementation increment it validates the feature that was just built, then runs regression coverage for the rest of the application before moving on.
 
@@ -281,12 +332,14 @@ A typical workflow:
 2. **Plan** — `/vault:plan` turns a freeform request into researched phases, executable step notes, and parallelism guidance; use `/vault:create-phase` and `/vault:create-step` when you want to manage the plan manually
 3. **Refine** — `/vault:refine` researches the whole phase, reviews each step, and asks clarifying questions until the steps are junior-friendly and execution-ready
 4. **Execute** — `/vault:execute` runs a phase or step only after a readiness-checklist preflight; if no target is supplied it proposes the most likely continuation and asks for confirmation, then executes in checkpoints with feature-level validation plus regression testing after each meaningful increment
-5. **Resume** — `/vault:resume` picks up where the last session left off; it reads the previous session's handoff state, determines the continuation target, creates a new session with full context, and transitions into execution
-6. **Work** — `/vault:create-session` still works for manual session logging or ad hoc runs outside the execute workflow, but execute creates and updates session notes automatically for the work it performs
-7. **Record** — `/vault:create-bug` and `/vault:create-decision` as issues and choices arise
-8. **Navigate** — `vault_traverse` to load relevant context before starting work
-9. **Update** — `vault_mutate` to update frontmatter (status, timestamps) and append notes to sections
-10. **Maintain** — `/vault:refresh` to rebuild indexes and active context, `/vault:validate` to check integrity
+5. **Orchestrate** — `/vault:orchestrate PHASE-01` runs all steps in a phase with context clearing between steps; `/vault:orchestrate bugs` triages and fixes open bugs on dedicated branches sorted by severity
+6. **Resume** — `/vault:resume` picks up where the last session left off; it reads the previous session's handoff state, determines the continuation target, creates a new session with full context, and transitions into execution
+7. **Enrich** — `/vault:enrich` audits the wikilink graph for missing connections, proposes new relationships based on semantic content analysis, and applies approved changes so traversals return complete context
+8. **Work** — `/vault:create-session` still works for manual session logging or ad hoc runs outside the execute workflow, but execute creates and updates session notes automatically for the work it performs
+9. **Record** — `/vault:create-bug` and `/vault:create-decision` as issues and choices arise
+10. **Navigate** — `vault_traverse` to load relevant context before starting work
+11. **Update** — `vault_mutate` to update frontmatter (status, timestamps) and append notes to sections
+12. **Maintain** — `/vault:refresh` to rebuild indexes and active context, `/vault:validate` to check integrity
 
 ### Session Persistence
 
