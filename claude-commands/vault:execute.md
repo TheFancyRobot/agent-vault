@@ -21,6 +21,7 @@ Workflow:
    - Find the exact phase and step notes under `.agent-vault/02_Phases/` by matching `phase_id:` and `step_id:`.
    - If the target is a phase, load the phase, its linked steps, related architecture, related bugs, related decisions, and recent sessions. Execute remaining steps in listed order unless dependencies clearly allow safe parallel work.
    - If the target is a single step, load the step, parent phase, linked notes, and recent sessions.
+   - Traversal recipes: for a phase target, use depth 2 from the phase note (direction both, include_content true) to pull the full phase subgraph in one call. For a single step, use depth 2 from the step (direction both) to reach the parent phase and its siblings. If the returned subgraph is missing architecture notes referenced in Required Reading, traverse those explicitly at depth 1.
 
 3. Enforce a readiness-checklist preflight before coding.
    - Use the same readiness dimensions as `vault:refine`, whether they were explicitly documented during refinement or must be inferred now from the notes and codebase.
@@ -53,6 +54,7 @@ Workflow:
      - Update `Validation Run` after each test or validation command.
      - Update `Findings` when durable facts are learned.
      - Update `Follow-Up Work` when new items are discovered or existing items are completed.
+   - When you discover that a step touches a subsystem, architecture concern, decision, or bug not currently linked, update the step's and session's frontmatter with the new wikilink via `vault_mutate`. The graph should grow richer as execution reveals real relationships.
    - Treat every cohesive feature, integration slice, or other meaningful increment as an explicit execution checkpoint.
    - At each checkpoint, record what was completed, what remains, and which validations proved the application still works.
    - Append the final result to each completed step's `Outcome Summary`.
@@ -82,6 +84,7 @@ Workflow:
      - integration or end-to-end verification
      - security review
      - performance review for hot paths, query patterns, expensive loops, bundle/runtime cost, or other likely bottlenecks
+     - wikilink audit: verify that step and session notes link to all architecture, decision, and bug notes the work actually touched; add missing links with `vault_mutate` so future traversals return complete context
    - Treat credible findings as more work to do, not as a final report. Fix issues, rerun the affected validations, and continue until requirements are met or you hit a real external blocker.
    - If new implementation discoveries invalidate the original readiness assumptions, pause that step, repair the missing context in the vault, and re-check readiness before continuing.
 

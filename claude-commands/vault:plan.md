@@ -9,6 +9,7 @@ Workflow:
 1. Establish planning context before inventing anything.
    - If the repo does not have a vault yet, initialize it with `vault_init`.
    - Use `vault_scan`, `vault_traverse`, and targeted repo/document searches to understand the current system, roadmap, active context, existing phases, architecture notes, decisions, bugs, and relevant docs.
+   - Traversal recipe: start from `00_Home/Active_Context` (depth 2, direction both, include_content true) to discover the current vault state, then traverse from each architecture note relevant to the initiative (depth 1, outgoing) to map related decisions, phases, and bugs. Track which existing notes relate to the initiative; they will become wikilinks in the new phase and step notes.
    - Restate the request as a planning problem: desired outcome, likely constraints, impacted workflows, and whether this is a new initiative or an update to an existing plan.
    - Do not create duplicate phases if the vault already contains the same work under different wording.
 
@@ -62,7 +63,7 @@ Workflow:
      - `Dependencies`: prior phases, decisions, tooling, approvals, or blocking unknowns
      - `Acceptance Criteria`: observable completion checks
      - `Notes`: resolved clarifications, unresolved blockers, pitfall notes, and the parallel work map
-   - Link related architecture, decision, and bug notes whenever they materially constrain the work.
+   - Before creating each phase, search the vault for existing architecture, decision, and bug notes related to the phase's scope. Populate the phase's `related_architecture`, `related_decisions`, and `related_bugs` frontmatter and generated blocks with real wikilinks to those notes, not placeholders. If an architecture note does not exist for a subsystem the phase will heavily modify, create one with `vault_create` and link it.
 
 8. Split every phase into bite-sized step notes.
    - Create step notes with `vault_create`.
@@ -73,7 +74,7 @@ Workflow:
      - why it matters to the phase
      - prerequisites and dependency steps
      - concrete starting files, directories, commands, docs, and tests
-     - required reading
+     - required reading populated with wikilinks to architecture, decision, and shared-knowledge notes the implementer must read, not just source file paths
      - validation commands or manual checks
      - edge cases or integrity risks relevant to that step
    - Put machine-readable sequencing in step `depends_on` frontmatter.

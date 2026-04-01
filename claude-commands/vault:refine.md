@@ -11,6 +11,7 @@ Workflow:
    - Load focused context with `vault_traverse`: the phase, all linked step notes, related architecture, related bugs, related decisions, and recent sessions.
    - Read the full phase objective, scope, non-goals, dependencies, acceptance criteria, and notes.
    - Research the codebase paths referenced across the whole phase so you understand how the steps fit together before asking any questions.
+   - Traversal recipe: use depth 2 from the phase note (direction both, include_content true) to load the full phase subgraph. If any step references a subsystem that has an architecture note not yet linked, traverse that architecture note at depth 1 to discover related decisions and bugs that should be linked.
 
 2. Use tactical subagent research to build phase-wide understanding first.
    - Launch independent research in parallel when useful, for example:
@@ -55,7 +56,7 @@ Workflow:
    - Strengthen the step until it includes explicit guidance a junior engineer can follow:
      - exact outcome
      - concrete file or directory starting points
-     - required reading links
+     - required reading populated with wikilinks to the specific architecture, decision, and shared-knowledge notes the implementer must read, not just source file paths
      - implementation constraints and non-goals
      - validation commands or manual checks
      - edge cases and error handling expectations

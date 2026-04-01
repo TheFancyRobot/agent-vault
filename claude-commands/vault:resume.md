@@ -27,6 +27,7 @@ Workflow:
 
 3. Load focused context for the continuation.
    - Use `vault_traverse` to load the target phase, target step, related architecture, bugs, decisions, and the previous session note.
+   - Traversal recipe: use depth 2 from the target step (direction both, include_content true) to pull the step, parent phase, sibling steps, and all linked notes. If the previous session's Findings or Follow-Up Work reference notes not in the traversal result, load those explicitly at depth 1.
    - Read the previous session's Execution Log, Findings, and Follow-Up Work to build a concise handoff briefing for the agent.
    - Read the target step's full content for requirements, acceptance criteria, and validation commands.
    - If the previous session references bugs or decisions, load those too so unresolved issues carry forward.
@@ -37,6 +38,7 @@ Workflow:
      - Set the Objective to reference the previous session and state what is being continued.
      - Append an initial Execution Log entry: `HH:MM - Resuming from [[previous session link]]. Continuing <step or phase description>.`
      - Copy unfinished Follow-Up Work items from the previous session into the new session's Planned Scope.
+     - Carry forward all `related_bugs` and `related_decisions` wikilinks from the previous session's frontmatter into the new session so the graph stays connected across session boundaries.
    - If the previous session was still `in-progress`, update its status to `completed` with `vault_mutate` and append a Completion Summary noting the handoff to the new session.
    - This new session is now the active session for the entire conversation. Do not create additional sessions unless the user explicitly requests one via `/vault:create-session`.
 
