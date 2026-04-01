@@ -181,7 +181,7 @@ Filter bugs with `--severity sev-2` (fixes sev-1 and sev-2 only) or pass specifi
 | `--agent` | auto-detect (prefers opencode > claude > codex) | Which agent CLI to spawn |
 | `--confirm` | off | Pause for confirmation between units |
 | `--retry` | 3 | Max retry attempts per incomplete unit |
-| `--severity` | all | (bugs mode only) Only fix bugs at this severity or higher |
+| `--severity` | all | (bugs mode only) Only fix bugs at this severity or more severe |
 
 The orchestrator can also be invoked from inside an agent session via the `/vault:orchestrate` slash command, which locates the CLI binary and runs it through the shell.
 

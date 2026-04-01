@@ -33,7 +33,7 @@ interface BugInfo {
 
 interface OrchestrateOptions {
   mode: 'phase' | 'bugs';
-  agent: 'opencode' | 'claude' | 'codex';
+  agent?: 'opencode' | 'claude' | 'codex';
   phase?: string;
   confirm: boolean;
   retries: number;
@@ -92,6 +92,9 @@ const titleFromFilename = (filename: string): string =>
 const slugify = (text: string): string =>
   text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 50);
 
+const normalizeStatus = (status: string): string =>
+  status.toLowerCase().trim();
+
 const severityRank = (severity: string): number => {
   const match = /^sev-(\d+)$/i.exec(severity.trim());
   return match ? Number(match[1]) : 999;
@@ -146,7 +149,7 @@ const loadSteps = async (phase: PhaseInfo): Promise<StepInfo[]> => {
     steps.push({
       id: `STEP-${match[1].padStart(2, '0')}-${match[2].padStart(2, '0')}`,
       path: filePath,
-      status: String(fm.status ?? 'planned'),
+      status: normalizeStatus(String(fm.status ?? 'planned')),
       title: titleFromFilename(file),
     });
   }
@@ -169,9 +172,9 @@ const loadBugs = async (vaultRoot: string): Promise<BugInfo[]> => {
     if (fm.note_type !== 'bug') continue;
 
     bugs.push({
-      bugId: String(fm.bug_id ?? basename(file, '.md')),
+      bugId: String(fm.bug_id ?? basename(file, '.md')).toUpperCase(),
       path: filePath,
-      status: String(fm.status ?? 'new'),
+      status: normalizeStatus(String(fm.status ?? 'new')),
       severity: String(fm.severity ?? 'sev-3'),
       title: String(fm.title ?? basename(file, '.md')),
     });
@@ -312,7 +315,7 @@ const executeStep = async (
 
     // Re-read step status from disk after agent exits
     const fm = await readFrontmatter(step.path);
-    const status = String(fm.status ?? '');
+    const status = normalizeStatus(String(fm.status ?? ''));
 
     if (COMPLETED_STATUSES.has(status)) return true;
 
@@ -358,7 +361,7 @@ const executeBug = async (
 
       // Re-read bug status from disk
       const fm = await readFrontmatter(bug.path);
-      const status = String(fm.status ?? '');
+      const status = normalizeStatus(String(fm.status ?? ''));
 
       if (BUG_DONE_STATUSES.has(status)) return true;
 
@@ -369,11 +372,25 @@ const executeBug = async (
 
     return false;
   } finally {
-    try {
-      await gitCheckout(projectRoot, originalBranch);
-    } catch {
-      console.error(`  Warning: could not return to branch ${originalBranch}`);
+    if (!(await gitIsClean(projectRoot))) {
+      console.error(`  Working tree is dirty on branch ${branchName}. Committing or stashing before returning.`);
+      // Stage and commit any leftover changes so checkout can succeed
+      try {
+        await execGit(['add', '-A'], projectRoot);
+        await execGit(['commit', '-m', `wip: uncommitted changes from ${bug.bugId} fix attempt`], projectRoot);
+      } catch {
+        // If commit fails (e.g., nothing to commit), force-restore with stash
+        try {
+          await execGit(['stash'], projectRoot);
+        } catch {
+          throw new Error(
+            `Cannot return to branch ${originalBranch}: working tree is dirty on ${branchName} and cleanup failed. ` +
+            `Resolve manually and re-run.`
+          );
+        }
+      }
     }
+    await gitCheckout(projectRoot, originalBranch);
   }
 };
 
@@ -393,7 +410,7 @@ Options:
                       (default: auto-detect, prefers opencode > claude > codex)
   --confirm           Pause for user confirmation between units
   --retry <n>         Max retries per unit if not completed (default: 3)
-  --severity <sev-N>  (bugs mode) Only fix bugs at this severity or higher
+  --severity <sev-N>  (bugs mode) Only fix bugs at this severity or more severe
   -h, --help          Show this help message
 
 Examples:
@@ -432,6 +449,10 @@ const parseOrchestrateArgs = (argv: string[]): OrchestrateOptions => {
 
   if (agent && !(AGENT_NAMES as readonly string[]).includes(agent)) {
     throw new Error(`Unknown agent "${agent}". Must be one of: ${AGENT_NAMES.join(', ')}`);
+  }
+
+  if (severity && !/^sev-\d+$/i.test(severity)) {
+    throw new Error(`Invalid severity "${severity}". Must be in "sev-N" format (e.g., sev-1, sev-2).`);
   }
 
   // Detect mode from positional arguments
@@ -562,7 +583,7 @@ const orchestrateBugs = async (
   console.log(`\n${'='.repeat(60)}`);
   console.log('  Bug Orchestration');
   console.log(`  Agent: ${options.agent} | Bugs: ${pending.length} open | Retries: ${options.retries}`);
-  if (options.severity) console.log(`  Severity filter: ${options.severity} or higher`);
+  if (options.severity) console.log(`  Severity filter: ${options.severity} or more severe`);
   console.log(`${'='.repeat(60)}`);
 
   const results: { bug: BugInfo; ok: boolean; elapsed: string; branch: string }[] = [];
