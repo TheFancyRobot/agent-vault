@@ -425,6 +425,7 @@ const renumberPhasesFrom = async (vaultRoot: string, insertionPoint: number): Pr
 
   // Build regex replacement pairs (ordered highest-to-lowest to prevent cascading).
   // PHASE-NN uses a non-digit lookahead to avoid prefix collisions (e.g. PHASE-10 vs PHASE-100).
+  const escapeRegExp = (s: string): string => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const replacements: Array<{ pattern: RegExp; replacement: string }> = [];
 
   for (const { dirName, number: oldNum } of toRenumber) {
@@ -432,7 +433,7 @@ const renumberPhasesFrom = async (vaultRoot: string, insertionPoint: number): Pr
     const newPadded = String(oldNum + 1).padStart(2, '0');
     const slug = dirName.replace(/^Phase_\d+_/, '');
 
-    replacements.push({ pattern: new RegExp(`Phase_${oldPadded}_${slug}`, 'g'), replacement: `Phase_${newPadded}_${slug}` });
+    replacements.push({ pattern: new RegExp(`Phase_${oldPadded}_${escapeRegExp(slug)}`, 'g'), replacement: `Phase_${newPadded}_${slug}` });
     replacements.push({ pattern: new RegExp(`PHASE-${oldPadded}(?!\\d)`, 'g'), replacement: `PHASE-${newPadded}` });
     replacements.push({ pattern: new RegExp(`STEP-${oldPadded}-`, 'g'), replacement: `STEP-${newPadded}-` });
     replacements.push({ pattern: new RegExp(`Phase ${oldPadded} `, 'g'), replacement: `Phase ${newPadded} ` });
@@ -1817,10 +1818,18 @@ export async function handleCreatePhaseCommand(
           }),
         );
 
-        // Update shifted phase's "Previous phase" and depends_on to point to new phase
+        // Update shifted phase's "Previous phase" and depends_on to point to new phase,
+        // preserving any non-linear dependencies the user may have added.
         await tryApplyBackreference(io, `shifted phase linkage for PHASE-${nextPhaseNumber}`, () =>
           updateBackreferenceNote(shiftedPhasePath, date, (shiftedContent) => {
-            let result = updateFrontmatter(shiftedContent, { depends_on: [newPhaseLink] }, shiftedPhasePath).content;
+            const shiftedFm = parseYamlFrontmatter(shiftedContent, shiftedPhasePath).data;
+            const existingDeps = parseStringListField(shiftedPhasePath, 'depends_on', shiftedFm.depends_on);
+            const previousPhaseLink = previousPhase?.wikiLink;
+            // Replace only the linear previous-phase dependency; preserve all others
+            const updatedDeps = previousPhaseLink && existingDeps.includes(previousPhaseLink)
+              ? existingDeps.map((dep) => dep === previousPhaseLink ? newPhaseLink : dep)
+              : [newPhaseLink, ...existingDeps.filter((dep) => dep !== newPhaseLink)];
+            let result = updateFrontmatter(shiftedContent, { depends_on: updatedDeps }, shiftedPhasePath).content;
             const block = readGeneratedBlockContent(result, 'phase-linear-context', shiftedPhasePath);
             const lines = block.trim().length === 0 ? [] : block.trim().split('\n');
             const prevLine = `- Previous phase: ${newPhaseLink}`;
