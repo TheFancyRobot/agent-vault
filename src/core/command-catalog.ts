@@ -74,15 +74,17 @@ const COMMANDS: readonly AgentVaultCommandDefinition[] = [
   {
     name: 'create-phase',
     group: 'Create Notes',
-    usage: 'create-phase <title> [--phase-number <number>] [--previous <related-phase>]',
+    usage: 'create-phase <title> [--phase-number <number>] [--previous <related-phase>] [--insert-before <phase-ref>]',
     summary: 'Create a phase folder and phase note with safe defaults and optional previous-phase linkage.',
     examples: [
       'vault create-phase "Workflow Adoption"',
       'vault create-phase "Automation Hardening" --phase-number 4 --previous PHASE-03',
+      'vault create-phase "New Phase" --insert-before 3',
     ],
     notes: [
       'If no phase number is provided, the next available phase number is generated automatically.',
       'A `Steps/` directory is created alongside the phase note.',
+      'Use `--insert-before` to insert at a specific position; existing phases from that point onward are renumbered.',
     ],
   },
   {

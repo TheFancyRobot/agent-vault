@@ -74,6 +74,10 @@ const CLAUDE_ALLOWED_TOOLS = [
   'mcp__agent-vault__vault_init',
 ].join(',');
 
+const NO_GIT_NOTICE =
+  'IMPORTANT: Do NOT run git add, git commit, git checkout, or any git commands. ' +
+  'The orchestrator manages all git operations automatically after you exit.';
+
 // --- Helpers ---
 
 const readFrontmatter = async (filePath: string): Promise<Record<string, unknown>> => {
@@ -204,18 +208,19 @@ const buildStepCommand = (
   phaseId: string,
   stepId: string,
 ): { cmd: string; args: string[] } => {
+  const stepPrompt = `${NO_GIT_NOTICE}\n\n/vault:execute ${phaseId} ${stepId}`;
   switch (agent) {
     case 'opencode':
-      return { cmd: 'opencode', args: ['run', `/vault:execute ${phaseId} ${stepId}`] };
+      return { cmd: 'opencode', args: ['run', stepPrompt] };
     case 'claude':
       return {
         cmd: 'claude',
-        args: ['-p', `/vault:execute ${phaseId} ${stepId}`, '--allowedTools', CLAUDE_ALLOWED_TOOLS],
+        args: ['-p', stepPrompt, '--allowedTools', CLAUDE_ALLOWED_TOOLS],
       };
     case 'codex':
       return {
         cmd: 'codex',
-        args: ['exec', `/prompts:vault-execute ${phaseId} ${stepId}`, '--full-auto'],
+        args: ['exec', stepPrompt, '--full-auto'],
       };
   }
 };
@@ -231,13 +236,15 @@ const buildBugCommand = (
   const prompt = [
     `Fix bug ${bug.bugId}: "${bug.title}" (severity: ${bug.severity}).`,
     '',
+    NO_GIT_NOTICE,
+    '',
     `The bug is documented at: ${bugRelPath}`,
     'Read the bug note for full context including reproduction steps, observed/expected behavior, and suspected root cause.',
     '',
     'Workflow:',
     '1. Load the bug note and related context via vault_traverse.',
     '2. Investigate the codebase to identify the root cause.',
-    `3. Implement the fix with incremental commits. Reference ${bug.bugId} in commit messages.`,
+    '3. Implement the fix using Write, Edit, and other file tools.',
     '4. Add or update tests to prevent regression.',
     '5. After fixing, update the bug note:',
     `   - Set frontmatter status to "closed" and fixed_on to "${today}" via vault_mutate update_frontmatter.`,
@@ -313,6 +320,17 @@ const executeStep = async (
       console.error(`  Agent error: ${err instanceof Error ? err.message : err}`);
     }
 
+    // Commit any changes the agent made (orchestrator owns all git operations)
+    if (!(await gitIsClean(projectRoot))) {
+      try {
+        await execGit(['add', '-A'], projectRoot);
+        await execGit(['commit', '-m', `vault: ${phaseId} ${step.id} - ${step.title}`], projectRoot);
+        console.log('  Committed changes');
+      } catch {
+        // Commit may fail if nothing staged; continue
+      }
+    }
+
     // Re-read step status from disk after agent exits
     const fm = await readFrontmatter(step.path);
     const status = normalizeStatus(String(fm.status ?? ''));
@@ -359,11 +377,27 @@ const executeBug = async (
         console.error(`  Agent error: ${err instanceof Error ? err.message : err}`);
       }
 
-      // Re-read bug status from disk
+      // Re-read bug status from disk (agent may have updated via vault_mutate)
       const fm = await readFrontmatter(bug.path);
       const status = normalizeStatus(String(fm.status ?? ''));
+      const isDone = BUG_DONE_STATUSES.has(status);
 
-      if (BUG_DONE_STATUSES.has(status)) return true;
+      // Commit any changes the agent made (orchestrator owns all git operations)
+      if (!(await gitIsClean(projectRoot))) {
+        try {
+          await execGit(['add', '-A'], projectRoot);
+          const prefix = isDone ? 'fix' : 'wip';
+          await execGit(
+            ['commit', '-m', `${prefix}(${bug.bugId.toLowerCase()}): ${bug.title}`],
+            projectRoot,
+          );
+          console.log(`  Committed changes (${prefix})`);
+        } catch {
+          // Commit may fail if nothing staged; continue
+        }
+      }
+
+      if (isDone) return true;
 
       if (attempt < maxRetries) {
         console.log(`  Status: ${status || 'unknown'} (not resolved)`);
@@ -372,14 +406,13 @@ const executeBug = async (
 
     return false;
   } finally {
+    // Safety net: commit or stash any remaining dirty state before switching branches
     if (!(await gitIsClean(projectRoot))) {
-      console.error(`  Working tree is dirty on branch ${branchName}. Committing or stashing before returning.`);
-      // Stage and commit any leftover changes so checkout can succeed
+      console.error(`  Working tree is dirty on branch ${branchName}. Committing before returning.`);
       try {
         await execGit(['add', '-A'], projectRoot);
         await execGit(['commit', '-m', `wip: uncommitted changes from ${bug.bugId} fix attempt`], projectRoot);
       } catch {
-        // If commit fails (e.g., nothing to commit), force-restore with stash
         try {
           await execGit(['stash'], projectRoot);
         } catch {
@@ -521,7 +554,7 @@ const orchestratePhase = async (
     }
 
     const t0 = Date.now();
-    const ok = await executeStep(options.agent, phase.id, step, options.retries, projectRoot);
+    const ok = await executeStep(options.agent!, phase.id, step, options.retries, projectRoot);
     const elapsed = ((Date.now() - t0) / 1000).toFixed(0);
 
     if (ok) {
@@ -603,7 +636,7 @@ const orchestrateBugs = async (
     }
 
     const t0 = Date.now();
-    const ok = await executeBug(options.agent, bug, options.retries, projectRoot);
+    const ok = await executeBug(options.agent!, bug, options.retries, projectRoot);
     const elapsed = ((Date.now() - t0) / 1000).toFixed(0);
     results.push({ bug, ok, elapsed, branch });
 

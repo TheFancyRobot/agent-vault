@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest';
+import { existsSync } from 'fs';
 import { mkdtemp, readFile, rm, writeFile, mkdir } from 'fs/promises';
 import { tmpdir } from 'os';
 import { join } from 'path';
@@ -478,6 +479,93 @@ describe('Agent Vault note generators', () => {
     expect(content).toContain('<!-- AGENT-START:critical-bugs -->');
     expect(content).toContain('BUG-0007 Release blocker');
     expect(harness.stdout[0]).toBe('Updated 00_Home/Active_Context.md');
+  });
+
+  it('create-phase --insert-before renumbers existing phases and inserts at the correct position', async () => {
+    const vaultRoot = await createTempVault();
+    const harness = makeIo();
+
+    // Create phase 2 (vault already has phase 1)
+    await handleCreatePhaseCommand(
+      ['Core Features'],
+      { vaultRoot, io: makeIo().io, now: () => FIXED_NOW },
+    );
+
+    // Create a step in phase 1 so we can verify step references get updated
+    await handleCreateStepCommand(
+      ['1', '1', 'Bootstrap'],
+      { vaultRoot, io: makeIo().io, now: () => FIXED_NOW },
+    );
+
+    // Insert a new phase before phase 2
+    const exitCode = await handleCreatePhaseCommand(
+      ['Inserted Phase', '--insert-before', '2'],
+      { vaultRoot, io: harness.io, now: () => FIXED_NOW },
+    );
+    expect(exitCode).toBe(0);
+
+    // New phase should be at position 2
+    const newPhasePath = join(vaultRoot, '02_Phases', 'Phase_02_inserted_phase', 'Phase.md');
+    expect(existsSync(newPhasePath)).toBe(true);
+    const newPhaseContent = await readFile(newPhasePath, 'utf-8');
+    const newPhaseFm = parseYamlFrontmatter(newPhaseContent, newPhasePath).data;
+    expect(newPhaseFm.phase_id).toBe('PHASE-02');
+    expect(newPhaseContent).toContain('# Phase 02 Inserted Phase');
+    expect(newPhaseFm.depends_on).toEqual([
+      '[[02_Phases/Phase_01_Foundation/Phase|PHASE-01 Foundation]]',
+    ]);
+
+    // Old phase 2 should now be phase 3 (slug stays lowercase)
+    const shiftedPhasePath = join(vaultRoot, '02_Phases', 'Phase_03_core_features', 'Phase.md');
+    expect(existsSync(shiftedPhasePath)).toBe(true);
+    const shiftedContent = await readFile(shiftedPhasePath, 'utf-8');
+    const shiftedFm = parseYamlFrontmatter(shiftedContent, shiftedPhasePath).data;
+    expect(shiftedFm.phase_id).toBe('PHASE-03');
+    expect(shiftedContent).toContain('# Phase 03 Core Features');
+
+    // Shifted phase's depends_on should point to the new phase 2
+    expect(shiftedFm.depends_on).toEqual([
+      '[[02_Phases/Phase_02_inserted_phase/Phase|PHASE-02 Inserted Phase]]',
+    ]);
+
+    // New phase's linear context should reference next phase (uses displayPhaseName format)
+    expect(newPhaseContent).toContain('- Next phase: [[02_Phases/Phase_03_core_features/Phase|Phase 03 core features]]');
+
+    // Shifted phase's linear context should reference new phase as previous
+    expect(shiftedContent).toContain('- Previous phase: [[02_Phases/Phase_02_inserted_phase/Phase|PHASE-02 Inserted Phase]]');
+
+    // Phase 1's forward link should now point to the new phase 2
+    const phase1Content = await readFile(join(vaultRoot, '02_Phases', 'Phase_01_Foundation', 'Phase.md'), 'utf-8');
+    expect(phase1Content).toContain('- Next phase: [[02_Phases/Phase_02_inserted_phase/Phase|PHASE-02 Inserted Phase]]');
+
+    // Old phase 2 directory should no longer exist
+    expect(existsSync(join(vaultRoot, '02_Phases', 'Phase_02_core_features'))).toBe(false);
+  });
+
+  it('create-phase --insert-before rejects non-existent phase', async () => {
+    const vaultRoot = await createTempVault();
+    const harness = makeIo();
+
+    const exitCode = await handleCreatePhaseCommand(
+      ['Bad Insert', '--insert-before', '5'],
+      { vaultRoot, io: harness.io, now: () => FIXED_NOW },
+    );
+
+    expect(exitCode).toBe(1);
+    expect(harness.stderr[0]).toContain('does not exist');
+  });
+
+  it('create-phase --insert-before rejects combined with --phase-number', async () => {
+    const vaultRoot = await createTempVault();
+    const harness = makeIo();
+
+    const exitCode = await handleCreatePhaseCommand(
+      ['Bad Combo', '--insert-before', '1', '--phase-number', '5'],
+      { vaultRoot, io: harness.io, now: () => FIXED_NOW },
+    );
+
+    expect(exitCode).toBe(1);
+    expect(harness.stderr[0]).toContain('Cannot use --insert-before together with --phase-number');
   });
 
   it('refresh-all-home-notes runs all three home refreshers', async () => {

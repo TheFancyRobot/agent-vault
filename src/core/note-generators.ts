@@ -1,5 +1,5 @@
 import { existsSync } from 'fs';
-import { mkdir, readFile, readdir, writeFile } from 'fs/promises';
+import { mkdir, readFile, readdir, rename, writeFile } from 'fs/promises';
 import { basename, dirname, join, relative, resolve } from 'path';
 import {
   appendToAppendOnlySection,
@@ -400,6 +400,67 @@ const getNextPhaseNumber = async (vaultRoot: string): Promise<string> => {
     .filter((value): value is number => value !== null);
   const maxPhase = phaseNumbers.length === 0 ? 0 : Math.max(...phaseNumbers);
   return String(maxPhase + 1).padStart(2, '0');
+};
+
+const parseInsertBeforeTarget = (input: string): number => {
+  const normalized = input.replace(/^PHASE-?/i, '').replace(/^0+(?=\d)/, '');
+  const num = Number(normalized);
+  if (isNaN(num) || num < 1 || !Number.isInteger(num)) {
+    throw new Error(`Invalid --insert-before target: "${input}". Use a phase number (e.g., 3) or ID (e.g., PHASE-03).`);
+  }
+  return num;
+};
+
+const renumberPhasesFrom = async (vaultRoot: string, insertionPoint: number): Promise<void> => {
+  const phaseNames = await listPhaseDirectoryNames(vaultRoot);
+
+  const toRenumber = phaseNames
+    .map((dirName) => ({ dirName, number: parsePhaseNumberFromDirectory(dirName) }))
+    .filter((entry): entry is { dirName: string; number: number } =>
+      entry.number !== null && entry.number >= insertionPoint,
+    )
+    .sort((a, b) => b.number - a.number); // highest first to avoid directory conflicts
+
+  if (toRenumber.length === 0) return;
+
+  // Build text replacement pairs (ordered highest-to-lowest to prevent cascading)
+  const replacements: Array<[oldText: string, newText: string]> = [];
+
+  for (const { dirName, number: oldNum } of toRenumber) {
+    const oldPadded = String(oldNum).padStart(2, '0');
+    const newPadded = String(oldNum + 1).padStart(2, '0');
+    const slug = dirName.replace(/^Phase_\d+_/, '');
+
+    replacements.push([`Phase_${oldPadded}_${slug}`, `Phase_${newPadded}_${slug}`]);
+    replacements.push([`PHASE-${oldPadded}`, `PHASE-${newPadded}`]);
+    replacements.push([`STEP-${oldPadded}-`, `STEP-${newPadded}-`]);
+    replacements.push([`Phase ${oldPadded} `, `Phase ${newPadded} `]);
+  }
+
+  // Rename directories (highest to lowest to avoid conflicts)
+  const phasesRoot = join(vaultRoot, '02_Phases');
+  for (const { dirName, number: oldNum } of toRenumber) {
+    const newPadded = String(oldNum + 1).padStart(2, '0');
+    const slug = dirName.replace(/^Phase_\d+_/, '');
+    const newDirName = `Phase_${newPadded}_${slug}`;
+    await rename(join(phasesRoot, dirName), join(phasesRoot, newDirName));
+  }
+
+  // Global text replacement pass on all .md files
+  const allFiles = await listMarkdownFiles(vaultRoot);
+  for (const filePath of allFiles) {
+    let content = await readFile(filePath, 'utf-8');
+    let changed = false;
+    for (const [oldText, newText] of replacements) {
+      if (content.includes(oldText)) {
+        content = content.split(oldText).join(newText);
+        changed = true;
+      }
+    }
+    if (changed) {
+      await writeFile(filePath, content, 'utf-8');
+    }
+  }
 };
 
 const findPreviousPhase = async (vaultRoot: string, phaseNumber: string): Promise<ResolvedPhaseNote | undefined> => {
@@ -1682,9 +1743,29 @@ export async function handleCreatePhaseCommand(
     }
 
     const vaultRoot = getVaultRoot(environment);
-    const phaseNumber = getRequiredOption(options, 'phase-number')
-      ? padNumber(getRequiredOption(options, 'phase-number')!, 2, 'Phase number')
-      : await getNextPhaseNumber(vaultRoot);
+    const insertBeforeRef = getRequiredOption(options, 'insert-before');
+
+    // Handle --insert-before: renumber existing phases to make room
+    let phaseNumber: string;
+    if (insertBeforeRef) {
+      if (getRequiredOption(options, 'phase-number')) {
+        throw new Error('Cannot use --insert-before together with --phase-number.');
+      }
+      const insertionPoint = parseInsertBeforeTarget(insertBeforeRef);
+      const existingPhases = (await listPhaseDirectoryNames(vaultRoot))
+        .map(parsePhaseNumberFromDirectory)
+        .filter((n): n is number => n !== null);
+      if (!existingPhases.includes(insertionPoint)) {
+        throw new Error(`Phase ${insertionPoint} does not exist. Cannot insert before a non-existent phase.`);
+      }
+      await renumberPhasesFrom(vaultRoot, insertionPoint);
+      phaseNumber = String(insertionPoint).padStart(2, '0');
+    } else {
+      phaseNumber = getRequiredOption(options, 'phase-number')
+        ? padNumber(getRequiredOption(options, 'phase-number')!, 2, 'Phase number')
+        : await getNextPhaseNumber(vaultRoot);
+    }
+
     const previousPhaseRef = getRequiredOption(options, 'previous');
     const previousPhase = previousPhaseRef
       ? await resolvePhaseReference(vaultRoot, previousPhaseRef)
@@ -1712,6 +1793,48 @@ export async function handleCreatePhaseCommand(
           phaseLink: previousPhase.wikiLink,
         }, toWikiLink(getRelativeNotePath(vaultRoot, phasePath), `${phaseId} ${title}`), date));
     }
+
+    // When inserting before, fix links between new phase and the shifted next phase
+    if (insertBeforeRef) {
+      const nextPhaseNumber = String(parseInsertBeforeTarget(insertBeforeRef) + 1).padStart(2, '0');
+      const newPhaseLink = toWikiLink(getRelativeNotePath(vaultRoot, phasePath), `${phaseId} ${title}`);
+
+      try {
+        const shiftedPhaseInfo = await findPhase(vaultRoot, nextPhaseNumber);
+        const shiftedPhasePath = join(shiftedPhaseInfo.absolutePath, 'Phase.md');
+        const shiftedPhaseLink = shiftedPhaseInfo.phaseLink;
+
+        // Update new phase's "Next phase" in linear context
+        await tryApplyBackreference(io, `next phase linkage for ${phaseId}`, () =>
+          updateBackreferenceNote(phasePath, date, (phaseContent) => {
+            const block = readGeneratedBlockContent(phaseContent, 'phase-linear-context', phasePath);
+            const lines = block.trim().length === 0 ? [] : block.trim().split('\n');
+            const nextLine = `- Next phase: ${shiftedPhaseLink}`;
+            const nextLines = lines.some((line) => line.startsWith('- Next phase:'))
+              ? lines.map((line) => line.startsWith('- Next phase:') ? nextLine : line)
+              : [...lines, nextLine];
+            return replaceGeneratedBlock(phaseContent, 'phase-linear-context', nextLines.join('\n'), phasePath).content;
+          }),
+        );
+
+        // Update shifted phase's "Previous phase" and depends_on to point to new phase
+        await tryApplyBackreference(io, `shifted phase linkage for PHASE-${nextPhaseNumber}`, () =>
+          updateBackreferenceNote(shiftedPhasePath, date, (shiftedContent) => {
+            let result = updateFrontmatter(shiftedContent, { depends_on: [newPhaseLink] }, shiftedPhasePath).content;
+            const block = readGeneratedBlockContent(result, 'phase-linear-context', shiftedPhasePath);
+            const lines = block.trim().length === 0 ? [] : block.trim().split('\n');
+            const prevLine = `- Previous phase: ${newPhaseLink}`;
+            const nextLines = lines.some((line) => line.startsWith('- Previous phase:'))
+              ? lines.map((line) => line.startsWith('- Previous phase:') ? prevLine : line)
+              : [prevLine, ...lines];
+            return replaceGeneratedBlock(result, 'phase-linear-context', nextLines.join('\n'), shiftedPhasePath).content;
+          }),
+        );
+      } catch {
+        // Shifted phase resolution failed — skip link fixup
+      }
+    }
+
     emitCreatedNote(io, vaultRoot, phasePath);
     return 0;
   } catch (error) {
