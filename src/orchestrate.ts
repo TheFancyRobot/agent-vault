@@ -220,7 +220,7 @@ const buildStepCommand = (
     case 'codex':
       return {
         cmd: 'codex',
-        args: ['exec', stepPrompt, '--full-auto'],
+        args: ['exec', `${NO_GIT_NOTICE}\n\n/prompts:vault-execute ${phaseId} ${stepId}`, '--full-auto'],
       };
   }
 };
@@ -326,8 +326,8 @@ const executeStep = async (
         await execGit(['add', '-A'], projectRoot);
         await execGit(['commit', '-m', `vault: ${phaseId} ${step.id} - ${step.title}`], projectRoot);
         console.log('  Committed changes');
-      } catch {
-        // Commit may fail if nothing staged; continue
+      } catch (err) {
+        console.error(`  Git commit failed: ${err instanceof Error ? err.message : String(err)}`);
       }
     }
 
@@ -521,6 +521,10 @@ const orchestratePhase = async (
   vaultRoot: string,
   projectRoot: string,
 ): Promise<void> => {
+  if (!(await gitIsClean(projectRoot))) {
+    throw new Error('Working tree has uncommitted changes. Commit or stash before running phase orchestration.');
+  }
+
   const phase = await findPhase(vaultRoot, options.phase!);
   const allSteps = await loadSteps(phase);
 

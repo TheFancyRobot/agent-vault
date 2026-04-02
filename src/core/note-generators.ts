@@ -423,18 +423,19 @@ const renumberPhasesFrom = async (vaultRoot: string, insertionPoint: number): Pr
 
   if (toRenumber.length === 0) return;
 
-  // Build text replacement pairs (ordered highest-to-lowest to prevent cascading)
-  const replacements: Array<[oldText: string, newText: string]> = [];
+  // Build regex replacement pairs (ordered highest-to-lowest to prevent cascading).
+  // PHASE-NN uses a non-digit lookahead to avoid prefix collisions (e.g. PHASE-10 vs PHASE-100).
+  const replacements: Array<{ pattern: RegExp; replacement: string }> = [];
 
   for (const { dirName, number: oldNum } of toRenumber) {
     const oldPadded = String(oldNum).padStart(2, '0');
     const newPadded = String(oldNum + 1).padStart(2, '0');
     const slug = dirName.replace(/^Phase_\d+_/, '');
 
-    replacements.push([`Phase_${oldPadded}_${slug}`, `Phase_${newPadded}_${slug}`]);
-    replacements.push([`PHASE-${oldPadded}`, `PHASE-${newPadded}`]);
-    replacements.push([`STEP-${oldPadded}-`, `STEP-${newPadded}-`]);
-    replacements.push([`Phase ${oldPadded} `, `Phase ${newPadded} `]);
+    replacements.push({ pattern: new RegExp(`Phase_${oldPadded}_${slug}`, 'g'), replacement: `Phase_${newPadded}_${slug}` });
+    replacements.push({ pattern: new RegExp(`PHASE-${oldPadded}(?!\\d)`, 'g'), replacement: `PHASE-${newPadded}` });
+    replacements.push({ pattern: new RegExp(`STEP-${oldPadded}-`, 'g'), replacement: `STEP-${newPadded}-` });
+    replacements.push({ pattern: new RegExp(`Phase ${oldPadded} `, 'g'), replacement: `Phase ${newPadded} ` });
   }
 
   // Rename directories (highest to lowest to avoid conflicts)
@@ -451,11 +452,10 @@ const renumberPhasesFrom = async (vaultRoot: string, insertionPoint: number): Pr
   for (const filePath of allFiles) {
     let content = await readFile(filePath, 'utf-8');
     let changed = false;
-    for (const [oldText, newText] of replacements) {
-      if (content.includes(oldText)) {
-        content = content.split(oldText).join(newText);
-        changed = true;
-      }
+    for (const { pattern, replacement } of replacements) {
+      const before = content;
+      content = content.replace(pattern, replacement);
+      if (content !== before) changed = true;
     }
     if (changed) {
       await writeFile(filePath, content, 'utf-8');
@@ -1830,8 +1830,11 @@ export async function handleCreatePhaseCommand(
             return replaceGeneratedBlock(result, 'phase-linear-context', nextLines.join('\n'), shiftedPhasePath).content;
           }),
         );
-      } catch {
-        // Shifted phase resolution failed — skip link fixup
+      } catch (error) {
+        io.stderr(
+          `Warning: failed to update shifted phase linkage for PHASE-${nextPhaseNumber}: ` +
+          (error instanceof Error ? error.message : String(error)),
+        );
       }
     }
 
