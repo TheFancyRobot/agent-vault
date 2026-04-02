@@ -70,7 +70,7 @@ bunx @fancyrobot/agent-vault
 #     Codex: /prompts:vault-refresh
 ```
 
-For ad hoc or manual workflows, the lower-level create commands such as `/vault:create-phase`, `/vault:create-step`, and `/vault:create-session` are still available.
+For ad hoc or manual workflows, the lower-level create commands such as `/vault:create-phase`, `/vault:create-step`, and `/vault:create-session` are still available. Use `--insert-before` to insert a phase at a specific position — existing phases are renumbered automatically.
 
 ## What It Does
 
@@ -206,7 +206,7 @@ After installation, these commands are available in each tool:
 | Claude Code / OpenCode | Codex | Description |
 |---|---|---|
 | `/vault:init` | `/prompts:vault-init` | Initialize vault scaffold and scan the project |
-| `/vault:create-phase` | `/prompts:vault-create-phase` | Create a new phase (auto-generates phase number) |
+| `/vault:create-phase` | `/prompts:vault-create-phase` | Create a new phase (auto-generates phase number, supports `--insert-before` to insert at a position) |
 | `/vault:create-step` | `/prompts:vault-create-step` | Create a step inside a phase |
 | `/vault:create-session` | `/prompts:vault-create-session` | Create a timestamped session linked to a step |
 | `/vault:create-bug` | `/prompts:vault-create-bug` | Create a bug note (auto-generates bug ID) |
@@ -287,6 +287,8 @@ Creates notes with auto-generated IDs and canonical templates:
 | `decision` | `DEC-NNNN` | `DEC-0001` |
 
 Each note is created with structured YAML frontmatter and required headings per note type. Phase creation also creates a `Steps/` subdirectory.
+
+Phases can be inserted at a specific position using the `insert_before` parameter (or `--insert-before` via CLI). This shifts all existing phases from that position onward — renaming directories, updating phase and step IDs, and fixing all wikilink references across the vault. For example, inserting before phase 3 in a vault with phases 1–4 renumbers phases 3 and 4 to 4 and 5, then creates the new phase at position 3.
 
 ### `vault_validate`
 

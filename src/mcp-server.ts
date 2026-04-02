@@ -102,7 +102,7 @@ export async function startServer(): Promise<void> {
     'vault_create',
     [
       'Create a vault note. The `type` field selects the note kind:',
-      '- "phase": Create a phase folder + note. Params: title (required), phase_number, previous.',
+      '- "phase": Create a phase folder + note. Params: title (required), phase_number, previous, insert_before.',
       '- "step": Create a step inside a phase. Params: title, phase_number, step_number (all required).',
       '- "session": Create a timestamped session linked to a step. Params: related_step (required), agent.',
       '- "bug": Create a bug note. Params: title (required), bug_id, step, session.',
@@ -114,6 +114,7 @@ export async function startServer(): Promise<void> {
       phase_number: z.string().optional().describe('Phase number (step: required; phase: optional, auto-generated)'),
       step_number: z.string().optional().describe('Step number (required for step)'),
       previous: z.string().optional().describe('Previous phase ID for linkage (phase only)'),
+      insert_before: z.string().optional().describe('Insert before this phase, shifting existing phases forward (phase only)'),
       related_step: z.string().optional().describe('Step ID to link (required for session)'),
       agent: z.string().optional().describe('Agent name (session only)'),
       bug_id: z.string().optional().describe('Bug ID, auto-generated if omitted (bug only)'),
@@ -132,6 +133,7 @@ export async function startServer(): Promise<void> {
           const argv = [input.title];
           if (input.phase_number) argv.push('--phase-number', input.phase_number);
           if (input.previous) argv.push('--previous', input.previous);
+          if (input.insert_before) argv.push('--insert-before', input.insert_before);
           return captureOutput(handleCreatePhaseCommand, argv, vaultRoot);
         }
 

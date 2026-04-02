@@ -7,7 +7,7 @@ Usage:
 
 Arguments:
 - phase: Phase number or ID (e.g., "1", "01", "PHASE-01")
-- bugs: Switch to bug-fix mode -- each bug gets its own branch with incremental commits
+- bugs: Switch to bug-fix mode -- each bug gets its own branch (orchestrator handles commits)
 - BUG-XXXX: Optional specific bug IDs to fix (only in bugs mode)
 - --agent: Which agent CLI to spawn (default: auto-detect, prefers opencode > claude > codex)
 - --confirm: Pause between units for user confirmation (default: auto-advance)
@@ -53,9 +53,9 @@ Workflow (bugs mode):
    - Apply filters: specific bug IDs if provided, severity threshold if `--severity` is set.
    - For each bug:
      a. Create a new git branch `fix/<bug-id>-<slug>` (or resume if it already exists).
-     b. Spawn a fresh agent CLI process with a bug-fix prompt.
-     c. The agent reads the bug note, investigates, fixes, commits incrementally, and updates the bug status.
-     d. After the agent exits, verify the bug's frontmatter status.
+     b. Spawn a fresh agent CLI process with a bug-fix prompt (agents are instructed NOT to run git commands).
+     c. The agent reads the bug note, investigates, implements the fix, and updates the bug status via vault_mutate.
+     d. After the agent exits, the orchestrator commits all changes and verifies the bug's frontmatter status.
      e. Return to the original branch before moving to the next bug.
    - If `--confirm` is set, prompt for confirmation before each bug.
    - Continue to the next bug even if one fails (unlike phase mode which stops on failure).
