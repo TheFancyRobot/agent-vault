@@ -5,13 +5,15 @@
   "publishConfig": {
     "access": "public"
   },
-  "description": "Durable project memory for coding agents. Obsidian-compatible vault with MCP server integration for Claude Code, OpenCode, and Codex.",
+  "description": "Durable project memory for coding agents. Obsidian-compatible vault with MCP server, pi package, and slash commands for Claude Code, OpenCode, and Codex.",
   "bin": {
     "agent-vault": "./dist/cli.mjs"
   },
   "files": [
     "dist/",
     "claude-commands/",
+    "pi-package/",
+    "src/",
     "README.md",
     "LICENSE"
   ],
@@ -31,6 +33,7 @@
     "@modelcontextprotocol/sdk": "^1.12.0",
     "@toon-format/toon": "^2.1.0",
     "js-yaml": "^4.1.0",
+    "playwright": "^1.59.1",
     "zod": "^3.24.0"
   },
   "devDependencies": {
@@ -44,6 +47,7 @@
     "vitest": "^3.0.0"
   },
   "keywords": [
+    "pi-package",
     "agent",
     "vault",
     "mcp",
@@ -53,5 +57,30 @@
     "codex",
     "project-memory"
   ],
+  "peerDependencies": {
+    "@mariozechner/pi-ai": "*",
+    "@mariozechner/pi-coding-agent": "*",
+    "@sinclair/typebox": "*"
+  },
+  "peerDependenciesMeta": {
+    "@mariozechner/pi-coding-agent": {
+      "optional": true
+    },
+    "@sinclair/typebox": {
+      "optional": true
+    },
+    "@mariozechner/pi-ai": {
+      "optional": true
+    }
+  },
+  "pi": {
+    "extensions": [
+      "./pi-package/extensions"
+    ],
+    "skills": [
+      "./pi-package/skills"
+    ],
+    "image": "https://raw.githubusercontent.com/fancyrobot/agent-vault/main/assets/preview.png"
+  },
   "license": "MIT"
 }

@@ -1,0 +1,27 @@
+{
+  "name": "vault-resume",
+  "version": "1.0.0",
+  "description": "Resume work from the last saved session checkpoint in an Agent Vault",
+  "main": "index.js",
+  "scripts": {
+    "test": "node test.js"
+  },
+  "keywords": [
+    "agent-vault",
+    "session",
+    "resume",
+    "checkpoint",
+    "continuation"
+  ],
+  "author": "Agent Vault Team",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {},
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/fancyrobot/agent-vault.git"
+  }
+}
