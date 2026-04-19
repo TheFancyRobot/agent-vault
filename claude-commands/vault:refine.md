@@ -8,10 +8,13 @@ Workflow:
 
 1. Resolve the phase, then understand the whole phase before touching individual steps.
    - Find the exact phase note under `.agent-vault/02_Phases/` by matching `phase_id:`.
-   - Load focused context with `vault_traverse`: the phase, all linked step notes, related architecture, related bugs, related decisions, and recent sessions.
-   - Read the full phase objective, scope, non-goals, dependencies, acceptance criteria, and notes.
+   - Use the phase note as the primary root. Do not start from home notes when the phase is already known; at most glance at `00_Home/Active_Context` to confirm whether the phase is currently active.
+   - Load focused context with `vault_traverse`: start from the phase note at depth 2 with `direction: outgoing` and `include_content: false` to discover linked step notes and directly connected architecture, bug, and decision notes.
+   - Read the full phase note, then read each step note in the phase fully.
+   - Read full content only for the handful of linked architecture, decision, and bug notes that are actually referenced by the step requirements or likely checklist gaps.
+   - Load recent sessions only when they contain unresolved handoff information relevant to a current step; when you do, read just the relevant handoff sections instead of the entire session history.
    - Research the codebase paths referenced across the whole phase so you understand how the steps fit together before asking any questions.
-   - Traversal recipe: use depth 2 from the phase note (direction both, include_content true) to load the full phase subgraph. If any step references a subsystem that has an architecture note not yet linked, traverse that architecture note at depth 1 to discover related decisions and bugs that should be linked.
+   - If any step references a subsystem whose architecture note is missing from the initial traversal, run a second targeted traversal from that architecture note at depth 1 rather than broadening the entire phase load.
 
 2. Use tactical subagent research to build phase-wide understanding first.
    - Launch independent research in parallel when useful, for example:

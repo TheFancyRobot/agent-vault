@@ -11,8 +11,11 @@ const execFile = promisify(execFileCallback);
 const WIKI_LINK_PATTERN = /\[\[([^\]]+)\]\]/g;
 const MARKDOWN_LINK_PATTERN = /\[[^\]]+\]\(([^)]+)\)/g;
 const HEADING_PATTERN = /^( {0,3})#{1,6}[ \t]+(.+?)(?:[ \t]+#+[ \t]*)?[ \t]*$/m;
-const CONTENT_EXCERPT_LIMIT = 4000;
-const TOTAL_CONTENT_LIMIT = 40000;
+const ROOT_CONTENT_EXCERPT_LIMIT = 4000;
+const CONTENT_EXCERPT_LIMIT = 2000;
+const MIN_CONTENT_EXCERPT_LIMIT = 400;
+const TOTAL_CONTENT_LIMIT = 24000;
+const TRUNCATION_SUFFIX = '\n\n[truncated]';
 const OBSIDIAN_TIMEOUT_MS = 5000;
 
 export type VaultGraphResolver = 'filesystem' | 'obsidian';
@@ -432,15 +435,104 @@ const normalizeFilterValues = (values: readonly string[] | undefined): Set<strin
   return normalized.length > 0 ? new Set(normalized) : null;
 };
 
-const excerptContent = (content: string): { excerpt: string; truncated: boolean } => {
-  if (content.length <= CONTENT_EXCERPT_LIMIT) {
+const getTraversalNeighbors = (node: VaultGraphNode, direction: VaultTraverseDirection): string[] => {
+  const neighborTargets = new Set<string>();
+  if (direction === 'outgoing' || direction === 'both') {
+    for (const target of node.outgoingLinks) {
+      neighborTargets.add(target);
+    }
+  }
+  if (direction === 'incoming' || direction === 'both') {
+    for (const target of node.incomingLinks) {
+      neighborTargets.add(target);
+    }
+  }
+  return [...neighborTargets];
+};
+
+const nodeMatchesFilters = (
+  node: VaultGraphNode,
+  noteTypeFilter: Set<string> | null,
+  statusFilter: Set<string> | null,
+): boolean => {
+  if (noteTypeFilter && !noteTypeFilter.has((node.noteType ?? '').toLowerCase())) {
+    return false;
+  }
+
+  if (statusFilter && !statusFilter.has((node.status ?? '').toLowerCase())) {
+    return false;
+  }
+
+  return true;
+};
+
+const excerptContent = (content: string, limit: number): { excerpt: string; truncated: boolean } => {
+  if (content.length <= limit) {
     return { excerpt: content, truncated: false };
   }
 
+  if (limit <= TRUNCATION_SUFFIX.length) {
+    return {
+      excerpt: TRUNCATION_SUFFIX.slice(0, limit),
+      truncated: true,
+    };
+  }
+
   return {
-    excerpt: `${content.slice(0, CONTENT_EXCERPT_LIMIT)}\n\n[truncated]`,
+    excerpt: `${content.slice(0, limit - TRUNCATION_SUFFIX.length)}${TRUNCATION_SUFFIX}`,
     truncated: true,
   };
+};
+
+const allocateContentExcerpts = (
+  nodes: readonly VaultGraphNode[],
+  rootTarget: string,
+  discoveredDepths: ReadonlyMap<string, number>,
+): { contentByTarget: Map<string, string>; truncated: boolean } => {
+  const prioritizedNodes = [...nodes].sort((left, right) => {
+    const leftRootRank = left.canonicalTarget === rootTarget ? 0 : 1;
+    const rightRootRank = right.canonicalTarget === rootTarget ? 0 : 1;
+    if (leftRootRank !== rightRootRank) {
+      return leftRootRank - rightRootRank;
+    }
+
+    const leftDepth = discoveredDepths.get(left.canonicalTarget) ?? Number.POSITIVE_INFINITY;
+    const rightDepth = discoveredDepths.get(right.canonicalTarget) ?? Number.POSITIVE_INFINITY;
+    if (leftDepth !== rightDepth) {
+      return leftDepth - rightDepth;
+    }
+
+    return left.relativePath.localeCompare(right.relativePath);
+  });
+
+  const contentByTarget = new Map<string, string>();
+  let contentBudgetRemaining = TOTAL_CONTENT_LIMIT;
+  let truncated = false;
+
+  prioritizedNodes.forEach((node, index) => {
+    if (contentBudgetRemaining <= 0) {
+      truncated = true;
+      return;
+    }
+
+    const remainingNodes = prioritizedNodes.length - index;
+    const fairShare = Math.max(MIN_CONTENT_EXCERPT_LIMIT, Math.floor(contentBudgetRemaining / remainingNodes));
+    const perNodeLimit = Math.min(
+      node.canonicalTarget === rootTarget ? ROOT_CONTENT_EXCERPT_LIMIT : CONTENT_EXCERPT_LIMIT,
+      fairShare,
+      contentBudgetRemaining,
+    );
+
+    const excerpt = excerptContent(node.content, perNodeLimit);
+    if (excerpt.truncated) {
+      truncated = true;
+    }
+
+    contentByTarget.set(node.canonicalTarget, excerpt.excerpt);
+    contentBudgetRemaining -= excerpt.excerpt.length;
+  });
+
+  return { contentByTarget, truncated };
 };
 
 export const traverseVaultGraph = (graph: VaultGraph, params: VaultTraverseParams, warnings: string[] = []): VaultTraverseResult => {
@@ -452,10 +544,55 @@ export const traverseVaultGraph = (graph: VaultGraph, params: VaultTraverseParam
   const maxNotes = Math.max(1, params.maxNotes ?? 500);
   const noteTypeFilter = normalizeFilterValues(params.noteTypes);
   const statusFilter = normalizeFilterValues(params.statuses);
+  const filtersActive = noteTypeFilter !== null || statusFilter !== null;
   const visited = new Set<string>([rootNode.canonicalTarget]);
   const included = new Set<string>([rootNode.canonicalTarget]);
+  const discoveredDepths = new Map<string, number>([[rootNode.canonicalTarget, 0]]);
   const queue: Array<{ target: string; depth: number }> = [{ target: rootNode.canonicalTarget, depth: 0 }];
+  const matchMemo = new Map<string, boolean>();
   let truncated = false;
+
+  const canReachIncludedNode = (target: string, remainingDepth: number, activeKeys = new Set<string>()): boolean => {
+    const memoKey = `${target}:${remainingDepth}`;
+    const memoized = matchMemo.get(memoKey);
+    if (memoized !== undefined) {
+      return memoized;
+    }
+
+    const node = graph.nodesByCanonicalTarget.get(target);
+    if (!node) {
+      matchMemo.set(memoKey, false);
+      return false;
+    }
+
+    if (nodeMatchesFilters(node, noteTypeFilter, statusFilter)) {
+      matchMemo.set(memoKey, true);
+      return true;
+    }
+
+    if (remainingDepth <= 0) {
+      matchMemo.set(memoKey, false);
+      return false;
+    }
+
+    activeKeys.add(memoKey);
+    for (const neighbor of getTraversalNeighbors(node, params.direction)) {
+      const childKey = `${neighbor}:${remainingDepth - 1}`;
+      if (activeKeys.has(childKey)) {
+        continue;
+      }
+
+      if (canReachIncludedNode(neighbor, remainingDepth - 1, activeKeys)) {
+        activeKeys.delete(memoKey);
+        matchMemo.set(memoKey, true);
+        return true;
+      }
+    }
+
+    activeKeys.delete(memoKey);
+    matchMemo.set(memoKey, false);
+    return false;
+  };
 
   while (queue.length > 0) {
     const current = queue.shift();
@@ -472,94 +609,69 @@ export const traverseVaultGraph = (graph: VaultGraph, params: VaultTraverseParam
       continue;
     }
 
-    const neighborTargets = new Set<string>();
-    if (params.direction === 'outgoing' || params.direction === 'both') {
-      for (const target of node.outgoingLinks) {
-        neighborTargets.add(target);
-      }
-    }
-    if (params.direction === 'incoming' || params.direction === 'both') {
-      for (const target of node.incomingLinks) {
-        neighborTargets.add(target);
-      }
-    }
-
-    for (const target of neighborTargets) {
+    for (const target of getTraversalNeighbors(node, params.direction)) {
       if (visited.has(target)) {
         continue;
       }
 
+      const nextDepth = current.depth + 1;
+      const remainingDepth = params.depth - nextDepth;
+      const candidate = graph.nodesByCanonicalTarget.get(target);
+      if (!candidate) {
+        visited.add(target);
+        continue;
+      }
+
+      if (filtersActive && !canReachIncludedNode(target, remainingDepth)) {
+        visited.add(target);
+        continue;
+      }
+
       visited.add(target);
+      queue.push({ target, depth: nextDepth });
+
+      if (!nodeMatchesFilters(candidate, noteTypeFilter, statusFilter)) {
+        continue;
+      }
+
       if (included.size >= maxNotes) {
         truncated = true;
         continue;
       }
 
       included.add(target);
-      queue.push({ target, depth: current.depth + 1 });
+      discoveredDepths.set(target, nextDepth);
     }
   }
 
   const filteredNodes = [...included]
     .map((target) => graph.nodesByCanonicalTarget.get(target))
     .filter((node): node is VaultGraphNode => Boolean(node))
-    .filter((node) => {
-      if (node.canonicalTarget === rootNode.canonicalTarget) {
-        return true;
-      }
-
-      if (noteTypeFilter && !noteTypeFilter.has((node.noteType ?? '').toLowerCase())) {
-        return false;
-      }
-
-      if (statusFilter && !statusFilter.has((node.status ?? '').toLowerCase())) {
-        return false;
-      }
-
-      return true;
-    })
     .sort((left, right) => left.relativePath.localeCompare(right.relativePath));
 
   const includedTargets = new Set(filteredNodes.map((node) => node.canonicalTarget));
-  let contentBudgetRemaining = TOTAL_CONTENT_LIMIT;
-  const notes = filteredNodes.map((node) => {
-    let content: string | undefined;
-    if (params.includeContent) {
-      const excerpt = excerptContent(node.content);
-      if (excerpt.truncated) {
-        truncated = true;
-      }
-
-      if (contentBudgetRemaining <= 0) {
-        truncated = true;
-      } else {
-        content = excerpt.excerpt.slice(0, contentBudgetRemaining);
-        contentBudgetRemaining -= content.length;
-        if (content.length < excerpt.excerpt.length) {
-          truncated = true;
-        }
-      }
+  const contentByTarget = new Map<string, string>();
+  if (params.includeContent) {
+    const allocatedContent = allocateContentExcerpts(filteredNodes, rootNode.canonicalTarget, discoveredDepths);
+    truncated ||= allocatedContent.truncated;
+    for (const [target, content] of allocatedContent.contentByTarget.entries()) {
+      contentByTarget.set(target, content);
     }
+  }
 
-    return {
-      path: node.relativePath,
-      title: node.title,
-      noteType: node.noteType,
-      status: node.status,
-      updated: node.updated,
-      ...(content !== undefined ? { content } : {}),
-    } satisfies VaultTraverseResultNode;
-  });
+  const notes = filteredNodes.map((node) => ({
+    path: node.relativePath,
+    title: node.title,
+    noteType: node.noteType,
+    status: node.status,
+    updated: node.updated,
+    ...(contentByTarget.has(node.canonicalTarget) ? { content: contentByTarget.get(node.canonicalTarget) } : {}),
+  } satisfies VaultTraverseResultNode));
 
   const edges = filteredNodes.flatMap((node) => {
-    const forwardEdges = (params.direction === 'outgoing' || params.direction === 'both')
-      ? node.outgoingLinks
-      : [];
-    const backwardEdges = (params.direction === 'incoming' || params.direction === 'both')
-      ? node.incomingLinks
-      : [];
+    const neighborTargets = getTraversalNeighbors(node, params.direction);
 
-    return [...new Set([...forwardEdges, ...backwardEdges])]
+    return neighborTargets
       .filter((target) => includedTargets.has(target))
       .map((target) => ({ from: node.relativePath, to: graph.nodesByCanonicalTarget.get(target)?.relativePath ?? target }))
       .filter((edge) => typeof edge.to === 'string')

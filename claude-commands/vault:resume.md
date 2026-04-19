@@ -10,7 +10,7 @@ Workflow:
    - Scan `.agent-vault/05_Sessions/` for session note files, sorted by filename timestamp (newest first).
    - If `--session` is provided, find the matching session by `session_id` frontmatter instead of using the most recent.
    - If no sessions exist, report that there is nothing to resume and suggest `/vault:execute` instead.
-   - Read the full session note: frontmatter (`status`, `phase`, `related_bugs`, `related_decisions`), Execution Log, Findings, Changed Paths, Follow-Up Work, and Completion Summary.
+   - Read the session frontmatter and only the sections needed for handoff: Follow-Up Work, Completion Summary, Findings, the latest relevant Execution Log entries or checkpoint, latest Validation Run, and Changed Paths. Read older log/history only if the handoff is still ambiguous after inspecting those sections.
 
 2. Determine the continuation target from the previous session.
    - Extract the phase link from the session's frontmatter.
@@ -23,14 +23,15 @@ Workflow:
      - If that step is `done` or `completed`, target the next incomplete step in the same phase.
      - If all steps in the phase are complete but the phase is not yet marked complete, target the phase for close-out.
      - If the phase is also complete, find the next planned phase and its first step.
-   - Show the user the proposed continuation target with evidence from the previous session (last Execution Log entries, Follow-Up Work items, Completion Summary) and ask for confirmation before proceeding.
+   - If the session handoff leaves multiple plausible targets, use home notes such as `00_Home/Active_Context` only to break the tie. Do not treat home notes as the main resume payload once a target is identified.
+   - Show the user the proposed continuation target with evidence from the previous session (latest Execution Log entries, Follow-Up Work items, Completion Summary) and ask for confirmation before proceeding.
 
 3. Load focused context for the continuation.
-   - Use `vault_traverse` to load the target phase, target step, related architecture, bugs, decisions, and the previous session note.
-   - Traversal recipe: use depth 2 from the target step (direction both, include_content true) to pull the step, parent phase, sibling steps, and all linked notes. If the previous session's Findings or Follow-Up Work reference notes not in the traversal result, load those explicitly at depth 1.
-   - Read the previous session's Execution Log, Findings, and Follow-Up Work to build a concise handoff briefing for the agent.
-   - Read the target step's full content for requirements, acceptance criteria, and validation commands.
-   - If the previous session references bugs or decisions, load those too so unresolved issues carry forward.
+   - Use target-rooted loading once the continuation target is known.
+   - Traversal recipe: start from the target step, or the target phase for close-out work, at depth 1-2 with `direction: outgoing` and `include_content: false` to discover the parent phase, required reading, linked bugs, decisions, architecture notes, and directly relevant sibling or dependency notes.
+   - Then read fully only the target step, parent phase, and the small set of linked notes actually referenced by Required Reading or the session handoff.
+   - Read only the relevant previous-session handoff material: Follow-Up Work, Completion Summary, Findings, latest relevant Execution Log entries, latest Validation Run, and Changed Paths. If those sections point to a bug or decision, load that note fully; otherwise do not pull unrelated historical session content.
+   - If a needed note is reachable only through an inbound link, do a second narrow traversal or explicit read for that note instead of broadening the whole load.
 
 4. Create a continuation session and prepare for work.
    - Create a new session note linked to the target step using `vault_create` with type `session`.

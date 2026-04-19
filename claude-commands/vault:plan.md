@@ -8,14 +8,16 @@ Workflow:
 
 1. Establish planning context before inventing anything.
    - If the repo does not have a vault yet, initialize it with `vault_init`.
-   - Use `vault_scan`, `vault_traverse`, and targeted repo/document searches to understand the current system, roadmap, active context, existing phases, architecture notes, decisions, bugs, and relevant docs.
-   - Traversal recipe: start from `00_Home/Active_Context` (depth 2, direction both, include_content true) to discover the current vault state, then traverse from each architecture note relevant to the initiative (depth 1, outgoing) to map related decisions, phases, and bugs. Track which existing notes relate to the initiative; they will become wikilinks in the new phase and step notes.
+   - Use `vault_scan`, targeted repo/document searches, and narrow vault discovery to understand the current system, roadmap, existing phases, architecture notes, decisions, bugs, and relevant docs.
+   - In mature vaults, treat home notes such as `00_Home/Active_Context` as routing/index notes only: use them to spot existing initiatives, active phases, or likely root notes, but do not use them as the main planning context payload.
+   - Traversal recipe: after identifying likely roots, prefer `vault_traverse` from the most relevant existing phase, architecture, decision, or bug note at depth 1-2 with `direction: outgoing` and `include_content: false`. Then read only the few notes that matter fully (usually the existing phase note, 1-3 architecture notes, any directly relevant decisions or bugs, and the specific step notes you may update). Use a secondary targeted traversal only when the first root misses a needed linked note.
    - Restate the request as a planning problem: desired outcome, likely constraints, impacted workflows, and whether this is a new initiative or an update to an existing plan.
    - Do not create duplicate phases if the vault already contains the same work under different wording.
 
 2. Review existing documents and gather evidence before asking questions.
    - Read the most relevant vault notes first, then repo docs such as `README.md`, `AGENTS.md`, architecture docs, package manifests, tests, scripts, and source files tied to the request.
    - When a source document is doing product or system design, explicitly extract any embedded roadmap, milestone list, named phases, architecture layers, or rollout sequence before deciding plan shape.
+   - Avoid loading entire phase trees or historical session content when a narrower target-rooted note set answers the question.
    - Launch independent research in parallel when useful:
      - `explore` for code-path discovery, existing patterns, and likely starting files
      - `general` for requirements gaps, sequencing, validation strategy, and integration risks
