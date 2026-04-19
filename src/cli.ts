@@ -10,7 +10,6 @@ Usage:
   bunx @fancyrobot/agent-vault                  Same install/update flow via Bun
   npx @fancyrobot/agent-vault uninstall         Remove MCP server configuration
   npx @fancyrobot/agent-vault serve             Start MCP stdio server (used by agent tools)
-  npx @fancyrobot/agent-vault orchestrate       Execute phase steps or fix bugs with context clearing
 
 Options:
   --global                    Install runtime in ~/.agent-vault without agent prompts
@@ -22,9 +21,6 @@ Options:
   } else if (command === 'serve') {
     const { startServer } = await import('./mcp-server.js');
     await startServer();
-  } else if (command === 'orchestrate') {
-    const { orchestrate } = await import('./orchestrate.js');
-    await orchestrate(args.slice(1));
   } else if (command === 'uninstall') {
     const { runUninstall } = await import('./install.js');
     await runUninstall(args.slice(1));
@@ -39,7 +35,6 @@ Usage:
   bunx @fancyrobot/agent-vault                  Same install/update flow via Bun
   npx @fancyrobot/agent-vault uninstall         Remove MCP server configuration
   npx @fancyrobot/agent-vault serve             Start MCP stdio server (used by agent tools)
-  npx @fancyrobot/agent-vault orchestrate       Execute phase steps or fix bugs with context clearing
 
 Options:
   --global                    Install runtime in ~/.agent-vault without agent prompts

@@ -1,0 +1,16 @@
+---
+description: Initialize an Agent Vault for the current project. Use when setting up a new vault, starting vault-based planning, or when the .agent-vault directory does not exist yet.
+---
+
+# Vault Init
+
+Initialize an Agent Vault for this project.
+
+Call the `vault_init` tool to create the `.agent-vault/` directory scaffold with templates, home notes, architecture stubs, and shared knowledge.
+
+After initialization:
+1. Read the scan results to understand the project structure
+2. Read key source files to understand the codebase architecture
+3. Populate the architecture stubs in `01_Architecture/` with what you learn
+4. Run `vault_refresh` to update home notes
+5. Run `vault_validate` to confirm the vault is healthy
