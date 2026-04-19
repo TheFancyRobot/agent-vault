@@ -14,14 +14,16 @@ Workflow:
    - If both `phase-id` and `step-id` are provided, verify that the step belongs to the phase, then target only that step.
    - If only `phase-id` is provided, target the phase and determine whether to resume an in-progress step or start the next ready step inside that phase.
    - If no arguments are provided, inspect `00_Home/Active_Context.md`, recent session notes, phase and step statuses, and the roadmap to infer the most likely continuation target.
+   - Use home notes such as `Active_Context` only to infer or confirm the target. Once the target is known, switch to target-rooted loading instead of treating home notes as the main execution payload.
    - Prefer, in order: an in-progress step with an active or recent session; otherwise the next non-completed step in the most active phase; otherwise the highest-signal planned phase with clear next work.
    - When the target was inferred rather than explicitly provided, show the user the recommended phase and step to continue, explain the evidence briefly, and ask for verification before proceeding. Do not start implementation until the user confirms or corrects the target.
 
 2. Load focused context with `vault_traverse`.
    - Find the exact phase and step notes under `.agent-vault/02_Phases/` by matching `phase_id:` and `step_id:`.
-   - If the target is a phase, load the phase, its linked steps, related architecture, related bugs, related decisions, and recent sessions. Execute remaining steps in listed order unless dependencies clearly allow safe parallel work.
-   - If the target is a single step, load the step, parent phase, linked notes, and recent sessions.
-   - Traversal recipes: for a phase target, use depth 2 from the phase note (direction both, include_content true) to pull the full phase subgraph in one call. For a single step, use depth 2 from the step (direction both) to reach the parent phase and its siblings. If the returned subgraph is missing architecture notes referenced in Required Reading, traverse those explicitly at depth 1.
+   - Use target-rooted loading. Home notes are only for target inference, not the main context payload.
+   - If the target is a phase, start from the phase note at depth 2 with `direction: outgoing` and `include_content: false` to discover linked steps and notes. Read the phase note fully, then read only the current step or next ready steps fully, plus the directly relevant architecture, decision, bug, and recent handoff notes. Do not load every step or every historical session in full unless the phase is tiny and all remaining work is immediately in scope.
+   - If the target is a single step, start from the step at depth 1-2 with `direction: outgoing` and `include_content: false`. Read that step fully and read its parent phase note fully. Load only the linked notes named in Required Reading, dependencies, unresolved bugs or decisions, or the most recent relevant handoff.
+   - If a target-rooted traversal misses something important because the link is inbound-only, do a second narrow traversal or explicit read for that note instead of switching to a broad both-direction full-content load.
 
 3. Enforce a readiness-checklist preflight before coding.
    - Use the same readiness dimensions as `vault:refine`, whether they were explicitly documented during refinement or must be inferred now from the notes and codebase.
