@@ -648,6 +648,76 @@ describe('Agent Vault note generators', () => {
     expect(stepFm.context_id).toBe('SESSION-2026-04-20-014040');
   });
 
+  it('update-frontmatter auto-re-mirrors step when session context.* fields change', async () => {
+    const vaultRoot = await createTempVault();
+    const FIXED_NOW = new Date('2026-04-20T01:40:40.000Z');
+    const harness = makeIo();
+
+    // Create a step and a session linked to it
+    await handleCreateStepCommand(
+      ['1', '2', 'Add Agent Vault generators'],
+      { vaultRoot, io: makeIo().io, now: () => FIXED_NOW },
+    );
+    await handleCreateSessionCommand(
+      ['STEP-01-02', '--agent', 'OpenCode'],
+      { vaultRoot, io: harness.io, now: () => FIXED_NOW },
+    );
+
+    const sessionFiles = await readdir(join(vaultRoot, '05_Sessions'));
+    const sessionRelPath = `05_Sessions/${sessionFiles[0]}`;
+    const stepPath = join(vaultRoot, '02_Phases', 'Phase_01_Foundation', 'Steps', 'Step_02_add-agent-vault-generators.md');
+
+    // Verify initial mirror is 'active'
+    let stepContent = await readFile(stepPath, 'utf-8');
+    let stepFm = parseYamlFrontmatter(stepContent).data;
+    expect(stepFm.context_status).toBe('active');
+
+    // Update session context.status to 'completed' via update-frontmatter with dot-path
+    harness.stdout.length = 0;
+    const exitCode = await handleUpdateFrontmatterCommand(
+      [sessionRelPath, '--set', 'context.status=completed'],
+      { vaultRoot, io: harness.io, now: () => FIXED_NOW },
+    );
+    expect(exitCode).toBe(0);
+
+    // Step mirror should have been auto-updated to 'completed'
+    stepContent = await readFile(stepPath, 'utf-8');
+    stepFm = parseYamlFrontmatter(stepContent).data;
+    expect(stepFm.context_status).toBe('completed');
+  });
+
+  it('update-frontmatter does not re-mirror when non-context fields change on a session', async () => {
+    const vaultRoot = await createTempVault();
+    const FIXED_NOW = new Date('2026-04-20T01:40:40.000Z');
+    const harness = makeIo();
+
+    await handleCreateStepCommand(
+      ['1', '2', 'Add Agent Vault generators'],
+      { vaultRoot, io: makeIo().io, now: () => FIXED_NOW },
+    );
+    await handleCreateSessionCommand(
+      ['STEP-01-02', '--agent', 'OpenCode'],
+      { vaultRoot, io: harness.io, now: () => FIXED_NOW },
+    );
+
+    const sessionFiles = await readdir(join(vaultRoot, '05_Sessions'));
+    const sessionRelPath = `05_Sessions/${sessionFiles[0]}`;
+    const stepPath = join(vaultRoot, '02_Phases', 'Phase_01_Foundation', 'Steps', 'Step_02_add-agent-vault-generators.md');
+
+    // Update a non-context field (e.g. owner)
+    harness.stdout.length = 0;
+    const exitCode = await handleUpdateFrontmatterCommand(
+      [sessionRelPath, '--set', 'owner=Agent2'],
+      { vaultRoot, io: harness.io, now: () => FIXED_NOW },
+    );
+    expect(exitCode).toBe(0);
+
+    // Step mirrors should remain unchanged
+    const stepContent = await readFile(stepPath, 'utf-8');
+    const stepFm = parseYamlFrontmatter(stepContent).data;
+    expect(stepFm.context_status).toBe('active');
+  });
+
   it('refresh-all-home-notes runs all three home refreshers', async () => {
     const vaultRoot = await createTempVault();
     await writeFile(join(vaultRoot, '03_Bugs', 'BUG-0001_release-blocker.md'), [

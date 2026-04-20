@@ -4,7 +4,7 @@ template_version: 2
 contract_version: 1
 title: Built-in vault context management
 phase_id: PHASE-01
-status: planned
+status: completed
 owner: Pi
 created: '2026-04-20'
 updated: '2026-04-20'
@@ -56,21 +56,21 @@ Use this note for a bounded phase of work in \`02_Phases/\`. This note is the so
 
 ## Acceptance Criteria
 
-- [ ] Scope is concrete and linked to the right durable notes.
-- [ ] Step notes exist for the first executable work units.
-- [ ] Validation and documentation expectations are explicit.
-- [ ] Decision note records the v1 context model and command surface clearly enough for implementation.
-- [ ] Session notes can store the canonical current effective context in a validated machine-readable shape.
-- [ ] Step notes can mirror routing-critical context fields and a human-readable summary.
-- [ ] `/vault:execute`, `/vault:resume`, and `/vault:orchestrate` use the built-in context subsystem safely.
-- [ ] Tests cover schema validation, mirror updates, and at least one end-to-end resume/execution workflow.
-- [ ] Docs explain normal workflow behavior, advanced/manual commands, and alias support.
+- [x] Scope is concrete and linked to the right durable notes.
+- [x] Step notes exist for the first executable work units.
+- [x] Validation and documentation expectations are explicit.
+- [x] Decision note records the v1 context model and command surface clearly enough for implementation.
+- [x] Session notes can store the canonical current effective context in a validated machine-readable shape.
+- [x] Step notes can mirror routing-critical context fields and a human-readable summary.
+- [x] `/vault:execute`, `/vault:resume`, and `/vault:orchestrate` use the built-in context subsystem safely.
+- [x] Tests cover schema validation, mirror updates, and at least one end-to-end resume/execution workflow.
+- [x] Docs explain normal workflow behavior, advanced/manual commands, and alias support.
 
 ## Linear Context
 
 <!-- AGENT-START:phase-linear-context -->
 - Previous phase: none.
-- Current phase status: planned
+- Current phase status: completed
 - Next phase: not planned yet.
 <!-- AGENT-END:phase-linear-context -->
 
@@ -96,10 +96,10 @@ Use this note for a bounded phase of work in \`02_Phases/\`. This note is the so
 ## Steps
 
 <!-- AGENT-START:phase-steps -->
-- [ ] [[02_Phases/Phase_01_built_in_vault_context_management/Steps/Step_01_finalize-context-schema-and-command-surface|STEP-01-01 Finalize context schema and command surface]]
-- [ ] [[02_Phases/Phase_01_built_in_vault_context_management/Steps/Step_02_implement-canonical-session-context-persistence|STEP-01-02 Implement canonical session context persistence]]
-- [ ] [[02_Phases/Phase_01_built_in_vault_context_management/Steps/Step_03_implement-step-mirrors-and-workflow-integration|STEP-01-03 Implement step mirrors and workflow integration]]
-- [ ] [[02_Phases/Phase_01_built_in_vault_context_management/Steps/Step_04_add-tests-docs-and-migration-notes|STEP-01-04 Add tests, docs, and migration notes]]
+- [x] [[02_Phases/Phase_01_built_in_vault_context_management/Steps/Step_01_finalize-context-schema-and-command-surface|STEP-01-01 Finalize context schema and command surface]]
+- [x] [[02_Phases/Phase_01_built_in_vault_context_management/Steps/Step_02_implement-canonical-session-context-persistence|STEP-01-02 Implement canonical session context persistence]]
+- [x] [[02_Phases/Phase_01_built_in_vault_context_management/Steps/Step_03_implement-step-mirrors-and-workflow-integration|STEP-01-03 Implement step mirrors and workflow integration]]
+- [x] [[02_Phases/Phase_01_built_in_vault_context_management/Steps/Step_04_add-tests-docs-and-migration-notes|STEP-01-04 Add tests, docs, and migration notes]]
 <!-- AGENT-END:phase-steps -->
 
 ## Notes
