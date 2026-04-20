@@ -189,6 +189,64 @@ Normal `/vault:*` workflows remain the primary UX. For advanced/manual usage, th
 
 The v1 session-owned context lifecycle is `active`, `paused`, `blocked`, `completed`. The `last_action.type` enum is `saved`, `switched`, `resumed`, `prepared`, `paused`, `completed`. `resume_target.type` uses `session`, `step`, `phase`, or `handoff`. Session notes reserve a single canonical prose section for prepared context and handoff text: `## Context Handoff`.
 
+### Step mirrors
+
+When a session is created and linked to a step, four routing-oriented fields are copied from the canonical session context onto the step note's frontmatter. These **step mirrors** provide durable routing across agent restarts without making the step note a second source of truth:
+
+| Mirror field | Source | Purpose |
+|---|---|---|
+| `context_id` | `context.context_id` | Identifies the canonical context | |
+| `active_session_id` | Session note vault path | Points to the active session for this step | |
+| `context_status` | `context.status` | Lifecycle state: `active`, `paused`, `blocked`, `completed` | |
+| `context_summary` | `context.current_focus.summary` | Human-readable focus summary | |
+
+Mirrors update automatically in three situations:
+
+1. **Session creation** — when a new session is linked to a step (via `/vault:create-session` or `/vault:execute`)
+2. **Lifecycle transitions** — when `vault_mutate update_frontmatter` changes a session note's `context.*` fields, the linked step's mirrors are re-mirrored automatically
+3. **Manual re-mirror** — agents can call `updateStepMirrors()` directly from the exported API
+
+The canonical context always lives on the **session note**. Step mirrors are a read-optimized projection for fast routing by `/vault:resume` and `/vault:orchestrate`.
+
+## Upgrading existing vaults
+
+If you created a vault before the context subsystem was added (sessions without a `context` frontmatter field), you may need to backfill older session notes:
+
+1. Run `/vault:validate --target frontmatter` to find sessions missing the `context` field
+2. For each affected session, use the `vault_mutate` MCP tool (action `update_frontmatter`) with dot-path keys to add a valid minimal context object. All sub-fields are required by the validator.
+
+   Call the tool like this (one call per session, with all keys in a single `updates` map):
+
+   ```json
+   {
+     "action": "update_frontmatter",
+     "note_path": "05_Sessions/<session-note-path>.md",
+     "updates": {
+       "context.context_id": "SESSION-YYYY-MM-DD-HHMMSS",
+       "context.status": "completed",
+       "context.updated_at": "2026-04-20T01:00:00.000Z",
+       "context.current_focus.summary": "Advance [[02_Phases/.../Steps/<step>|<step name>]].",
+       "context.current_focus.target": "[[02_Phases/.../Steps/<step>|<step name>]]",
+       "context.resume_target.type": "step",
+       "context.resume_target.target": "[[02_Phases/.../Steps/<step>|<step name>]]",
+       "context.resume_target.section": "Context Handoff",
+       "context.last_action.type": "completed"
+     }
+   }
+   ```
+
+   Each dot-path key (e.g. `context.current_focus.summary`) deep-merges into the nested object. All six top-level fields are required: `context_id`, `status`, `updated_at`, `current_focus`, `resume_target`, and `last_action`. Within those, `current_focus` needs both `summary` and `target`; `resume_target` needs `type`, `target`, and `section`; `last_action` needs `type`.
+
+   - If the session is still active, use `context.status` = `active` and `context.last_action.type` = `saved`.
+   - If the session was completed, use `context.status` = `completed` and `context.last_action.type` = `completed`.
+   - Valid values for `context.status`: `active`, `paused`, `blocked`, `completed`.
+   - Valid values for `context.resume_target.type`: `session`, `step`, `phase`, `handoff`.
+   - Valid values for `context.last_action.type`: `saved`, `switched`, `resumed`, `prepared`, `paused`, `completed`.
+
+3. After backfilling, run `/vault:validate --target doctor` to confirm the vault passes
+
+Step mirrors are optional — they appear only on step notes that have been linked to a session. Steps without linked sessions will not have mirror fields, which is normal and does not indicate a validation error.
+
 ## MCP Tools (9 tools)
 
 These tools are exposed via the MCP server and can be called by any MCP-compatible agent:
@@ -261,7 +319,7 @@ Runs read-only checks against the vault:
 
 Conservative mutations that preserve existing content:
 
-- **`update_frontmatter`** — Set YAML frontmatter fields; preserves unknown keys
+- **`update_frontmatter`** — Set YAML frontmatter fields; preserves unknown keys. Supports dot-path keys (e.g. `context.status=completed`) for deep-merge into nested objects
 - **`append_section`** — Append text to a named heading section
 
 ## Vault Initialization

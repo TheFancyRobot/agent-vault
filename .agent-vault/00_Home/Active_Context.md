@@ -20,9 +20,9 @@ Keep this note short, current, and safe to overwrite as the repo focus changes.
 
 <!-- AGENT-START:current-focus -->
 _Last refreshed: 2026-04-20._
-- Session in progress: [[05_Sessions/2026-04-20-015720-implement-step-mirrors-and-workflow-integration-implementer|SESSION-2026-04-20-015720 implementer session for Implement step mirrors and workflow integration]] - owner: implementer - phase: [[02_Phases/Phase_01_built_in_vault_context_management/Phase|Phase 01 built in vault context management]] - updated: 2026-04-20
-- Current step: [[02_Phases/Phase_01_built_in_vault_context_management/Steps/Step_04_add-tests-docs-and-migration-notes|STEP-01-04 Add tests, docs, and migration notes]] - status: planned - phase: [[02_Phases/Phase_01_built_in_vault_context_management/Phase|Phase 01 built in vault context management]]
-- Active phase: [[02_Phases/Phase_01_built_in_vault_context_management/Phase|PHASE-01 Built-in vault context management]] - status: planned - owner: Pi - updated: 2026-04-20
+- Session in progress: none.
+- Current step: no active or planned step is marked in metadata.
+- Active phase: no active or planned phase is marked in metadata.
 <!-- AGENT-END:current-focus -->
 
 ## Repo Snapshot

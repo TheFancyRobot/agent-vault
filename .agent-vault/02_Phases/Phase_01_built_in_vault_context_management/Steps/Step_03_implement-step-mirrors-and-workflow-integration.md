@@ -21,7 +21,7 @@ tags:
 context_id: SESSION-2026-04-20-015720
 active_session_id: 05_Sessions/2026-04-20-015720-implement-step-mirrors-and-workflow-integration-implementer
 context_status: completed
-context_summary: Advance STEP-01-03 Implement step mirrors and workflow integration.
+context_summary: Advance [[02_Phases/Phase_01_built_in_vault_context_management/Steps/Step_03_implement-step-mirrors-and-workflow-integration|STEP-01-03 Implement step mirrors and workflow integration]].
 ---
 
 # Step 03 - Implement step mirrors and workflow integration

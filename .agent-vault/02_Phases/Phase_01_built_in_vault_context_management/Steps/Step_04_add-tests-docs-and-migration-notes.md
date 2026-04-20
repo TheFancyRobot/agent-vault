@@ -5,19 +5,24 @@ contract_version: 1
 title: Add tests, docs, and migration notes
 step_id: STEP-01-04
 phase: '[[02_Phases/Phase_01_built_in_vault_context_management/Phase|Phase 01 built in vault context management]]'
-status: planned
-owner: ''
+status: completed
+owner: implementer
 created: '2026-04-20'
 updated: '2026-04-20'
 depends_on:
   - '[[02_Phases/Phase_01_built_in_vault_context_management/Steps/Step_01_finalize-context-schema-and-command-surface|STEP-01-01 Finalize context schema and command surface]]'
   - '[[02_Phases/Phase_01_built_in_vault_context_management/Steps/Step_02_implement-canonical-session-context-persistence|STEP-01-02 Implement canonical session context persistence]]'
   - '[[02_Phases/Phase_01_built_in_vault_context_management/Steps/Step_03_implement-step-mirrors-and-workflow-integration|STEP-01-03 Implement step mirrors and workflow integration]]'
-related_sessions: []
+related_sessions:
+  - '[[05_Sessions/2026-04-20-022929-add-tests-docs-and-migration-notes-implementer|SESSION-2026-04-20-022929 implementer session for Add tests, docs, and migration notes]]'
 related_bugs: []
 tags:
   - agent-vault
   - step
+context_id: SESSION-2026-04-20-022929
+active_session_id: 05_Sessions/2026-04-20-022929-add-tests-docs-and-migration-notes-implementer
+context_status: completed
+context_summary: Advance [[02_Phases/Phase_01_built_in_vault_context_management/Steps/Step_04_add-tests-docs-and-migration-notes|STEP-01-04 Add tests, docs, and migration notes]].
 ---
 
 # Step 04 - Add tests, docs, and migration notes
@@ -97,16 +102,23 @@ Use this note for one executable step inside a phase. This note is the source of
 ## Agent-Managed Snapshot
 
 <!-- AGENT-START:step-agent-managed-snapshot -->
-- Status: planned
-- Current owner: 
+- Status: completed
+- Current owner: implementer
 - Last touched: 2026-04-20
-- Next action: Start STEP-01-04.
+- Next action: PHASE-01 complete. No further action required.
 <!-- AGENT-END:step-agent-managed-snapshot -->
 
 ## Implementation Notes
 
 - Capture facts learned during execution.
 - Prefer short bullets with file paths, commands, and observed behavior.
+- Added "Step mirrors" section to README.md documenting mirror fields, update triggers, and the canonical-source principle.
+- Added "Upgrading existing vaults" section to README.md with concrete migration instructions using dot-path mutations.
+- Updated `vault_mutate` docs in README.md to mention dot-path deep-merge support.
+- Added negative test: "update-frontmatter does not re-mirror when non-context fields change on a session" — confirms the auto-re-mirror wiring is scoped to `context.*` updates only.
+- Backfilled the legacy session note `2026-04-20-013545` (from STEP-01-01) with a canonical `context` field using the dot-path migration pattern. This fixes the pre-existing `vault_validate doctor` error and serves as live proof that the migration docs work.
+- After backfill, `vault_validate doctor` reports clean (0 errors, 0 warnings).
+- All 101 tests pass, typecheck clean.
 
 ## Human Notes
 
@@ -115,10 +127,15 @@ Use this note for one executable step inside a phase. This note is the source of
 ## Session History
 
 <!-- AGENT-START:step-session-history -->
-- No sessions yet.
+- 2026-04-20 - [[05_Sessions/2026-04-20-022929-add-tests-docs-and-migration-notes-implementer|SESSION-2026-04-20-022929 implementer session for Add tests, docs, and migration notes]] - Session created.
 <!-- AGENT-END:step-session-history -->
 
 ## Outcome Summary
 
 - Record the final result, the validation performed, and any follow-up required.
 - If the step is blocked, say exactly what is blocking it.
+- STEP-01-04 is complete. The new context subsystem (STEP-01-01 through STEP-01-03) is now fully tested, documented, and safe to ship.
+- README updated with step-mirror docs and migration guidance.
+- Legacy session note backfilled as proof of migration path.
+- Vault doctor passes clean.
+- PHASE-01 is ready to be marked completed.
