@@ -627,15 +627,15 @@ export const traverseVaultGraph = (graph: VaultGraph, params: VaultTraverseParam
         continue;
       }
 
+      if (included.size >= maxNotes) {
+        truncated = true;
+        continue;
+      }
+
       visited.add(target);
       queue.push({ target, depth: nextDepth });
 
       if (!nodeMatchesFilters(candidate, noteTypeFilter, statusFilter)) {
-        continue;
-      }
-
-      if (included.size >= maxNotes) {
-        truncated = true;
         continue;
       }
 

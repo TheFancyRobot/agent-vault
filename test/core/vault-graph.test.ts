@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest';
+import type { VaultGraph, VaultGraphNode } from '../../src/core/vault-graph';
 import { mkdir, mkdtemp, rm, writeFile } from 'fs/promises';
 import { tmpdir } from 'os';
 import { dirname, join } from 'path';
@@ -334,5 +335,88 @@ describe('vault graph', () => {
 
     expect(result.meta.truncated).toBe(true);
     expect(result.notes).toHaveLength(2);
+  });
+
+  it('stops exploring downstream neighbors once max_notes is reached', () => {
+    class CountingMap extends Map<string, VaultGraphNode> {
+      accessed = new Set<string>();
+
+      override get(key: string): VaultGraphNode | undefined {
+        this.accessed.add(key);
+        return super.get(key);
+      }
+    }
+
+    const rootNode: VaultGraphNode = {
+      absolutePath: '/vault/root.md',
+      relativePath: 'root.md',
+      canonicalTarget: 'root',
+      title: 'Root',
+      mtimeMs: 0,
+      frontmatter: {},
+      content: '# Root',
+      outgoingLinks: ['child-a'],
+      incomingLinks: [],
+    };
+    const childANode: VaultGraphNode = {
+      absolutePath: '/vault/child-a.md',
+      relativePath: 'child-a.md',
+      canonicalTarget: 'child-a',
+      title: 'Child A',
+      mtimeMs: 0,
+      frontmatter: {},
+      content: '# Child A',
+      outgoingLinks: ['child-b'],
+      incomingLinks: ['root'],
+    };
+    const childBNode: VaultGraphNode = {
+      absolutePath: '/vault/child-b.md',
+      relativePath: 'child-b.md',
+      canonicalTarget: 'child-b',
+      title: 'Child B',
+      mtimeMs: 0,
+      frontmatter: {},
+      content: '# Child B',
+      outgoingLinks: ['child-c'],
+      incomingLinks: ['child-a'],
+    };
+    const childCNode: VaultGraphNode = {
+      absolutePath: '/vault/child-c.md',
+      relativePath: 'child-c.md',
+      canonicalTarget: 'child-c',
+      title: 'Child C',
+      mtimeMs: 0,
+      frontmatter: {},
+      content: '# Child C',
+      outgoingLinks: [],
+      incomingLinks: ['child-b'],
+    };
+
+    const nodesByCanonicalTarget = new CountingMap([
+      ['root', rootNode],
+      ['child-a', childANode],
+      ['child-b', childBNode],
+      ['child-c', childCNode],
+    ]);
+
+    const graph: VaultGraph = {
+      vaultRoot: '/vault',
+      resolver: 'filesystem',
+      nodes: [rootNode, childANode, childBNode, childCNode],
+      nodesByCanonicalTarget,
+      signature: 'test-graph',
+    };
+
+    const result = traverseVaultGraph(graph, {
+      root: 'root',
+      depth: 3,
+      direction: 'outgoing',
+      maxNotes: 2,
+    });
+
+    expect(result.meta.truncated).toBe(true);
+    expect(result.notes.map((note) => note.path)).toEqual(['child-a.md', 'root.md']);
+    expect(nodesByCanonicalTarget.accessed.has('child-b')).toBe(true);
+    expect(nodesByCanonicalTarget.accessed.has('child-c')).toBe(false);
   });
 });
