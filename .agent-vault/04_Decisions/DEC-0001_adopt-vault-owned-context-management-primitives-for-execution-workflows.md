@@ -34,7 +34,7 @@ Use one note per durable choice in \`04_Decisions/\`. This note is the source of
 
 ## Decision
 
-- Adopt a built-in, vault-owned context management subsystem for execution workflows, centered on four v1 primitives: `checkpoint`, `transition`, `resume-context`, and `compact-research`.
+- Adopt a built-in, vault-owned context management subsystem for execution workflows, centered on four v1 primitive concepts that map to manual command aliases: `checkpoint`, `transition`, `resume-prepare`, and `compact-research`.
 - Keep normal workflows primary: `/vault:execute`, `/vault:resume`, and `/vault:orchestrate` should use this subsystem implicitly where helpful.
 - Also expose the primitives as advanced/manual commands with canonical names plus aliases.
 - Persist the canonical current effective context on session notes under a hybrid frontmatter/prose model.
@@ -65,7 +65,7 @@ Use one note per durable choice in \`04_Decisions/\`. This note is the source of
 - Mirror `context_id`, `session_id`, and `status` onto step-note frontmatter; keep fuller human summary in prose.
 - Update the step mirror only on lifecycle changes or when the active canonical session changes.
 - Add tests, docs, and migration notes as part of the implementation phase.
-- Use friendly canonical manual command names: `save-context`, `switch-context`, `resume-context`, `prepare-context`; keep primitive names as aliases.
+- Use friendly canonical manual command names: `save-context`, `switch-context`, `resume-context`, `prepare-context`; keep the back-compat primitive aliases `checkpoint`, `transition`, `resume-prepare`, and `compact-research`.
 - Use a broader v1 `last_action.type` set: `saved`, `switched`, `resumed`, `prepared`, `paused`, `completed`.
 - Represent `current_focus` as a hybrid object with required fields `summary` and `target`.
 - Keep a single canonical session prose section for handoff/prepared context: `## Context Handoff`.

@@ -5,12 +5,13 @@ contract_version: 1
 title: Finalize context schema and command surface
 step_id: STEP-01-01
 phase: '[[02_Phases/Phase_01_built_in_vault_context_management/Phase|Phase 01 built in vault context management]]'
-status: planned
-owner: ''
+status: completed
+owner: Pi
 created: '2026-04-20'
 updated: '2026-04-20'
 depends_on: []
-related_sessions: []
+related_sessions:
+  - '[[05_Sessions/2026-04-20-013545-finalize-context-schema-and-command-surface-pi|SESSION-2026-04-20-013545 Pi session for Finalize context schema and command surface]]'
 related_bugs: []
 tags:
   - agent-vault
@@ -94,10 +95,10 @@ Use this note for one executable step inside a phase. This note is the source of
 ## Agent-Managed Snapshot
 
 <!-- AGENT-START:step-agent-managed-snapshot -->
-- Status: planned
-- Current owner: 
+- Status: completed
+- Current owner: Pi
 - Last touched: 2026-04-20
-- Next action: Start STEP-01-01.
+- Next action: Hand contract constants and docs to STEP-01-02.
 <!-- AGENT-END:step-agent-managed-snapshot -->
 
 ## Implementation Notes
@@ -110,6 +111,10 @@ Use this note for one executable step inside a phase. This note is the source of
 - Locked `last_action.type` v1 enum: `saved`, `switched`, `resumed`, `prepared`, `paused`, `completed`.
 - Locked `current_focus` v1 shape: hybrid object with required `summary` and `target`.
 - Locked canonical session prose section: `## Context Handoff` only.
+- Added `src/core/context-contract.ts` as the shared code-facing source of truth for lifecycle enums, manual command names, aliases, and prepare-context write boundaries.
+- Updated `src/core/command-catalog.ts` and `README.md` to surface the canonical manual names while keeping `/vault:*` workflows primary.
+- Updated `src/templates/note-templates.ts` and `.agent-vault/07_Templates/Session_Template.md` to reserve `## Context Handoff` before persistence work begins.
+- Resolved the DEC-0001 ambiguity by locking the resume alias to `resume-prepare` and aligning the decision note before changing source files.
 
 ## Human Notes
 
@@ -118,10 +123,12 @@ Use this note for one executable step inside a phase. This note is the source of
 ## Session History
 
 <!-- AGENT-START:step-session-history -->
-- No sessions yet.
+- 2026-04-20 - [[05_Sessions/2026-04-20-013545-finalize-context-schema-and-command-surface-pi|SESSION-2026-04-20-013545 Pi session for Finalize context schema and command surface]] - Session created.
 <!-- AGENT-END:step-session-history -->
 
 ## Outcome Summary
 
-- Record the final result, the validation performed, and any follow-up required.
-- If the step is blocked, say exactly what is blocking it.
+- Completed the v1 context contract lock-in without starting persistence behavior. The new shared contract module now defines the canonical lifecycle enums, manual command names, aliases, prepare-context write boundaries, and handoff heading.
+- Aligned durable docs and surfaced help across `src/core/context-contract.ts`, `src/core/command-catalog.ts`, `src/templates/note-templates.ts`, `.agent-vault/07_Templates/Session_Template.md`, `README.md`, and DEC-0001.
+- Validation performed: `bun test test/core/context-contract.test.ts test/core/command-catalog.test.ts test/install.test.ts test/slash-commands.test.ts`; `bun run typecheck`.
+- Follow-up: STEP-01-02 can now implement canonical session persistence against the locked contract instead of rediscovering field names or aliases.

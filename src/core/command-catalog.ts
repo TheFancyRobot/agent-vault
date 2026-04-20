@@ -1,3 +1,5 @@
+import { formatContextManualCommandSummary } from './context-contract';
+
 export type AgentVaultCommandName =
   | 'vault'
   | 'vault-doctor'
@@ -349,6 +351,8 @@ export const formatCommandCatalog = (): string => {
     lines.push('');
   }
 
+  lines.push(...formatContextManualCommandSummary());
+  lines.push('');
   lines.push('For command-specific help, use the vault_help MCP tool with `command` set to the command name.');
   lines.push('For graph-based context loading, use the `vault_traverse` MCP tool.');
   return lines.join('\n');

@@ -390,6 +390,11 @@ Use one note per meaningful work session in \\\`05_Sessions/\\\`. This note reco
 - Record important facts learned during the session.
 - Promote durable information into architecture, bug, or decision notes when appropriate.
 
+## Context Handoff
+
+- Use this as the single canonical prose section for prepared context, resume notes, and handoff summaries tied to the current effective context.
+- Keep durable conclusions promoted into phase, bug, decision, or architecture notes when they outlive the session.
+
 ## Changed Paths
 
 <!-- AGENT-START:session-changed-paths -->

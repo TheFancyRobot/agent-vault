@@ -16,6 +16,12 @@ describe('Agent Vault command catalog', () => {
     expect(output).toContain('- create-step - Create a step note inside an existing phase steps folder.');
     expect(output).toContain('Validate Notes:');
     expect(output).toContain('- validate-all - Run all integrity validators and return a failing exit code if any errors are found.');
+    expect(output).toContain('Advanced/manual context primitives:');
+    expect(output).toContain('- save-context (alias: checkpoint)');
+    expect(output).toContain('- switch-context (alias: transition)');
+    expect(output).toContain('- resume-context (alias: resume-prepare)');
+    expect(output).toContain('- prepare-context (alias: compact-research)');
+    expect(output).toContain('Normal /vault:* workflow commands remain the primary UX.');
   });
 
   it('formats detailed help for a single command', () => {
