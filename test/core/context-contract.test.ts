@@ -6,7 +6,14 @@ import {
   CONTEXT_PREPARE_AUTO_WRITE_FIELDS,
   CONTEXT_RESUME_TARGET_TYPES,
   CONTEXT_STATUS_VALUES,
+  STEP_MIRROR_CONTEXT_ID_KEY,
+  STEP_MIRROR_SESSION_ID_KEY,
+  STEP_MIRROR_STATUS_KEY,
+  STEP_MIRROR_SUMMARY_KEY,
+  STEP_MIRROR_REQUIRED_KEYS,
+  buildStepMirror,
   createDefaultSessionContext,
+  isValidContextStatus,
 } from '../../src/core/context-contract';
 import { SESSION_TEMPLATE } from '../../src/templates/note-templates';
 
@@ -57,6 +64,47 @@ describe('built-in context contract', () => {
       last_action: {
         type: 'saved',
       },
+    });
+  });
+
+  describe('step mirrors', () => {
+    it('exports step-mirror key constants', () => {
+      expect(STEP_MIRROR_CONTEXT_ID_KEY).toBe('context_id');
+      expect(STEP_MIRROR_SESSION_ID_KEY).toBe('active_session_id');
+      expect(STEP_MIRROR_STATUS_KEY).toBe('context_status');
+      expect(STEP_MIRROR_SUMMARY_KEY).toBe('context_summary');
+    });
+
+    it('exports the full list of required step-mirror keys', () => {
+      expect(STEP_MIRROR_REQUIRED_KEYS).toEqual([
+        'context_id', 'active_session_id', 'context_status', 'context_summary',
+      ]);
+    });
+
+    it('builds step-mirror frontmatter from canonical session state', () => {
+      const mirror = buildStepMirror({
+        sessionId: '05_Sessions/SESSION-2026-04-20-014040-implement-canonical-session-context-persistence-pi',
+        contextId: 'SESSION-2026-04-20-014040',
+        status: 'active',
+        summary: 'Advance STEP-01-02.',
+      });
+      expect(mirror).toEqual({
+        context_id: 'SESSION-2026-04-20-014040',
+        active_session_id: '05_Sessions/SESSION-2026-04-20-014040-implement-canonical-session-context-persistence-pi',
+        context_status: 'active',
+        context_summary: 'Advance STEP-01-02.',
+      });
+    });
+
+    it('validates context status values correctly', () => {
+      expect(isValidContextStatus('active')).toBe(true);
+      expect(isValidContextStatus('paused')).toBe(true);
+      expect(isValidContextStatus('blocked')).toBe(true);
+      expect(isValidContextStatus('completed')).toBe(true);
+      expect(isValidContextStatus('invalid')).toBe(false);
+      expect(isValidContextStatus('')).toBe(false);
+      expect(isValidContextStatus(undefined)).toBe(false);
+      expect(isValidContextStatus(42)).toBe(false);
     });
   });
 });

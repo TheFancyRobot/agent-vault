@@ -5,14 +5,14 @@ contract_version: 1
 title: Implement step mirrors and workflow integration
 step_id: STEP-01-03
 phase: '[[02_Phases/Phase_01_built_in_vault_context_management/Phase|Phase 01 built in vault context management]]'
-status: planned
-owner: ''
+status: completed
+owner: implementer
 created: '2026-04-20'
 updated: '2026-04-20'
 depends_on:
   - '[[02_Phases/Phase_01_built_in_vault_context_management/Steps/Step_01_finalize-context-schema-and-command-surface|STEP-01-01 Finalize context schema and command surface]]'
   - '[[02_Phases/Phase_01_built_in_vault_context_management/Steps/Step_02_implement-canonical-session-context-persistence|STEP-01-02 Implement canonical session context persistence]]'
-related_sessions: []
+related_sessions: '[[05_Sessions/2026-04-20-015720-implement-step-mirrors-and-workflow-integration-implementer|SESSION-2026-04-20-015720 implementer session for Implement step mirrors and workflow integration]]'
 related_bugs: []
 tags:
   - agent-vault
@@ -111,6 +111,14 @@ Use this note for one executable step inside a phase. This note is the source of
 
 - Capture facts learned during execution.
 - Prefer short bullets with file paths, commands, and observed behavior.
+- Added step-mirror types and constants to `src/core/context-contract.ts`: `STEP_MIRROR_CONTEXT_ID_KEY`, `STEP_MIRROR_SESSION_ID_KEY`, `STEP_MIRROR_STATUS_KEY`, `STEP_MIRROR_SUMMARY_KEY`, `STEP_MIRROR_REQUIRED_KEYS`, `StepMirrorState` interface, `buildStepMirror()`, `isValidContextStatus()`.
+- Updated `linkSessionBackToStep()` in `src/core/note-generators.ts` to accept canonical session context parameters and write step-mirror fields via `buildStepMirror()`.
+- Updated `handleCreateSessionCommand()` to pass default session context values to `linkSessionBackToStep()` so mirrors are written immediately when a session is created and linked to a step.
+- Step-mirror fields are optional on step notes — they exist only when a session has been linked. The validator does not require them.
+- Mirrors update only on: session creation linked to the step, lifecycle transitions, session completion, or when a new session becomes the active session for the step. Unrelated prose changes do not trigger mirror updates.
+- Updated 6 workflow docs (3 `claude-commands/` + 3 `pi-package/skills/`): `vault:execute` steps 4 and 7, `vault:resume` step 2, `vault:orchestrate` step 4e — all now reference step mirrors for routing, lifecycle tracking, and verification.
+- MCP tool descriptions (`src/mcp-server.ts`, `pi-package/extensions/index.ts`) do not need changes — step mirrors are an internal detail of the session-to-step linking path.
+- 9 new tests added across `test/core/context-contract.test.ts` (4 tests) and `test/core/note-generators.test.ts` (1 extended test with 4 new assertions). All 63 tests pass.
 
 ## Human Notes
 
@@ -119,10 +127,16 @@ Use this note for one executable step inside a phase. This note is the source of
 ## Session History
 
 <!-- AGENT-START:step-session-history -->
-- No sessions yet.
+- 2026-04-20 - [[05_Sessions/2026-04-20-015720-implement-step-mirrors-and-workflow-integration-implementer|SESSION-2026-04-20-015720 implementer session for Implement step mirrors and workflow integration]] - Session created.
 <!-- AGENT-END:step-session-history -->
+- 2026-04-20 - [[05_Sessions/2026-04-20-015720-implement-step-mirrors-and-workflow-integration-implementer|SESSION-2026-04-20-015720 implementer session for Implement step mirrors and workflow integration]] - Session created.
 
 ## Outcome Summary
 
 - Record the final result, the validation performed, and any follow-up required.
 - If the step is blocked, say exactly what is blocking it.
+- Completed step-mirror implementation for PHASE-01 STEP-01-03.
+- Step notes now expose routing-oriented mirror fields (`context_id`, `active_session_id`, `context_status`, `context_summary`) written from the canonical session context when a session is linked.
+- All 6 workflow docs (vault:execute, vault:resume, vault:orchestrate — both claude-commands and pi skills) updated to reference step mirrors.
+- Validation performed: `bun test` (63 pass, 0 fail across 6 files), `bun run typecheck` (clean).
+- Follow-up: STEP-01-04 can document and test the full context lifecycle including step mirrors.

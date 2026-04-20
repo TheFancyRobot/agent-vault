@@ -51,7 +51,7 @@ d. After the agent completes, handle git operations:
      - `git add -A`
      - `git commit -m "vault: <PHASE-ID> <STEP-ID> - <title>"`
    - If no changes, that is acceptable.
-e. Verify completion: read the step note's frontmatter. Check if the status is in {done, completed, closed, cancelled}.
+e. Verify completion: read the step note's frontmatter. Check if the status is in {done, completed, closed, cancelled}. Also check the step-mirror `context_status` field — if it matches {active, paused}, the canonical session may still be open, which indicates the step was not cleanly closed.
 f. If completed: announce success with elapsed time and move to the next step.
 g. If not completed and retries remain: announce the retry attempt and return to step 4c with a fresh agent.
 h. If not completed and no retries remain: announce failure and stop orchestration. Do not continue to the next step.
