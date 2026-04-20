@@ -36,6 +36,58 @@ export interface ContextCommandDefinition {
   readonly aliases: readonly string[];
 }
 
+export interface SessionContextFocus {
+  readonly summary: string;
+  readonly target: string;
+}
+
+export interface SessionContextResumeTarget {
+  readonly type: ContextResumeTargetType;
+  readonly target: string;
+  readonly section: string;
+}
+
+export interface SessionContextLastAction {
+  readonly type: ContextLastActionType;
+}
+
+export interface SessionContextState {
+  readonly context_id: string;
+  readonly status: ContextStatus;
+  readonly updated_at: string;
+  readonly current_focus: SessionContextFocus;
+  readonly resume_target: SessionContextResumeTarget;
+  readonly last_action: SessionContextLastAction;
+}
+
+export interface CreateDefaultSessionContextInput {
+  readonly sessionId: string;
+  readonly stepLink: string;
+  readonly updatedAt: string;
+}
+
+export const createDefaultSessionContext = ({
+  sessionId,
+  stepLink,
+  updatedAt,
+}: CreateDefaultSessionContextInput): SessionContextState => ({
+  context_id: sessionId,
+  status: 'active',
+  updated_at: updatedAt,
+  current_focus: {
+    summary: `Advance ${stepLink}.`,
+    target: stepLink,
+  },
+  resume_target: {
+    type: 'step',
+    target: stepLink,
+    section: CONTEXT_HANDOFF_SECTION_HEADING,
+  },
+  last_action: {
+    type: 'saved',
+  },
+});
+
 export const formatContextManualCommandSummary = (): string[] => [
   'Advanced/manual context primitives:',
   ...CONTEXT_MANUAL_COMMANDS.map(({ canonical, aliases }) => {

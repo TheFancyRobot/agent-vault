@@ -21,9 +21,9 @@ Keep this note short, current, and safe to overwrite as the repo focus changes.
 <!-- AGENT-START:current-focus -->
 _Last refreshed: 2026-04-20._
 - Session in progress: none.
-- Current step: [[02_Phases/Phase_01_built_in_vault_context_management/Steps/Step_02_implement-canonical-session-context-persistence|STEP-01-02 Implement canonical session context persistence]] - status: planned - phase: [[02_Phases/Phase_01_built_in_vault_context_management/Phase|Phase 01 built in vault context management]]
+- Current step: [[02_Phases/Phase_01_built_in_vault_context_management/Steps/Step_03_implement-step-mirrors-and-workflow-integration|STEP-01-03 Implement step mirrors and workflow integration]] - status: planned - phase: [[02_Phases/Phase_01_built_in_vault_context_management/Phase|Phase 01 built in vault context management]]
 - Active phase: [[02_Phases/Phase_01_built_in_vault_context_management/Phase|PHASE-01 Built-in vault context management]] - status: planned - owner: Pi - updated: 2026-04-20
-- Also active: 2 more additional steps.
+- Also active: 1 more additional steps.
 <!-- AGENT-END:current-focus -->
 
 ## Repo Snapshot

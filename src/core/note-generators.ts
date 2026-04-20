@@ -10,6 +10,7 @@ import {
   updateFrontmatter,
 } from './note-mutations';
 import { formatCommandHelp, formatCommandUsage } from './command-catalog';
+import { CONTEXT_HANDOFF_SECTION_HEADING, createDefaultSessionContext } from './context-contract';
 import {
   assertWithinVaultRoot,
   getRelativeNotePath,
@@ -144,6 +145,33 @@ const formatTimestamp = (date: Date): string => {
 };
 
 const replaceFirstHeading = (content: string, heading: string): string => content.replace(/^#\s+.*$/m, `# ${heading}`);
+
+const ensureHeadingSection = (
+  content: string,
+  headingText: string,
+  sectionContent: string,
+  insertBeforeHeading?: string,
+): string => {
+  const headingToken = `## ${headingText}`;
+  if (content.includes(headingToken)) {
+    return replaceHeadingSection(content, headingText, sectionContent).content;
+  }
+
+  const lineEnding = content.includes('\r\n') ? '\r\n' : '\n';
+  const normalizedBody = sectionContent.replace(/\r\n|\r|\n/g, lineEnding).trim();
+  const section = `${headingToken}${lineEnding}${lineEnding}${normalizedBody}${lineEnding}${lineEnding}`;
+
+  if (insertBeforeHeading) {
+    const beforeToken = `## ${insertBeforeHeading}`;
+    const beforeIndex = content.indexOf(beforeToken);
+    if (beforeIndex !== -1) {
+      return `${content.slice(0, beforeIndex)}${section}${content.slice(beforeIndex)}`;
+    }
+  }
+
+  const trimmed = content.replace(/(?:\r\n|\r|\n)+$/g, '');
+  return `${trimmed}${lineEnding}${lineEnding}${section}`;
+};
 
 const parseArgs = (argv: string[]): ParsedArgs => {
   const positionals: string[] = [];
@@ -1168,6 +1196,7 @@ const createSessionContent = (
   date: string,
   time: string,
   stepLink: string,
+  updatedAt: string,
 ): string => {
   let content = template;
   content = replaceFirstHeading(content, title);
@@ -1177,6 +1206,11 @@ const createSessionContent = (
     date,
     owner,
     phase: phaseLink,
+    context: createDefaultSessionContext({
+      sessionId,
+      stepLink,
+      updatedAt,
+    }),
     created: date,
     updated: date,
   }).content;
@@ -1186,6 +1220,12 @@ const createSessionContent = (
     `- ${time} - Created session note.`,
     `- ${time} - Linked related step ${stepLink}.`,
   ].join('\n')).content;
+  content = ensureHeadingSection(
+    content,
+    CONTEXT_HANDOFF_SECTION_HEADING,
+    '- Use this as the single canonical prose section for prepared context, resume notes, and handoff summaries tied to the current effective context.\n- Keep durable conclusions promoted into phase, bug, decision, or architecture notes when they outlive the session.',
+    'Changed Paths',
+  );
   content = replaceGeneratedBlock(content, 'session-changed-paths', '- None yet.').content;
   content = replaceGeneratedBlock(content, 'session-validation-run', [
     '- Command: not run yet',
@@ -1897,6 +1937,7 @@ export async function handleCreateSessionCommand(
       date,
       formatTime(now),
       step.wikiLink,
+      now.toISOString(),
     );
 
     await writeNewNote(filePath, content);

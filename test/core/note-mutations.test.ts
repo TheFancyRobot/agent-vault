@@ -42,6 +42,51 @@ Body.
     expect(updated.content).toContain('owner: human');
   });
 
+  it('writes nested frontmatter objects while preserving unknown keys', () => {
+    const note = `---
+title: Session
+status: in-progress
+owner: human
+custom_flag: true
+---
+
+# Session
+`;
+
+    const updated = updateFrontmatter(note, {
+      context: {
+        context_id: 'SESSION-2026-03-14-150926',
+        status: 'active',
+        updated_at: '2026-03-14T15:09:26.000Z',
+        current_focus: {
+          summary: 'Advance step.',
+          target: '[[02_Phases/Phase_01_Testing/Steps/Step_01_missing-links|STEP-01-01 Missing links]]',
+        },
+        resume_target: {
+          type: 'step',
+          target: '[[02_Phases/Phase_01_Testing/Steps/Step_01_missing-links|STEP-01-01 Missing links]]',
+          section: 'Context Handoff',
+        },
+        last_action: {
+          type: 'saved',
+        },
+      },
+    });
+
+    const parsed = parseYamlFrontmatter(updated.content);
+    expect(parsed.data).toMatchObject({
+      owner: 'human',
+      custom_flag: true,
+      context: {
+        context_id: 'SESSION-2026-03-14-150926',
+        status: 'active',
+        updated_at: '2026-03-14T15:09:26.000Z',
+      },
+    });
+    expect(updated.content).toContain('current_focus:');
+    expect(updated.content).toContain('resume_target:');
+  });
+
   it('preserves CRLF line endings when updating generated content', () => {
     const note = [
       '---',

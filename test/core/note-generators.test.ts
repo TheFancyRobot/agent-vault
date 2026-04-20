@@ -244,6 +244,24 @@ describe('Agent Vault note generators', () => {
     expect(frontmatter.title).toBe('OpenCode session for Add Agent Vault generators');
     expect(frontmatter.session_id).toBe(EXPECTED_SESSION_ID);
     expect(frontmatter.owner).toBe('OpenCode');
+    expect(frontmatter.context).toEqual({
+      context_id: EXPECTED_SESSION_ID,
+      status: 'active',
+      updated_at: FIXED_NOW.toISOString(),
+      current_focus: {
+        summary: 'Advance [[02_Phases/Phase_01_Foundation/Steps/Step_02_add-agent-vault-generators|STEP-01-02 Add Agent Vault generators]].',
+        target: '[[02_Phases/Phase_01_Foundation/Steps/Step_02_add-agent-vault-generators|STEP-01-02 Add Agent Vault generators]]',
+      },
+      resume_target: {
+        type: 'step',
+        target: '[[02_Phases/Phase_01_Foundation/Steps/Step_02_add-agent-vault-generators|STEP-01-02 Add Agent Vault generators]]',
+        section: 'Context Handoff',
+      },
+      last_action: {
+        type: 'saved',
+      },
+    });
+    expect(content).toContain('## Context Handoff');
     expect(content).toContain('[[02_Phases/Phase_01_Foundation/Steps/Step_02_add-agent-vault-generators|STEP-01-02 Add Agent Vault generators]]');
     expect(harness.stdout[0]).toBe(`Created 05_Sessions/${sessionFilename}`);
 

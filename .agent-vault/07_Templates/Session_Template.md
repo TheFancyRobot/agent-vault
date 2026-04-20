@@ -9,6 +9,19 @@ status: in-progress
 owner: ""
 branch: ""
 phase: "[[02_Phases/<phase path>/Phase|<phase name>]]"
+context:
+  context_id: "SESSION-YYYY-MM-DD-01"
+  status: active
+  updated_at: "YYYY-MM-DDTHH:MM:SS.000Z"
+  current_focus:
+    summary: "Advance [[02_Phases/<phase path>/Steps/<step note>|<step name>]]."
+    target: "[[02_Phases/<phase path>/Steps/<step note>|<step name>]]"
+  resume_target:
+    type: step
+    target: "[[02_Phases/<phase path>/Steps/<step note>|<step name>]]"
+    section: "Context Handoff"
+  last_action:
+    type: saved
 related_bugs: []
 related_decisions: []
 created: "YYYY-MM-DD"
