@@ -6,6 +6,7 @@ import {
   CONTEXT_PREPARE_AUTO_WRITE_FIELDS,
   CONTEXT_RESUME_TARGET_TYPES,
   CONTEXT_STATUS_VALUES,
+  createDefaultSessionContext,
 } from '../../src/core/context-contract';
 import { SESSION_TEMPLATE } from '../../src/templates/note-templates';
 
@@ -32,5 +33,30 @@ describe('built-in context contract', () => {
   it('reserves a single canonical handoff section on session notes', () => {
     expect(CONTEXT_HANDOFF_SECTION_HEADING).toBe('Context Handoff');
     expect(SESSION_TEMPLATE).toContain('## Context Handoff');
+    expect(SESSION_TEMPLATE).toContain('context:');
+  });
+
+  it('builds the default canonical session context shape', () => {
+    expect(createDefaultSessionContext({
+      sessionId: 'SESSION-2026-03-14-150926',
+      stepLink: '[[02_Phases/Phase_01_Foundation/Steps/Step_02_add-agent-vault-generators|STEP-01-02 Add Agent Vault generators]]',
+      updatedAt: '2026-03-14T15:09:26.000Z',
+    })).toEqual({
+      context_id: 'SESSION-2026-03-14-150926',
+      status: 'active',
+      updated_at: '2026-03-14T15:09:26.000Z',
+      current_focus: {
+        summary: 'Advance [[02_Phases/Phase_01_Foundation/Steps/Step_02_add-agent-vault-generators|STEP-01-02 Add Agent Vault generators]].',
+        target: '[[02_Phases/Phase_01_Foundation/Steps/Step_02_add-agent-vault-generators|STEP-01-02 Add Agent Vault generators]]',
+      },
+      resume_target: {
+        type: 'step',
+        target: '[[02_Phases/Phase_01_Foundation/Steps/Step_02_add-agent-vault-generators|STEP-01-02 Add Agent Vault generators]]',
+        section: 'Context Handoff',
+      },
+      last_action: {
+        type: 'saved',
+      },
+    });
   });
 });

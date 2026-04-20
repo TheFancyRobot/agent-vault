@@ -2,6 +2,11 @@ import { readFile } from 'fs/promises';
 import { formatCommandHelp } from './command-catalog';
 import type { AgentVaultCommandEnvironment, AgentVaultCommandIO } from './note-generators';
 import { AgentVaultMutationError, parseYamlFrontmatter } from './note-mutations';
+import {
+  CONTEXT_LAST_ACTION_TYPES,
+  CONTEXT_RESUME_TARGET_TYPES,
+  CONTEXT_STATUS_VALUES,
+} from './context-contract';
 import { collectLinks } from './vault-graph';
 import { getRelativeNotePath, listMarkdownFiles, resolveVaultRoot } from './vault-files';
 
@@ -66,7 +71,7 @@ const FRONTMATTER_REQUIRED_KEYS: Record<FrontmatterNoteType, readonly string[]> 
   home_context: ['note_type', 'template_version', 'contract_version', 'title', 'status', 'created', 'updated', 'tags'],
   home_index: ['note_type', 'template_version', 'contract_version', 'title', 'status', 'created', 'updated', 'tags'],
   phase: ['note_type', 'template_version', 'contract_version', 'title', 'phase_id', 'status', 'owner', 'created', 'updated', 'depends_on', 'related_architecture', 'related_decisions', 'related_bugs', 'tags'],
-  session: ['note_type', 'template_version', 'contract_version', 'title', 'session_id', 'date', 'status', 'owner', 'branch', 'phase', 'related_bugs', 'related_decisions', 'created', 'updated', 'tags'],
+  session: ['note_type', 'template_version', 'contract_version', 'title', 'session_id', 'date', 'status', 'owner', 'branch', 'phase', 'context', 'related_bugs', 'related_decisions', 'created', 'updated', 'tags'],
   step: ['note_type', 'template_version', 'contract_version', 'title', 'step_id', 'phase', 'status', 'owner', 'created', 'updated', 'depends_on', 'related_sessions', 'related_bugs', 'tags'],
 };
 
@@ -78,7 +83,7 @@ const STRUCTURE_REQUIRED_HEADINGS: Record<StructureKind, readonly string[]> = {
   decisions_index: ['Logging Rules', 'Starter Decision Candidates', 'Decision Log', 'Useful Links'],
   home_context: ['Current Objective', 'Repo Snapshot', 'In Scope Right Now', 'Out Of Scope Right Now', 'Working Assumptions', 'Blockers', 'Open Questions', 'Critical Bugs', 'Next Actions'],
   phase: ['Objective', 'Why This Phase Exists', 'Scope', 'Non-Goals', 'Dependencies', 'Acceptance Criteria', 'Linear Context', 'Related Architecture', 'Related Decisions', 'Related Bugs', 'Steps', 'Notes'],
-  session: ['Objective', 'Planned Scope', 'Execution Log', 'Findings', 'Changed Paths', 'Validation Run', 'Bugs Encountered', 'Decisions Made or Updated', 'Follow-Up Work', 'Completion Summary'],
+  session: ['Objective', 'Planned Scope', 'Execution Log', 'Findings', 'Context Handoff', 'Changed Paths', 'Validation Run', 'Bugs Encountered', 'Decisions Made or Updated', 'Follow-Up Work', 'Completion Summary'],
   step: ['Purpose', 'Why This Step Exists', 'Prerequisites', 'Relevant Code Paths', 'Required Reading', 'Execution Prompt', 'Agent-Managed Snapshot', 'Implementation Notes', 'Human Notes', 'Session History', 'Outcome Summary'],
 };
 
@@ -92,6 +97,9 @@ const FRONTMATTER_NOTE_TYPES = new Set<FrontmatterNoteType>([
   'session',
   'step',
 ]);
+const CONTEXT_STATUS_SET = new Set<string>(CONTEXT_STATUS_VALUES);
+const CONTEXT_RESUME_TARGET_TYPE_SET = new Set<string>(CONTEXT_RESUME_TARGET_TYPES);
+const CONTEXT_LAST_ACTION_TYPE_SET = new Set<string>(CONTEXT_LAST_ACTION_TYPES);
 
 const MARKER_LINE_PATTERN = /^<!-- AGENT-(START|END):([A-Za-z0-9._-]+) -->$/;
 const HEADING_PATTERN = /^( {0,3})(#{1,6})[ \t]+(.+?)(?:[ \t]+#+[ \t]*)?[ \t]*$/;
@@ -180,6 +188,65 @@ const makeIssue = (severity: ValidationSeverity, code: string, notePath: string,
   notePath,
   message,
 });
+
+const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null && !Array.isArray(value);
+
+const isNonEmptyString = (value: unknown): value is string => typeof value === 'string' && value.trim().length > 0;
+
+const validateSessionContext = (note: ParsedNote): ValidationIssue[] => {
+  const issues: ValidationIssue[] = [];
+  const context = note.frontmatter?.context;
+
+  if (!isRecord(context)) {
+    issues.push(makeIssue('error', 'INVALID_SESSION_CONTEXT', note.relativePath, 'session frontmatter.context must be an object'));
+    return issues;
+  }
+
+  if (!isNonEmptyString(context.context_id)) {
+    issues.push(makeIssue('error', 'INVALID_SESSION_CONTEXT', note.relativePath, 'session context.context_id must be a non-empty string'));
+  }
+
+  if (!isNonEmptyString(context.updated_at)) {
+    issues.push(makeIssue('error', 'INVALID_SESSION_CONTEXT', note.relativePath, 'session context.updated_at must be a non-empty string'));
+  }
+
+  if (!isNonEmptyString(context.status) || !CONTEXT_STATUS_SET.has(context.status)) {
+    issues.push(makeIssue('error', 'INVALID_SESSION_CONTEXT', note.relativePath, `session context.status must be one of: ${CONTEXT_STATUS_VALUES.join(', ')}`));
+  }
+
+  if (!isRecord(context.current_focus)) {
+    issues.push(makeIssue('error', 'INVALID_SESSION_CONTEXT', note.relativePath, 'session context.current_focus must be an object'));
+  } else {
+    if (!isNonEmptyString(context.current_focus.summary)) {
+      issues.push(makeIssue('error', 'INVALID_SESSION_CONTEXT', note.relativePath, 'session context.current_focus.summary must be a non-empty string'));
+    }
+    if (!isNonEmptyString(context.current_focus.target)) {
+      issues.push(makeIssue('error', 'INVALID_SESSION_CONTEXT', note.relativePath, 'session context.current_focus.target must be a non-empty string'));
+    }
+  }
+
+  if (!isRecord(context.resume_target)) {
+    issues.push(makeIssue('error', 'INVALID_SESSION_CONTEXT', note.relativePath, 'session context.resume_target must be an object'));
+  } else {
+    if (!isNonEmptyString(context.resume_target.type) || !CONTEXT_RESUME_TARGET_TYPE_SET.has(context.resume_target.type)) {
+      issues.push(makeIssue('error', 'INVALID_SESSION_CONTEXT', note.relativePath, `session context.resume_target.type must be one of: ${CONTEXT_RESUME_TARGET_TYPES.join(', ')}`));
+    }
+    if (!isNonEmptyString(context.resume_target.target)) {
+      issues.push(makeIssue('error', 'INVALID_SESSION_CONTEXT', note.relativePath, 'session context.resume_target.target must be a non-empty string'));
+    }
+    if (!isNonEmptyString(context.resume_target.section)) {
+      issues.push(makeIssue('error', 'INVALID_SESSION_CONTEXT', note.relativePath, 'session context.resume_target.section must be a non-empty string'));
+    }
+  }
+
+  if (!isRecord(context.last_action)) {
+    issues.push(makeIssue('error', 'INVALID_SESSION_CONTEXT', note.relativePath, 'session context.last_action must be an object'));
+  } else if (!isNonEmptyString(context.last_action.type) || !CONTEXT_LAST_ACTION_TYPE_SET.has(context.last_action.type)) {
+    issues.push(makeIssue('error', 'INVALID_SESSION_CONTEXT', note.relativePath, `session context.last_action.type must be one of: ${CONTEXT_LAST_ACTION_TYPES.join(', ')}`));
+  }
+
+  return issues;
+};
 
 const scanHeadings = (content: string): string[] => {
   const headings: string[] = [];
@@ -337,6 +404,10 @@ const validateFrontmatter = (notes: readonly ParsedNote[]): ValidationSummary =>
       if (!(key in note.frontmatter)) {
         issues.push(makeIssue('error', 'MISSING_FRONTMATTER_KEY', note.relativePath, `missing required frontmatter key "${key}" for ${note.noteType} notes`));
       }
+    }
+
+    if (note.noteType === 'session' && 'context' in note.frontmatter) {
+      issues.push(...validateSessionContext(note));
     }
   }
 

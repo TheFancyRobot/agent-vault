@@ -5,13 +5,14 @@ contract_version: 1
 title: Implement canonical session context persistence
 step_id: STEP-01-02
 phase: '[[02_Phases/Phase_01_built_in_vault_context_management/Phase|Phase 01 built in vault context management]]'
-status: planned
-owner: ''
+status: completed
+owner: Pi
 created: '2026-04-20'
 updated: '2026-04-20'
 depends_on:
   - '[[02_Phases/Phase_01_built_in_vault_context_management/Steps/Step_01_finalize-context-schema-and-command-surface|STEP-01-01 Finalize context schema and command surface]]'
-related_sessions: []
+related_sessions:
+  - '[[05_Sessions/2026-04-20-014040-implement-canonical-session-context-persistence-pi|SESSION-2026-04-20-014040 Pi session for Implement canonical session context persistence]]'
 related_bugs: []
 tags:
   - agent-vault
@@ -94,16 +95,20 @@ Use this note for one executable step inside a phase. This note is the source of
 ## Agent-Managed Snapshot
 
 <!-- AGENT-START:step-agent-managed-snapshot -->
-- Status: planned
-- Current owner: 
+- Status: completed
+- Current owner: Pi
 - Last touched: 2026-04-20
-- Next action: Start STEP-01-02.
+- Next action: Hand canonical session context persistence to STEP-01-03 for step-mirror integration.
 <!-- AGENT-END:step-agent-managed-snapshot -->
 
 ## Implementation Notes
 
-- Capture facts learned during execution.
-- Prefer short bullets with file paths, commands, and observed behavior.
+- `src/core/context-contract.ts` now exports the canonical session-context shape and `createDefaultSessionContext`, locking `context_id`, `status`, `updated_at`, `current_focus.summary`, `current_focus.target`, `resume_target.type`, `resume_target.target`, `resume_target.section`, and `last_action.type` in code-facing form.
+- `src/templates/note-templates.ts` and `.agent-vault/07_Templates/Session_Template.md` now scaffold the full `context` object directly in the session template so new vaults and checked-in templates stay aligned.
+- `src/core/note-generators.ts` now persists `context` on session creation and defensively inserts `## Context Handoff` before `## Changed Paths` when the source template is older and does not yet contain the canonical heading.
+- `src/core/note-validators.ts` now requires the session `context` frontmatter key, validates the nested object and enum subfields, and enforces the `Context Handoff` heading as part of the stable session-note structure.
+- `test/helpers.ts` now copies templates from this repo's `.agent-vault/` instead of an external sibling repo so temp-vault generator and validator tests exercise the checked-in contract actually being changed here.
+- `test/core/context-contract.test.ts`, `test/core/note-generators.test.ts`, `test/core/note-validators.test.ts`, and `test/core/note-mutations.test.ts` now cover default context creation, generated-session persistence, missing-context validation failures, missing-handoff-heading failures, and nested frontmatter mutation safety.
 
 ## Human Notes
 
@@ -112,10 +117,11 @@ Use this note for one executable step inside a phase. This note is the source of
 ## Session History
 
 <!-- AGENT-START:step-session-history -->
-- No sessions yet.
+- 2026-04-20 - [[05_Sessions/2026-04-20-014040-implement-canonical-session-context-persistence-pi|SESSION-2026-04-20-014040 Pi session for Implement canonical session context persistence]] - Session created.
 <!-- AGENT-END:step-session-history -->
 
 ## Outcome Summary
 
-- Record the final result, the validation performed, and any follow-up required.
-- If the step is blocked, say exactly what is blocking it.
+- Completed canonical session context persistence for PHASE-01 STEP-01-02. New session notes now persist the v1 `context` object in frontmatter and always include the single canonical `## Context Handoff` prose section.
+- Validation performed: `bun test test/core/context-contract.test.ts test/core/note-generators.test.ts test/core/note-validators.test.ts test/core/note-mutations.test.ts`; `bun run typecheck`; `vault_validate doctor` after `vault_refresh all`.
+- Follow-up: STEP-01-03 can now mirror `context_id`, active `session_id`, and lifecycle state onto step notes without inventing a second source of truth.
