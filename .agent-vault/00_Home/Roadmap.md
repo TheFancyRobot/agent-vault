@@ -26,13 +26,14 @@ This roadmap tracks the evolution of the vault itself and the operational habits
 
 | Phase | Status | Goal |
 | --- | --- | --- |
-| Phase 01 Foundation | planned | Create the initial scaffold, standards, and starter maps |
+| Phase 01 Built-in vault context management | completed | Add canonical session context, step mirrors, workflow integration, tests, docs, and migration guidance |
+| Phase 02 | not planned | No next phase has been defined yet |
 
 ## Near-Term Outcomes
 
-- A dependable home note that agents can open first.
-- Reusable templates for bugs, decisions, sessions, and phases.
-- A small but real architecture map of the \`agent-vault\` repo.
+- Define the next concrete phase before starting new implementation work.
+- Keep the context-management docs and templates aligned with the code.
+- Continue maintaining the architecture map as the \`agent-vault\` repo evolves.
 
 ## Later Opportunities
 

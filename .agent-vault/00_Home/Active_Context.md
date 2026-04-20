@@ -69,6 +69,6 @@ _Last refreshed: 2026-04-20._
 
 ## Next Actions
 
+- Define the next phase before starting additional planned implementation work.
 - Keep the architecture notes aligned with the code as packages evolve.
-- Add the first real decision record when a non-trivial process or design tradeoff is made.
-- Start session logging once the vault is used during feature work.
+- Add new decision records whenever a non-trivial design tradeoff is made.
