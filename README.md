@@ -176,6 +176,19 @@ For bug triage, use `/vault:orchestrate bugs` to fix all open bugs (or filter by
 
 During execution, the agent maintains a single session note for the entire conversation. The session is updated continuously — after each implementation change, test run, or step transition — so that `/vault:resume` always has a current handoff to work from. The agent also works in checkpoints: after each meaningful implementation increment it validates the feature that was just built, then runs regression coverage for the rest of the application before moving on.
 
+### Built-in context contract (v1)
+
+Normal `/vault:*` workflows remain the primary UX. For advanced/manual usage, the built-in context subsystem reserves these canonical command names and aliases:
+
+| Canonical manual command | Alias | Purpose |
+|---|---|---|
+| `save-context` | `checkpoint` | Persist the current effective context without switching targets |
+| `switch-context` | `transition` | Change the active execution target while preserving continuity |
+| `resume-context` | `resume-prepare` | Re-anchor the current session around an explicit resume target |
+| `prepare-context` | `compact-research` | Prepare a handoff-oriented context update; in v1 it may update `updated_at`, `last_action`, `current_focus`, and `resume_target`, and may only change lifecycle from `active` to `paused` |
+
+The v1 session-owned context lifecycle is `active`, `paused`, `blocked`, `completed`. The `last_action.type` enum is `saved`, `switched`, `resumed`, `prepared`, `paused`, `completed`. `resume_target.type` uses `session`, `step`, `phase`, or `handoff`. Session notes reserve a single canonical prose section for prepared context and handoff text: `## Context Handoff`.
+
 ## MCP Tools (9 tools)
 
 These tools are exposed via the MCP server and can be called by any MCP-compatible agent:
