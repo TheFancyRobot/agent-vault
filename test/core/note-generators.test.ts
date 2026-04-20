@@ -1,9 +1,9 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { existsSync } from 'fs';
-import { mkdtemp, readFile, rm, writeFile, mkdir } from 'fs/promises';
+import { mkdtemp, readFile, rm, writeFile, mkdir, readdir } from 'fs/promises';
 import { tmpdir } from 'os';
 import { join } from 'path';
-import { parseYamlFrontmatter } from '../../src/core/note-mutations';
+import { parseYamlFrontmatter, updateFrontmatter } from '../../src/core/note-mutations';
 import {
   handleAppendSectionCommand,
   handleCreateBugCommand,
@@ -16,7 +16,9 @@ import {
   handleRebuildBugsIndexCommand,
   handleRebuildDecisionsIndexCommand,
   handleUpdateFrontmatterCommand,
+  updateStepMirrors,
 } from '../../src/core/note-generators';
+import type { ResolvedStepNote } from '../../src/core/note-generators';
 import { copyTemplate, copyHomeNote, makeIo } from '../helpers';
 
 const FIXED_NOW = new Date('2026-03-14T15:09:26Z');
@@ -592,6 +594,58 @@ describe('Agent Vault note generators', () => {
 
     expect(exitCode).toBe(1);
     expect(harness.stderr[0]).toContain('Cannot use --insert-before together with --phase-number');
+  });
+
+  it('updateStepMirrors re-reads canonical session context and re-mirrors onto step', async () => {
+    const vaultRoot = await createTempVault();
+    const FIXED_NOW = new Date('2026-04-20T01:40:40.000Z');
+    const harness = makeIo();
+
+    // Create a step first
+    await handleCreateStepCommand(
+      ['1', '2', 'Add Agent Vault generators'],
+      { vaultRoot, io: makeIo().io, now: () => FIXED_NOW },
+    );
+
+    // Create a session linked to the step (this writes initial mirrors)
+    await handleCreateSessionCommand(
+      ['STEP-01-02', '--agent', 'OpenCode'],
+      { vaultRoot, io: harness.io, now: () => FIXED_NOW },
+    );
+
+    // Find the session file
+    const sessionFiles = await readdir(join(vaultRoot, '05_Sessions'));
+    expect(sessionFiles.length).toBe(1);
+    const sessionPath = join(vaultRoot, '05_Sessions', sessionFiles[0]);
+    const stepPath = join(vaultRoot, '02_Phases', 'Phase_01_Foundation', 'Steps', 'Step_02_add-agent-vault-generators.md');
+
+    // Verify initial mirror state
+    let stepContent = await readFile(stepPath, 'utf-8');
+    let stepFm = parseYamlFrontmatter(stepContent).data;
+    expect(stepFm.context_status).toBe('active');
+
+    // Update the canonical session context to 'completed' using dot-path mutation
+    let sessionContent = await readFile(sessionPath, 'utf-8');
+    const sessionUpdated = updateFrontmatter(sessionContent, { 'context.status': 'completed' }, sessionPath);
+    await writeFile(sessionPath, sessionUpdated.content, 'utf-8');
+
+    // Re-mirror from session onto step
+    const step: ResolvedStepNote = {
+      absolutePath: stepPath,
+      vaultRelativePath: '02_Phases/Phase_01_Foundation/Steps/Step_02_add-agent-vault-generators.md',
+      wikiLink: '[[02_Phases/Phase_01_Foundation/Steps/Step_02_add-agent-vault-generators|STEP-01-02 Add Agent Vault generators]]',
+      title: 'Add Agent Vault generators',
+      stepId: 'STEP-01-02',
+      phaseLink: '[[02_Phases/Phase_01_Foundation/Phase|Phase 01 Foundation]]',
+    };
+    const changed = await updateStepMirrors(step, sessionPath, '2026-04-20');
+    expect(changed).toBe(true);
+
+    // Verify the step mirror now reflects the completed status
+    stepContent = await readFile(stepPath, 'utf-8');
+    stepFm = parseYamlFrontmatter(stepContent).data;
+    expect(stepFm.context_status).toBe('completed');
+    expect(stepFm.context_id).toBe('SESSION-2026-04-20-014040');
   });
 
   it('refresh-all-home-notes runs all three home refreshers', async () => {

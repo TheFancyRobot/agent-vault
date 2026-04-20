@@ -87,6 +87,85 @@ custom_flag: true
     expect(updated.content).toContain('resume_target:');
   });
 
+  it('deep-merges dot-path keys into existing nested objects', () => {
+    const note = `---
+title: Session
+context:
+  context_id: SESSION-001
+  status: active
+  updated_at: '2026-03-14T15:00:00.000Z'
+---
+
+# Session
+`;
+
+    // Update only context.status without touching other nested fields
+    const updated = updateFrontmatter(note, { 'context.status': 'completed' });
+    const parsed = parseYamlFrontmatter(updated.content);
+    expect(parsed.data.context).toEqual({
+      context_id: 'SESSION-001',
+      status: 'completed',
+      updated_at: '2026-03-14T15:00:00.000Z',
+    });
+  });
+
+  it('creates intermediate nested objects for dot-path keys that do not exist yet', () => {
+    const note = `---
+title: Step
+status: planned
+---
+
+# Step
+`;
+
+    const updated = updateFrontmatter(note, { 'context.status': 'active' });
+    const parsed = parseYamlFrontmatter(updated.content);
+    expect(parsed.data.context).toEqual({ status: 'active' });
+    expect(parsed.data.title).toBe('Step');
+    expect(parsed.data.status).toBe('planned');
+  });
+
+  it('handles triple-nested dot-path keys', () => {
+    const note = `---
+title: Session
+context:
+  current_focus:
+    summary: Old summary
+    target: Old target
+  status: active
+---
+
+# Session
+`;
+
+    const updated = updateFrontmatter(note, { 'context.current_focus.summary': 'New summary' });
+    const parsed = parseYamlFrontmatter(updated.content);
+    expect(parsed.data.context).toEqual({
+      current_focus: { summary: 'New summary', target: 'Old target' },
+      status: 'active',
+    });
+  });
+
+  it('preserves flat keys and dot-path keys in the same update call', () => {
+    const note = `---
+title: Step
+status: planned
+context:
+  status: active
+---
+
+# Step
+`;
+
+    const updated = updateFrontmatter(note, {
+      status: 'done',
+      'context.status': 'completed',
+    });
+    const parsed = parseYamlFrontmatter(updated.content);
+    expect(parsed.data.status).toBe('done');
+    expect(parsed.data.context.status).toBe('completed');
+  });
+
   it('preserves CRLF line endings when updating generated content', () => {
     const note = [
       '---',
