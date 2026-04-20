@@ -273,6 +273,14 @@ describe('Agent Vault note generators', () => {
       `[[${sessionTarget}|${sessionLinkAlias}]]`,
     ]);
     expect(stepContent).toContain(`- ${EXPECTED_DATE} - [[${sessionTarget}|${sessionLinkAlias}]] - Session created.`);
+
+    // Verify step-mirror fields were written from canonical session context
+    expect(stepFrontmatter.context_id).toBe(EXPECTED_SESSION_ID);
+    expect(stepFrontmatter.active_session_id).toBe(`05_Sessions/${sessionFilename.replace('.md', '')}`);
+    expect(stepFrontmatter.context_status).toBe('active');
+    expect(stepFrontmatter.context_summary).toBe(
+      'Advance [[02_Phases/Phase_01_Foundation/Steps/Step_02_add-agent-vault-generators|STEP-01-02 Add Agent Vault generators]].',
+    );
   });
 
   it('create-bug auto-generates the next bug id and links related step and session notes', async () => {

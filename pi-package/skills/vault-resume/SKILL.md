@@ -20,9 +20,11 @@ Accepts an optional `--session <session-id>` argument. If no arguments are provi
 ### 2. Determine the continuation target from the previous session.
 - Extract the phase link from the session's frontmatter.
 - Read the Follow-Up Work and Completion Summary sections to understand what remains and what the handoff state is.
+- Check step-mirror fields (`context_id`, `active_session_id`, `context_status`) on step notes for fast routing. A step with `context_status: active` or `context_status: paused` in its mirrors had an active session that may not have been closed cleanly. Prefer these mirrors for initial routing, then confirm by reading the linked session's handoff sections.
 - Identify the step that was last active by checking:
   - Steps that reference this session in their `related_sessions` frontmatter (the most recently linked step is the last active one).
   - Step statuses within the linked phase: look for `in-progress` steps first, then the next `planned` or `not-started` step in listed order.
+  - Step mirror `context_status` values: `active` or `paused` indicate an incomplete step; `completed` indicates a finished step.
 - Apply this priority order to select the continuation target:
   - If the previous session's last active step is still `in-progress`, resume that step.
   - If that step is `done` or `completed`, target the next incomplete step in the same phase.

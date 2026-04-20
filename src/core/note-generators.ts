@@ -10,7 +10,7 @@ import {
   updateFrontmatter,
 } from './note-mutations';
 import { formatCommandHelp, formatCommandUsage } from './command-catalog';
-import { CONTEXT_HANDOFF_SECTION_HEADING, createDefaultSessionContext } from './context-contract';
+import { CONTEXT_HANDOFF_SECTION_HEADING, createDefaultSessionContext, buildStepMirror } from './context-contract';
 import {
   assertWithinVaultRoot,
   getRelativeNotePath,
@@ -985,6 +985,9 @@ const linkSessionBackToStep = async (
   step: ResolvedStepNote,
   sessionLink: string,
   updatedOn: string,
+  sessionContextId?: string,
+  sessionContextStatus?: string,
+  sessionContextSummary?: string,
 ): Promise<boolean> =>
   updateBackreferenceNote(step.absolutePath, updatedOn, (content) => {
     let nextContent = appendUniqueFrontmatterLink(content, step.absolutePath, 'related_sessions', sessionLink);
@@ -995,6 +998,16 @@ const linkSessionBackToStep = async (
       `- ${updatedOn} - ${sessionLink} - Session created.`,
       ['- No sessions yet.'],
     );
+    // Write step-mirror fields from canonical session context.
+    if (sessionContextId && sessionContextStatus) {
+      const mirror = buildStepMirror({
+        sessionId: sessionLink.replace(/^\[\[|\]\]$/g, '').split('|')[0],
+        contextId: sessionContextId,
+        status: sessionContextStatus as 'active' | 'paused' | 'blocked' | 'completed',
+        summary: sessionContextSummary ?? '',
+      });
+      nextContent = updateFrontmatter(nextContent, mirror, step.absolutePath).content;
+    }
     return nextContent;
   });
 
@@ -1942,8 +1955,21 @@ export async function handleCreateSessionCommand(
 
     await writeNewNote(filePath, content);
     const sessionLink = toWikiLink(getRelativeNotePath(vaultRoot, filePath), `${sessionId} ${title}`);
+    // Mirror canonical session context onto the step note.
+    const defaultContext = createDefaultSessionContext({
+      sessionId,
+      stepLink: step.wikiLink,
+      updatedAt: now.toISOString(),
+    });
     await tryApplyBackreference(io, `step backreference for ${step.stepId}`, () =>
-      linkSessionBackToStep(step, sessionLink, date));
+      linkSessionBackToStep(
+        step,
+        sessionLink,
+        date,
+        defaultContext.context_id,
+        defaultContext.status,
+        defaultContext.current_focus.summary,
+      ));
     emitCreatedNote(io, vaultRoot, filePath);
     return 0;
   } catch (error) {

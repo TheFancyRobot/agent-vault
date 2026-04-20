@@ -49,6 +49,7 @@ Workflow:
    - If no active session exists for this conversation, create a single session note linked to the first step being executed. This session persists for the entire conversation. Do not create additional sessions for subsequent steps; reuse the same session.
    - If an active session already exists (from `/vault:resume`, an earlier `/vault:execute` in the same conversation, or another vault command), continue using it rather than creating a new one.
    - Update step frontmatter to `in-progress` when work starts on each step.
+   - When a session is created or linked to a step, step-mirror fields (`context_id`, `active_session_id`, `context_status`, `context_summary`) are written from the canonical session context. These mirrors provide durable routing without being the source of truth — the session note remains canonical. Mirrors update only on lifecycle transitions or when the active canonical session changes.
    - When work begins on a new step within the same session, link the session to that step's `Session History` via `vault_mutate` and append a step-transition entry to the session's `Execution Log`.
    - Update the session continuously as work progresses:
      - Append to `Execution Log` after each meaningful action: implementation change, test run, research finding, or command execution.
@@ -91,7 +92,8 @@ Workflow:
    - If new implementation discoveries invalidate the original readiness assumptions, pause that step, repair the missing context in the vault, and re-check readiness before continuing.
 
 7. Close the loop in the vault and leave a clean handoff.
-   - Mark completed steps with `vault_mutate` frontmatter updates and note blocked items explicitly if anything remains open.
+   - Mark completed steps with `vault_mutate` frontmatter updates (including `context_status: completed` in the step mirrors) and note blocked items explicitly if anything remains open.
+   - Update the session's canonical context status to `completed` via `vault_mutate`, then update the step mirrors to reflect the new status. This ensures `/vault:resume` can read either the session or the step mirror and get the same lifecycle answer.
    - Update the session's `Follow-Up Work` with any remaining items and write a `Completion Summary` that captures what was accomplished, what remains, and what the next agent should do. This is the primary handoff mechanism for `/vault:resume`.
    - The session remains `in-progress` unless all targeted work is complete or the user explicitly ends it. An open session signals that `/vault:resume` should continue from this point.
    - If a whole phase is complete, update the phase status as well and mark the session as `completed`.
