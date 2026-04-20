@@ -116,12 +116,21 @@ async function locatePreviousSession(sessionId) {
 }
 
 /**
- * Extract timestamp from session filename (assumes format like YYYY-MM-DD_HH-MM-SS_Session.md)
+ * Extract timestamp from session filename.
+ * Supports canonical Agent Vault session names like YYYY-MM-DD-HHMMSS-slug.md.
  */
 function extractTimestampFromFilename(filename) {
   const basename = path.basename(filename, '.md');
-  const timestampPart = basename.split('_').slice(0, 2).join(' ');
-  return new Date(timestampPart.replace(/-/g, '/')).getTime();
+  const match = basename.match(/^(\d{4})-(\d{2})-(\d{2})-(\d{6})(?:-|$)/);
+  if (!match) {
+    return Number.NEGATIVE_INFINITY;
+  }
+
+  const [, year, month, day, hhmmss] = match;
+  const hours = hhmmss.slice(0, 2);
+  const minutes = hhmmss.slice(2, 4);
+  const seconds = hhmmss.slice(4, 6);
+  return Date.UTC(Number(year), Number(month) - 1, Number(day), Number(hours), Number(minutes), Number(seconds));
 }
 
 /**
@@ -205,11 +214,13 @@ async function determineContinuationTarget(previousSession) {
   const phaseData = parseSessionNote(phaseContent);
   
   // Find steps in this phase
-  const stepsDir = path.dirname(phaseFiles);
-  const stepFiles = fs.readdirSync(stepsDir)
-    .filter(file => file.startsWith('Step_') && file.endsWith('.md'))
-    .sort()
-    .map(file => path.join(stepsDir, file));
+  const stepsDir = path.join(path.dirname(phaseFiles), 'Steps');
+  const stepFiles = fs.existsSync(stepsDir)
+    ? fs.readdirSync(stepsDir)
+        .filter(file => file.startsWith('Step_') && file.endsWith('.md'))
+        .sort()
+        .map(file => path.join(stepsDir, file))
+    : [];
   
   let lastActiveStep = null;
   let nextIncompleteStep = null;
@@ -303,12 +314,15 @@ async function findNextPlannedPhase(currentPhaseNumber) {
       if (phaseNumber > currentPhaseNumber) {
         const phaseFile = path.join(phasesDir, phaseDir, 'Phase.md');
         if (fs.existsSync(phaseFile)) {
-          const stepFiles = fs.readdirSync(path.join(phasesDir, phaseDir))
-            .filter(file => file.startsWith('Step_') && file.endsWith('.md'))
-            .sort();
+          const stepsDir = path.join(phasesDir, phaseDir, 'Steps');
+          const stepFiles = fs.existsSync(stepsDir)
+            ? fs.readdirSync(stepsDir)
+                .filter(file => file.startsWith('Step_') && file.endsWith('.md'))
+                .sort()
+            : [];
           
           if (stepFiles.length > 0) {
-            const firstStepFile = path.join(phasesDir, phaseDir, stepFiles[0]);
+            const firstStepFile = path.join(stepsDir, stepFiles[0]);
             const firstStepContent = fs.readFileSync(firstStepFile, 'utf8');
             const firstStepData = parseSessionNote(firstStepContent);
             
