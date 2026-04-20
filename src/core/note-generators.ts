@@ -10,7 +10,7 @@ import {
   updateFrontmatter,
 } from './note-mutations';
 import { formatCommandHelp, formatCommandUsage } from './command-catalog';
-import { CONTEXT_HANDOFF_SECTION_HEADING, createDefaultSessionContext, buildStepMirror } from './context-contract';
+import { CONTEXT_HANDOFF_SECTION_HEADING, createDefaultSessionContext, buildStepMirror, STEP_MIRROR_CONTEXT_ID_KEY } from './context-contract';
 import {
   assertWithinVaultRoot,
   getRelativeNotePath,
@@ -42,7 +42,7 @@ interface PhaseInfo {
   readonly phaseLink: string;
 }
 
-interface ResolvedStepNote {
+export interface ResolvedStepNote {
   readonly absolutePath: string;
   readonly vaultRelativePath: string;
   readonly wikiLink: string;
@@ -1010,6 +1010,50 @@ const linkSessionBackToStep = async (
     }
     return nextContent;
   });
+
+/** Re-read canonical session context from a session note and re-mirror onto the linked step.
+ * This is the principled way to update step mirrors on lifecycle transitions, completion,
+ * or when a new session becomes active for the step (per DEC-0001).
+ * Returns true if the step note was modified, false otherwise.
+ */
+export const updateStepMirrors = async (
+  step: ResolvedStepNote,
+  sessionNotePath: string,
+  updatedOn: string,
+): Promise<boolean> => {
+  const sessionFrontmatter = await readNoteFrontmatter(sessionNotePath);
+  const context = sessionFrontmatter.context;
+
+  if (typeof context !== 'object' || context === null || Array.isArray(context)) {
+    return false;
+  }
+
+  const ctx = context as Record<string, unknown>;
+  const contextId = parseOptionalStringField(ctx[STEP_MIRROR_CONTEXT_ID_KEY]);
+  const status = parseOptionalStringField(ctx.status);
+  const focus = ctx.current_focus;
+  const summary = (typeof focus === 'object' && focus !== null && !Array.isArray(focus))
+    ? parseOptionalStringField((focus as Record<string, unknown>).summary)
+    : undefined;
+
+  if (!contextId || !status) {
+    return false;
+  }
+
+  const mirror = buildStepMirror({
+    sessionId: getRelativeNotePath(
+      join(step.absolutePath, '..','..','..','..'),
+      sessionNotePath,
+    ).replace(/\.md$/i, ''),
+    contextId,
+    status: status as 'active' | 'paused' | 'blocked' | 'completed',
+    summary: summary ?? '',
+  });
+
+  return updateBackreferenceNote(step.absolutePath, updatedOn, (content) =>
+    updateFrontmatter(content, mirror, step.absolutePath).content,
+  );
+};
 
 const linkBugBackToStep = async (
   step: ResolvedStepNote,
@@ -2158,6 +2202,43 @@ export async function handleUpdateFrontmatterCommand(
     if (result.changed) {
       await writeFile(absolutePath, result.content, 'utf-8');
       io.stdout(`Updated frontmatter in ${notePath}`);
+
+      // Auto-re-mirror step mirrors when session context fields change.
+      const hasContextUpdate = Object.keys(updates).some((key) => key === 'context' || key.startsWith('context.'));
+      if (hasContextUpdate) {
+        try {
+          const updatedFrontmatter = parseYamlFrontmatter(result.content, notePath).data;
+          if (updatedFrontmatter.note_type === 'session') {
+            const sessionUpdatedOn = parseOptionalStringField(updatedFrontmatter.updated) ?? formatDate(new Date());
+            // Scan step notes for ones that reference this session in their related_sessions.
+            const sessionRelPath = getRelativeNotePath(vaultRoot, absolutePath).replace(/\.md$/i, '');
+            const candidateSteps = await listMarkdownFiles(join(vaultRoot, '02_Phases'));
+            for (const candidatePath of candidateSteps) {
+              try {
+                const candidateFm = await readNoteFrontmatter(candidatePath);
+                if (candidateFm.note_type !== 'step') continue;
+                const stepRelatedSessions = parseStringListField(candidatePath, 'related_sessions', candidateFm.related_sessions);
+                if (stepRelatedSessions.some((link: string) => link.includes(sessionRelPath))) {
+                  const candidateRelPath = getRelativeNotePath(vaultRoot, candidatePath);
+                  const step: ResolvedStepNote = {
+                    absolutePath: candidatePath,
+                    vaultRelativePath: candidateRelPath,
+                    wikiLink: toWikiLink(candidateRelPath, `${candidateFm.step_id ?? ''} ${candidateFm.title ?? ''}`),
+                    title: parseOptionalStringField(candidateFm.title) ?? '',
+                    stepId: parseOptionalStringField(candidateFm.step_id) ?? '',
+                    phaseLink: parseOptionalStringField(candidateFm.phase) ?? '',
+                  };
+                  await updateStepMirrors(step, absolutePath, sessionUpdatedOn);
+                }
+              } catch {
+                // Skip unreadable step notes.
+              }
+            }
+          }
+        } catch (mirrorError) {
+          io.stderr(`Warning: step mirror update failed: ${mirrorError instanceof Error ? mirrorError.message : String(mirrorError)}`);
+        }
+      }
     } else {
       io.stdout(`Unchanged ${notePath}`);
     }

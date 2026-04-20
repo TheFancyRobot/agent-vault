@@ -396,7 +396,11 @@ const resolveGeneratedBlockRange = (
   };
 };
 
-/** Merge frontmatter updates while preserving unknown keys and note line endings. */
+/** Merge frontmatter updates while preserving unknown keys and note line endings.
+ * Supports dot-path keys (e.g. `context.status`) for deep-merge into nested objects.
+ * When a key contains dots, each segment is traversed/created as a nested object.
+ * Non-dot keys and leaf segments use simple assignment (no deep-merge of objects).
+ */
 export const updateFrontmatter = (
   content: string,
   updates: Record<string, unknown>,
@@ -410,7 +414,24 @@ export const updateFrontmatter = (
   const nextData: Record<string, unknown> = { ...frontmatter.data };
 
   for (const [key, value] of Object.entries(updates)) {
-    nextData[key] = value;
+    const segments = key.split('.');
+    if (segments.length > 1) {
+      // Dot-path deep merge: walk/create nested objects, assign at leaf.
+      let current: Record<string, unknown> = nextData;
+      for (let i = 0; i < segments.length - 1; i++) {
+        const existing = current[segments[i]];
+        if (typeof existing === 'object' && existing !== null && !Array.isArray(existing)) {
+          current = existing as Record<string, unknown>;
+        } else {
+          const nested: Record<string, unknown> = {};
+          current[segments[i]] = nested;
+          current = nested;
+        }
+      }
+      current[segments[segments.length - 1]] = value;
+    } else {
+      nextData[key] = value;
+    }
   }
 
   return applyMutation(content, {

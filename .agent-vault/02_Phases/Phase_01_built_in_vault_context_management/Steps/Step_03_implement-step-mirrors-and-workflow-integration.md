@@ -12,11 +12,16 @@ updated: '2026-04-20'
 depends_on:
   - '[[02_Phases/Phase_01_built_in_vault_context_management/Steps/Step_01_finalize-context-schema-and-command-surface|STEP-01-01 Finalize context schema and command surface]]'
   - '[[02_Phases/Phase_01_built_in_vault_context_management/Steps/Step_02_implement-canonical-session-context-persistence|STEP-01-02 Implement canonical session context persistence]]'
-related_sessions: '[[05_Sessions/2026-04-20-015720-implement-step-mirrors-and-workflow-integration-implementer|SESSION-2026-04-20-015720 implementer session for Implement step mirrors and workflow integration]]'
+related_sessions:
+  - '[[05_Sessions/2026-04-20-015720-implement-step-mirrors-and-workflow-integration-implementer|SESSION-2026-04-20-015720 implementer session for Implement step mirrors and workflow integration]]'
 related_bugs: []
 tags:
   - agent-vault
   - step
+context_id: SESSION-2026-04-20-015720
+active_session_id: 05_Sessions/2026-04-20-015720-implement-step-mirrors-and-workflow-integration-implementer
+context_status: completed
+context_summary: Advance STEP-01-03 Implement step mirrors and workflow integration.
 ---
 
 # Step 03 - Implement step mirrors and workflow integration
@@ -101,10 +106,10 @@ Use this note for one executable step inside a phase. This note is the source of
 ## Agent-Managed Snapshot
 
 <!-- AGENT-START:step-agent-managed-snapshot -->
-- Status: planned
-- Current owner: 
+- Status: completed
+- Current owner: implementer
 - Last touched: 2026-04-20
-- Next action: Start STEP-01-03.
+- Next action: Review concerns addressed; ready for STEP-01-04.
 <!-- AGENT-END:step-agent-managed-snapshot -->
 
 ## Implementation Notes
@@ -119,6 +124,10 @@ Use this note for one executable step inside a phase. This note is the source of
 - Updated 6 workflow docs (3 `claude-commands/` + 3 `pi-package/skills/`): `vault:execute` steps 4 and 7, `vault:resume` step 2, `vault:orchestrate` step 4e — all now reference step mirrors for routing, lifecycle tracking, and verification.
 - MCP tool descriptions (`src/mcp-server.ts`, `pi-package/extensions/index.ts`) do not need changes — step mirrors are an internal detail of the session-to-step linking path.
 - 9 new tests added across `test/core/context-contract.test.ts` (4 tests) and `test/core/note-generators.test.ts` (1 extended test with 4 new assertions). All 63 tests pass.
+- **Review fix (post-completion):** Three reviewer concerns addressed:
+  1. Added `updateStepMirrors()` export to `note-generators.ts` — re-reads canonical session context from session note and re-mirrors onto linked step. Resolves runtime/doc mismatch: mirrors can now update on lifecycle transitions, not just creation.
+  2. Added dot-path deep-merge support to `updateFrontmatter` in `note-mutations.ts` — `vault_mutate --set context.status=completed` now merges into nested objects instead of creating a flat key.
+  3. Fixed live vault note: `related_sessions` corrected from scalar to list, step-mirror fields added to frontmatter, duplicated Session History line removed, Agent-Managed Snapshot updated to reflect completed status.
 
 ## Human Notes
 
@@ -129,7 +138,6 @@ Use this note for one executable step inside a phase. This note is the source of
 <!-- AGENT-START:step-session-history -->
 - 2026-04-20 - [[05_Sessions/2026-04-20-015720-implement-step-mirrors-and-workflow-integration-implementer|SESSION-2026-04-20-015720 implementer session for Implement step mirrors and workflow integration]] - Session created.
 <!-- AGENT-END:step-session-history -->
-- 2026-04-20 - [[05_Sessions/2026-04-20-015720-implement-step-mirrors-and-workflow-integration-implementer|SESSION-2026-04-20-015720 implementer session for Implement step mirrors and workflow integration]] - Session created.
 
 ## Outcome Summary
 
