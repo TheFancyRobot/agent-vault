@@ -7,10 +7,14 @@ import {
   buildInstallTarget,
   buildMcpServerConfig,
   buildOpenCodeMcpServerConfig,
+  buildPiPackageSource,
+  detectTools,
   parseNumberedSelection,
   parseInstallScope,
+  removePiPackageSourcesFromConfig,
   renderToolCommand,
   resolveInstallRoot,
+  upsertPiPackageSourceInConfig,
 } from '../src/install';
 
 // We test the JSON config merge logic directly since the install module
@@ -181,6 +185,22 @@ If no sessions exist, suggest /vault:execute instead. Do not create a new sessio
 });
 
 describe('install target helpers', () => {
+  it('detects pi as an install target when pi settings exist', async () => {
+    const home = await createTempDir('pi-home');
+    const cwd = await createTempDir('pi-cwd');
+
+    await mkdir(join(home, '.pi', 'agent'), { recursive: true });
+    await writeFile(join(home, '.pi', 'agent', 'settings.json'), '{}\n', 'utf-8');
+
+    const detected = detectTools('global', cwd, home).filter((tool) => tool.detected);
+
+    expect(detected.map((tool) => tool.name)).toContain('pi');
+  });
+
+  it('ships the migrate-step-notes skill in the pi package', () => {
+    expect(existsSync(join(import.meta.dirname, '..', 'pi-package', 'skills', 'vault-migrate-step-notes', 'SKILL.md'))).toBe(true);
+  });
+
   it('parses explicit install scope flags', () => {
     expect(parseInstallScope(['--global'])).toBe('global');
     expect(parseInstallScope(['--cwd'])).toBe('cwd');
@@ -235,5 +255,49 @@ describe('install target helpers', () => {
       command: ['/usr/bin/node', '/home/alice/.agent-vault/.runtime/node_modules/@fancyrobot/agent-vault/dist/cli.mjs', 'serve'],
       enabled: true,
     });
+  });
+
+  it('builds pi package source from the installed runtime package path', () => {
+    const source = buildPiPackageSource(buildInstallTarget('cwd', '/workspace/repo', '/home/alice'));
+
+    expect(source).toBe('/workspace/repo/.agent-vault/.runtime/node_modules/@fancyrobot/agent-vault');
+  });
+});
+
+describe('pi package config helpers', () => {
+  it('adds the installed runtime package path to pi settings without dropping existing packages', () => {
+    const packageSource = '/workspace/repo/.agent-vault/.runtime/node_modules/@fancyrobot/agent-vault';
+    const result = upsertPiPackageSourceInConfig({
+      packages: ['pi-skills', { source: 'npm:@acme/other-package', prompts: [] }],
+    }, packageSource);
+
+    expect(result.changed).toBe(true);
+    expect(result.config.packages).toEqual([
+      'pi-skills',
+      { source: 'npm:@acme/other-package', prompts: [] },
+      packageSource,
+    ]);
+  });
+
+  it('does not duplicate the runtime package path in pi settings', () => {
+    const packageSource = '/workspace/repo/.agent-vault/.runtime/node_modules/@fancyrobot/agent-vault';
+    const result = upsertPiPackageSourceInConfig({ packages: [packageSource] }, packageSource);
+
+    expect(result.changed).toBe(false);
+    expect(result.config.packages).toEqual([packageSource]);
+  });
+
+  it('removes installed runtime package paths from pi settings while preserving other packages', () => {
+    const globalSource = '/home/alice/.agent-vault/.runtime/node_modules/@fancyrobot/agent-vault';
+    const cwdSource = '/workspace/repo/.agent-vault/.runtime/node_modules/@fancyrobot/agent-vault';
+    const result = removePiPackageSourcesFromConfig({
+      packages: [globalSource, 'pi-skills', { source: 'npm:@acme/other-package', prompts: [] }, cwdSource],
+    }, [globalSource, cwdSource]);
+
+    expect(result.changed).toBe(true);
+    expect(result.config.packages).toEqual([
+      'pi-skills',
+      { source: 'npm:@acme/other-package', prompts: [] },
+    ]);
   });
 });

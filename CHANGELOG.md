@@ -1,5 +1,13 @@
 # @fancyrobot/agent-vault
 
+## Unreleased
+
+### Patch Changes
+
+- Add end-to-end pi installer coverage and document pi integration more clearly across the README and contributing guide.
+- Ship the missing `vault-migrate-step-notes` bundled pi skill and cover pi tool detection in installer tests.
+- Clarify target-rooted context loading guidance in the `vault:execute` workflow prompt.
+
 ## 0.4.0
 
 ### Minor Changes

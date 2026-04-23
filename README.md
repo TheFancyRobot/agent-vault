@@ -2,7 +2,7 @@
 
 Durable project memory for coding agents. An Obsidian-compatible vault that provides structured context preservation across agent sessions.
 
-Agent Vault creates a `.agent-vault/` directory in your project with templates, architecture stubs, and shared knowledge files. It integrates with **Claude Code**, **OpenCode**, and **Codex** via MCP (Model Context Protocol).
+Agent Vault creates a `.agent-vault/` directory in your project with templates, architecture stubs, and shared knowledge files. It integrates with **Claude Code**, **OpenCode**, **pi**, and **Codex**.
 
 For larger work, the intended flow is: use `/vault:plan` to turn a request into researched phases and step notes, `/vault:refine` to make the steps execution-ready, `/vault:execute` to implement them with checkpointed feature validation plus regression testing, `/vault:orchestrate` to run an entire phase with automatic context clearing between steps (or to triage and fix open bugs on dedicated branches), `/vault:enrich` to audit and strengthen the wikilink graph so traversals return complete context, and `/vault:resume` to pick up where the last session left off across agent restarts.
 
@@ -19,6 +19,7 @@ bunx @fancyrobot/agent-vault
 
 # 2. Inside your agent tool, initialize a vault in your project:
 #    Claude Code / OpenCode: /vault:init
+#    pi: use the installed Agent Vault pi package tools/skills (for example `vault_init`)
 #    Codex: /prompts:vault-init
 #
 # This creates the .agent-vault/ scaffold, scans your project,
@@ -110,6 +111,7 @@ Detected agent tools can include:
 
 - **Claude Code**: Adds MCP server to `~/.claude.json`, copies 14 slash commands to `~/.claude/commands/`
 - **OpenCode**: Adds MCP server to `~/.config/opencode/config.json` under `mcp`, copies 14 slash commands to `~/.config/opencode/commands/`
+- **pi**: Adds the installed Agent Vault package path to pi settings (`~/.pi/agent/settings.json` for global installs, `.pi/settings.json` for cwd installs) so pi loads the bundled tools and skills
 - **Codex**: Adds MCP server to `~/.codex/config.json`, copies 14 custom prompt commands to `~/.codex/prompts/` (invoked as `/prompts:vault-init`, `/prompts:vault-create-phase`, etc.)
 
 The MCP server configuration points at the installed runtime instead of using `npx` every time. In practice that means the detected Node or Bun executable runs:
@@ -126,7 +128,7 @@ Global installs keep runtime files in `~/.agent-vault`; `vault:init` still creat
 
 ### What `uninstall` does
 
-Removes the MCP server entry from all detected tool configs, deletes the installed command files from `~/.claude/commands/`, `~/.config/opencode/commands/`, and `~/.codex/prompts/`, and removes installed runtime files from `~/.agent-vault/.runtime` and `$PWD/.agent-vault/.runtime` when present.
+Removes the MCP server entry from all detected tool configs, removes the installed Agent Vault package path from pi settings, deletes the installed command files from `~/.claude/commands/`, `~/.config/opencode/commands/`, and `~/.codex/prompts/`, and removes installed runtime files from `~/.agent-vault/.runtime` and `$PWD/.agent-vault/.runtime` when present.
 
 ## CLI Commands
 
@@ -161,6 +163,28 @@ After installation, these commands are available in each tool:
 | `/vault:enrich` | `/prompts:vault-enrich` | Audit the wikilink graph and apply missing connections for complete traversal context |
 | `/vault:validate` | `/prompts:vault-validate` | Run vault integrity checks |
 | `/vault:refresh` | `/prompts:vault-refresh` | Refresh all home notes from metadata |
+
+### pi bundled skills
+
+When Agent Vault is installed into **pi**, pi loads the package's bundled skills alongside the MCP tools. The workflow-oriented skills currently shipped are:
+
+- `vault-init`
+- `vault-create-phase`
+- `vault-create-step`
+- `vault-create-session`
+- `vault-migrate-step-notes`
+- `vault-create-bug`
+- `vault-create-decision`
+- `vault-plan`
+- `vault-refine`
+- `vault-execute`
+- `vault-resume`
+- `vault-orchestrate`
+- `vault-enrich`
+- `vault-validate`
+- `vault-refresh`
+
+If you are looking for the migration workflow specifically in pi, use the bundled `vault-migrate-step-notes` skill.
 
 ### Recommended Workflow
 
