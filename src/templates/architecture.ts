@@ -1,8 +1,44 @@
 /**
  * Empty architecture stub content for newly initialized vaults.
- * Each stub has proper frontmatter and required headings from the
- * Architecture Template, but with generic placeholder content.
+ * Each stub keeps the required headings but stays intentionally thin.
  */
+
+const ARCH_SECTIONS = (title: string, relatedNotes: string[]) => `# ${title}
+
+## Purpose
+
+- Explain what this note covers.
+
+## Overview
+
+- To be populated after vault initialization.
+
+## Key Components
+
+<!-- AGENT-START:architecture-key-components -->
+- To be populated after vault initialization.
+<!-- AGENT-END:architecture-key-components -->
+
+## Important Paths
+
+<!-- AGENT-START:architecture-important-paths -->
+- To be populated after vault initialization.
+<!-- AGENT-END:architecture-important-paths -->
+
+## Constraints
+
+- To be populated after vault initialization.
+
+## Failure Modes
+
+- To be populated after vault initialization.
+
+## Related Notes
+
+<!-- AGENT-START:architecture-related-notes -->
+${relatedNotes.map((note) => `- ${note}`).join('\n')}
+<!-- AGENT-END:architecture-related-notes -->
+`;
 
 export const SYSTEM_OVERVIEW_STUB = `---
 note_type: architecture
@@ -25,45 +61,12 @@ tags:
   - architecture
 ---
 
-# System Overview
-
-## Purpose
-
-- Explain the top-level shape of the repository and the boundaries that future changes should preserve.
-
-## Overview
-
-- To be populated after vault initialization.
-
-## Key Components
-
-<!-- AGENT-START:architecture-key-components -->
-- To be populated after vault initialization.
-<!-- AGENT-END:architecture-key-components -->
-
-## Important Paths
-
-<!-- AGENT-START:architecture-important-paths -->
-- To be populated after vault initialization.
-<!-- AGENT-END:architecture-important-paths -->
-
-## Constraints
-
-- To be populated after vault initialization.
-
-## Failure Modes
-
-- To be populated after vault initialization.
-
-## Related Notes
-
-<!-- AGENT-START:architecture-related-notes -->
-- [[01_Architecture/Domain_Model|Domain Model]]
-- [[01_Architecture/Code_Map|Code Map]]
-- [[01_Architecture/Integration_Map|Integration Map]]
-- [[01_Architecture/Agent_Workflow|Agent Workflow]]
-<!-- AGENT-END:architecture-related-notes -->
-` as string;
+${ARCH_SECTIONS('System Overview', [
+  '[[01_Architecture/Domain_Model|Domain Model]]',
+  '[[01_Architecture/Code_Map|Code Map]]',
+  '[[01_Architecture/Integration_Map|Integration Map]]',
+  '[[01_Architecture/Agent_Workflow|Agent Workflow]]',
+])}` as string;
 
 export const CODE_MAP_STUB = `---
 note_type: architecture
@@ -84,43 +87,10 @@ tags:
   - architecture
 ---
 
-# Code Map
-
-## Purpose
-
-- Map the directory structure and key entry points so a new engineer can navigate the codebase quickly.
-
-## Overview
-
-- To be populated after vault initialization.
-
-## Key Components
-
-<!-- AGENT-START:architecture-key-components -->
-- To be populated after vault initialization.
-<!-- AGENT-END:architecture-key-components -->
-
-## Important Paths
-
-<!-- AGENT-START:architecture-important-paths -->
-- To be populated after vault initialization.
-<!-- AGENT-END:architecture-important-paths -->
-
-## Constraints
-
-- To be populated after vault initialization.
-
-## Failure Modes
-
-- To be populated after vault initialization.
-
-## Related Notes
-
-<!-- AGENT-START:architecture-related-notes -->
-- [[01_Architecture/System_Overview|System Overview]]
-- [[01_Architecture/Code_Graph|Code Graph]]
-<!-- AGENT-END:architecture-related-notes -->
-` as string;
+${ARCH_SECTIONS('Code Map', [
+  '[[01_Architecture/System_Overview|System Overview]]',
+  '[[01_Architecture/Code_Graph|Code Graph]]',
+])}` as string;
 
 export const AGENT_WORKFLOW_STUB = `---
 note_type: architecture
@@ -140,43 +110,10 @@ tags:
   - architecture
 ---
 
-# Agent Workflow
-
-## Purpose
-
-- Document how agents interact with the vault and codebase during work sessions.
-
-## Overview
-
-- To be populated after vault initialization.
-
-## Key Components
-
-<!-- AGENT-START:architecture-key-components -->
-- To be populated after vault initialization.
-<!-- AGENT-END:architecture-key-components -->
-
-## Important Paths
-
-<!-- AGENT-START:architecture-important-paths -->
-- To be populated after vault initialization.
-<!-- AGENT-END:architecture-important-paths -->
-
-## Constraints
-
-- To be populated after vault initialization.
-
-## Failure Modes
-
-- To be populated after vault initialization.
-
-## Related Notes
-
-<!-- AGENT-START:architecture-related-notes -->
-- [[01_Architecture/System_Overview|System Overview]]
-- [[06_Shared_Knowledge/Agent_Workflow_Playbooks|Agent Workflow Playbooks]]
-<!-- AGENT-END:architecture-related-notes -->
-` as string;
+${ARCH_SECTIONS('Agent Workflow', [
+  '[[01_Architecture/System_Overview|System Overview]]',
+  '[[06_Shared_Knowledge/Agent_Workflow_Playbooks|Agent Workflow Playbooks]]',
+])}` as string;
 
 export const DOMAIN_MODEL_STUB = `---
 note_type: architecture
@@ -196,42 +133,9 @@ tags:
   - architecture
 ---
 
-# Domain Model
-
-## Purpose
-
-- Describe the core domain concepts, their relationships, and the vocabulary used across the codebase.
-
-## Overview
-
-- To be populated after vault initialization.
-
-## Key Components
-
-<!-- AGENT-START:architecture-key-components -->
-- To be populated after vault initialization.
-<!-- AGENT-END:architecture-key-components -->
-
-## Important Paths
-
-<!-- AGENT-START:architecture-important-paths -->
-- To be populated after vault initialization.
-<!-- AGENT-END:architecture-important-paths -->
-
-## Constraints
-
-- To be populated after vault initialization.
-
-## Failure Modes
-
-- To be populated after vault initialization.
-
-## Related Notes
-
-<!-- AGENT-START:architecture-related-notes -->
-- [[01_Architecture/System_Overview|System Overview]]
-<!-- AGENT-END:architecture-related-notes -->
-` as string;
+${ARCH_SECTIONS('Domain Model', [
+  '[[01_Architecture/System_Overview|System Overview]]',
+])}` as string;
 
 export const INTEGRATION_MAP_STUB = `---
 note_type: architecture
@@ -251,39 +155,6 @@ tags:
   - architecture
 ---
 
-# Integration Map
-
-## Purpose
-
-- Document external dependencies, APIs, services, and integration boundaries.
-
-## Overview
-
-- To be populated after vault initialization.
-
-## Key Components
-
-<!-- AGENT-START:architecture-key-components -->
-- To be populated after vault initialization.
-<!-- AGENT-END:architecture-key-components -->
-
-## Important Paths
-
-<!-- AGENT-START:architecture-important-paths -->
-- To be populated after vault initialization.
-<!-- AGENT-END:architecture-important-paths -->
-
-## Constraints
-
-- To be populated after vault initialization.
-
-## Failure Modes
-
-- To be populated after vault initialization.
-
-## Related Notes
-
-<!-- AGENT-START:architecture-related-notes -->
-- [[01_Architecture/System_Overview|System Overview]]
-<!-- AGENT-END:architecture-related-notes -->
-` as string;
+${ARCH_SECTIONS('Integration Map', [
+  '[[01_Architecture/System_Overview|System Overview]]',
+])}` as string;

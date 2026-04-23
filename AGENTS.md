@@ -22,6 +22,7 @@ The following tools are available when the `agent-vault` MCP server is running:
 | `vault_scan` | Scan project and return structured metadata |
 | `vault_create` | Create notes: phase, step, session, bug, decision |
 | `vault_traverse` | Load connected notes via graph traversal (use for context) |
+| `vault_lookup_code_graph` | Look up symbols/files from the compact code-graph index without loading the full index |
 | `vault_mutate` | Update frontmatter or append to heading sections |
 | `vault_refresh` | Rebuild index tables and active context |
 | `vault_validate` | Check vault integrity (frontmatter, structure, links, orphans) |
@@ -38,6 +39,7 @@ The following tools are available when the `agent-vault` MCP server is running:
 - Use bounded mutations only (frontmatter updates, section appends, generated block replacements).
 - Do not rewrite entire notes or delete human-authored content.
 - Do not load the entire vault into context — use `vault_traverse` for targeted graph loading.
+- Treat `01_Architecture/Code_Graph.md` as summary-only; use `vault_lookup_code_graph` for symbol/file lookup instead of loading the full code-graph index.
 - See `.agent-vault/AGENTS.md` for the full operating contract.
 
 <!-- agent-vault:end -->

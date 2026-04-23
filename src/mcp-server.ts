@@ -24,6 +24,8 @@ import {
   handleVaultDoctorCommand,
 } from './core/note-validators';
 import { formatCommandCatalog, formatCommandHelp } from './core/command-catalog';
+import { formatCodeGraphLookupResultsAsToon, loadCodeGraphIndex, queryCodeGraphIndex } from './core/code-graph-lookup';
+import { formatInitResultAsToon, formatScanResultAsToon, formatVaultConfigAsToon } from './core/mcp-response-format';
 import {
   ensureVaultGraph,
   formatVaultTraverseResultAsJson,
@@ -62,8 +64,8 @@ export async function startServer(): Promise<void> {
   // ── vault_init ──────────────────────────────────────────────────────
   server.tool(
     'vault_init',
-    'Initialize an Agent Vault in the project. Creates .agent-vault/ scaffold with templates, home notes, architecture stubs, and .obsidian config. Runs a filesystem scan and returns structured project metadata. If a .planning/ directory (GSD) exists, backfills phases, steps, decisions, and project context into the vault.',
-    { project_root: z.string().optional().describe('Project root directory. Defaults to cwd.') },
+    'Initialize `.agent-vault/`, scan the project, and backfill from `.planning/` when present.',
+    { project_root: z.string().optional().describe('Project root. Defaults to cwd.') },
     async ({ project_root }) => {
       const root = project_root || process.cwd();
       const result = await initVault(root);
@@ -71,16 +73,7 @@ export async function startServer(): Promise<void> {
       return {
         content: [{
           type: 'text',
-          text: JSON.stringify({
-            vaultRoot: result.vaultRoot,
-            created: result.created,
-            filesWritten: result.filesWritten,
-            config,
-            scan: result.scan,
-            ...(result.planningBackfill?.found ? { planningBackfill: result.planningBackfill } : {}),
-            ...(result.codeGraph ? { codeGraph: result.codeGraph } : {}),
-            ...(result.codeGraphWarning ? { codeGraphWarning: result.codeGraphWarning } : {}),
-          }, null, 2),
+          text: formatInitResultAsToon(result, config),
         }],
       };
     },
@@ -89,25 +82,18 @@ export async function startServer(): Promise<void> {
   // ── vault_scan ──────────────────────────────────────────────────────
   server.tool(
     'vault_scan',
-    'Scan the project filesystem and return structured metadata: languages, frameworks, package manager, monorepo shape, key directories, test framework, build system, CI system, and entry points.',
-    { project_root: z.string().optional().describe('Project root directory. Defaults to cwd.') },
+    'Scan the project and return compact metadata such as languages, frameworks, package manager, key paths, tests, build, CI, and entry points.',
+    { project_root: z.string().optional().describe('Project root. Defaults to cwd.') },
     async ({ project_root }) => {
       const result = await scanProject(project_root || process.cwd());
-      return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
+      return { content: [{ type: 'text', text: formatScanResultAsToon(result) }] };
     },
   );
 
   // ── vault_create ────────────────────────────────────────────────────
   server.tool(
     'vault_create',
-    [
-      'Create a vault note. The `type` field selects the note kind:',
-      '- "phase": Create a phase folder + note. Params: title (required), phase_number, previous, insert_before.',
-      '- "step": Create a step inside a phase. Params: title, phase_number, step_number (all required).',
-      '- "session": Create a timestamped session linked to a step. Params: related_step (required), agent.',
-      '- "bug": Create a bug note. Params: title (required), bug_id, step, session.',
-      '- "decision": Create a decision note. Params: title (required), decision_id, phase, session, bug.',
-    ].join('\n'),
+    'Create a phase, step, session, bug, or decision note.',
     {
       type: z.enum(['phase', 'step', 'session', 'bug', 'decision']).describe('Note type to create'),
       title: z.string().optional().describe('Note title (required for phase, step, bug, decision)'),
@@ -176,24 +162,17 @@ export async function startServer(): Promise<void> {
   // ── vault_traverse ──────────────────────────────────────────────────
   server.tool(
     'vault_traverse',
-    [
-      'Traverse connected vault notes for agent context loading.',
-      '- Depth controls how many hops away from the root note are included.',
-      '- Filters narrow the returned notes without including unresolved links.',
-      '- TOON is the default output format for token-efficient structured context.',
-      '- The resolver defaults to the vault config (obsidian when available, filesystem otherwise).',
-      '- Obsidian CLI provides richer link resolution; filesystem is the automatic fallback.',
-    ].join('\n'),
+    'Load linked vault context from a root note. TOON is the default compact format.',
     {
-      root: z.string().describe('Starting note path or wiki target, e.g. "02_Phases/Phase_01_Foundation/Phase"'),
-      depth: z.number().int().min(0).max(10).describe('Traversal depth from the root note'),
-      direction: z.enum(['outgoing', 'incoming', 'both']).default('outgoing').describe('Traversal direction'),
-      format: z.enum(['toon', 'json']).default('toon').describe('Response format'),
-      include_content: z.boolean().default(false).describe('Include bounded note content excerpts'),
-      note_type: z.array(z.string()).optional().describe('Optional note_type filter for returned notes'),
-      status: z.array(z.string()).optional().describe('Optional status filter for returned notes'),
-      max_notes: z.number().int().min(1).max(5000).default(500).describe('Safety cap for returned notes'),
-      resolver: z.enum(['filesystem', 'obsidian']).optional().describe('Link resolver override. Defaults to vault config.'),
+      root: z.string().describe('Root note path or wikilink target.'),
+      depth: z.number().int().min(0).max(10).describe('Traversal depth.'),
+      direction: z.enum(['outgoing', 'incoming', 'both']).default('outgoing').describe('Link direction.'),
+      format: z.enum(['toon', 'json']).default('toon').describe('Output format.'),
+      include_content: z.boolean().default(false).describe('Include bounded content excerpts.'),
+      note_type: z.array(z.string()).optional().describe('Optional note_type filter.'),
+      status: z.array(z.string()).optional().describe('Optional status filter.'),
+      max_notes: z.number().int().min(1).max(5000).default(500).describe('Max notes returned.'),
+      resolver: z.enum(['filesystem', 'obsidian']).optional().describe('Resolver override.'),
     },
     async ({ root, depth, direction, format, include_content, note_type, status, max_notes, resolver }) => {
       const vaultRoot = resolveVaultRoot(process.cwd());
@@ -219,20 +198,55 @@ export async function startServer(): Promise<void> {
     },
   );
 
+  // ── vault_lookup_code_graph ───────────────────────────────────────
+  server.tool(
+    'vault_lookup_code_graph',
+    'Search the compact code-graph index for matching symbols and files. Returns TOON; compact mode is the default.',
+    {
+      query: z.string().describe('Case-insensitive symbol substring.'),
+      limit: z.number().int().min(1).max(200).default(10).describe('Max matches.'),
+      path_substring: z.string().optional().describe('Optional file-path filter.'),
+      exported_only: z.boolean().default(false).describe('Only exported/public symbols.'),
+      compact: z.boolean().default(true).describe('Use grouped compact TOON output.'),
+    },
+    async ({ query, limit, path_substring, exported_only, compact }) => {
+      try {
+        const vaultRoot = resolveVaultRoot(process.cwd());
+        const index = await loadCodeGraphIndex(vaultRoot);
+        const matches = queryCodeGraphIndex(index, {
+          query,
+          limit,
+          pathSubstring: path_substring,
+          exportedOnly: exported_only,
+        });
+        return {
+          content: [{
+            type: 'text',
+            text: formatCodeGraphLookupResultsAsToon(index, matches, query, { compact }),
+          }],
+        };
+      } catch (err) {
+        return {
+          isError: true,
+          content: [{
+            type: 'text',
+            text: `Failed to query code graph index: ${err instanceof Error ? err.message : String(err)}`,
+          }],
+        };
+      }
+    },
+  );
+
   // ── vault_mutate ────────────────────────────────────────────────────
   server.tool(
     'vault_mutate',
-    [
-      'Mutate an existing vault note. The `action` field selects the operation:',
-      '- "update_frontmatter": Update YAML frontmatter fields. Params: note_path, updates (Record<string,string>).',
-      '- "append_section": Append text to a heading section. Params: note_path, heading, content.',
-    ].join('\n'),
+    'Safely update note frontmatter or append to a named section.',
     {
-      action: z.enum(['update_frontmatter', 'append_section']).describe('Mutation action'),
-      note_path: z.string().describe('Note path relative to vault root'),
-      updates: z.record(z.string(), z.string()).optional().describe('Key-value pairs to set (update_frontmatter)'),
-      heading: z.string().optional().describe('Heading text to append under (append_section)'),
-      content: z.string().optional().describe('Content to append (append_section)'),
+      action: z.enum(['update_frontmatter', 'append_section']).describe('Mutation action.'),
+      note_path: z.string().describe('Path relative to vault root.'),
+      updates: z.record(z.string(), z.string()).optional().describe('Fields to set.'),
+      heading: z.string().optional().describe('Target heading.'),
+      content: z.string().optional().describe('Content to append.'),
     },
     async (input) => {
       const vaultRoot = resolveVaultRoot(process.cwd());
@@ -270,15 +284,9 @@ export async function startServer(): Promise<void> {
   // ── vault_refresh ───────────────────────────────────────────────────
   server.tool(
     'vault_refresh',
-    [
-      'Refresh generated home-note content from vault metadata.',
-      '- target "all" (default): rebuild indexes + refresh active context.',
-      '- target "indexes": rebuild bugs and decisions index tables only.',
-      '- target "active_context": refresh focus, blockers, and critical bugs only.',
-      '- target "code_graph": re-scan source files and regenerate the code graph architecture note.',
-    ].join('\n'),
+    'Refresh generated indexes, active context, or the code graph.',
     {
-      target: z.enum(['all', 'indexes', 'active_context', 'code_graph']).default('all').describe('What to refresh'),
+      target: z.enum(['all', 'indexes', 'active_context', 'code_graph']).default('all').describe('Refresh target.'),
     },
     async ({ target }) => {
       switch (target) {
@@ -323,17 +331,9 @@ export async function startServer(): Promise<void> {
   // ── vault_validate ──────────────────────────────────────────────────
   server.tool(
     'vault_validate',
-    [
-      'Validate vault integrity. Runs read-only checks and reports issues.',
-      '- target "all" (default): run all four validators.',
-      '- target "frontmatter": check YAML frontmatter shape and required keys.',
-      '- target "structure": check required headings and generated-block balance.',
-      '- target "links": check required inter-note links.',
-      '- target "orphans": detect notes with no inbound links.',
-      '- target "doctor": strict health report (validation + summary).',
-    ].join('\n'),
+    'Run read-only vault validation checks or a strict doctor report.',
     {
-      target: z.enum(['all', 'frontmatter', 'structure', 'links', 'orphans', 'doctor']).default('all').describe('What to validate'),
+      target: z.enum(['all', 'frontmatter', 'structure', 'links', 'orphans', 'doctor']).default('all').describe('Validation target.'),
     },
     async ({ target }) => {
       switch (target) {
@@ -350,31 +350,26 @@ export async function startServer(): Promise<void> {
   // ── vault_config ────────────────────────────────────────────────────
   server.tool(
     'vault_config',
-    [
-      'View or update vault configuration (.agent-vault/.config.json).',
-      '- With no parameters: returns current config.',
-      '- resolver: set the default link resolver ("obsidian" or "filesystem").',
-      '  Obsidian CLI is preferred when available and provides richer link resolution.',
-    ].join('\n'),
+    'View or update `.agent-vault/.config.json`.',
     {
-      resolver: z.enum(['filesystem', 'obsidian']).optional().describe('Set the default link resolver'),
+      resolver: z.enum(['filesystem', 'obsidian']).optional().describe('Default link resolver.'),
     },
     async ({ resolver }) => {
       const vaultRoot = resolveVaultRoot(process.cwd());
       if (resolver) {
         const config = await updateVaultConfig(vaultRoot, { resolver });
-        return { content: [{ type: 'text', text: JSON.stringify(config, null, 2) }] };
+        return { content: [{ type: 'text', text: formatVaultConfigAsToon(config) }] };
       }
       const config = await readVaultConfig(vaultRoot);
-      return { content: [{ type: 'text', text: JSON.stringify(config, null, 2) }] };
+      return { content: [{ type: 'text', text: formatVaultConfigAsToon(config) }] };
     },
   );
 
   // ── vault_help ──────────────────────────────────────────────────────
   server.tool(
     'vault_help',
-    'List all vault commands or show detailed help for a specific command.',
-    { command: z.string().optional().describe('Command name to get help for') },
+    'List commands or show help for one command.',
+    { command: z.string().optional().describe('Command name.') },
     async ({ command }) => {
       const text = command
         ? formatCommandHelp(command as Parameters<typeof formatCommandHelp>[0])

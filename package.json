@@ -21,6 +21,7 @@
     "build": "tsup",
     "test": "vitest run",
     "test:watch": "vitest",
+    "context:report": "bun run scripts/context-report.ts",
     "e2e:local": "bun run scripts/e2e-local.ts",
     "e2e:home": "bun run scripts/e2e-home.ts",
     "e2e:uninstall": "bun run scripts/e2e-uninstall.ts",

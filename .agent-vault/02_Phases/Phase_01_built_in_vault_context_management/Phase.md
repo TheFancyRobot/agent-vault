@@ -7,14 +7,15 @@ phase_id: PHASE-01
 status: completed
 owner: Pi
 created: '2026-04-20'
-updated: '2026-04-20'
+updated: '2026-04-23'
 depends_on: []
 related_architecture:
   - '[[01_Architecture/Agent_Workflow|Agent Workflow]]'
   - '[[01_Architecture/System_Overview|System Overview]]'
 related_decisions:
   - '[[04_Decisions/DEC-0001_adopt-vault-owned-context-management-primitives-for-execution-workflows|DEC-0001 Adopt vault-owned context management primitives for execution workflows]]'
-related_bugs: []
+related_bugs:
+  - '[[03_Bugs/BUG-0001_built-in-context-management-inflates-prompt-prefill-to-100k-tokens|BUG-0001 Built-in context management inflates prompt prefill to 100k+ tokens]]'
 tags:
   - agent-vault
   - phase
@@ -90,7 +91,7 @@ Use this note for a bounded phase of work in \`02_Phases/\`. This note is the so
 ## Related Bugs
 
 <!-- AGENT-START:phase-related-bugs -->
-- None yet.
+- [[03_Bugs/BUG-0001_built-in-context-management-inflates-prompt-prefill-to-100k-tokens|BUG-0001 Built-in context management inflates prompt prefill to 100k+ tokens]]
 <!-- AGENT-END:phase-related-bugs -->
 
 ## Steps

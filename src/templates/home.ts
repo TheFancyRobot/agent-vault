@@ -19,7 +19,7 @@ tags:
 
 # Active Context
 
-Keep this note short, current, and safe to overwrite as the repo focus changes.
+Keep this note short and current.
 
 ## Current Objective
 
@@ -40,20 +40,19 @@ _Last refreshed: YYYY-MM-DD._
 ## In Scope Right Now
 
 - Establish the vault structure and starter notes.
-- Capture the first-pass architecture map for the repo.
-- Define standards and templates that future agents can follow.
+- Keep first-pass architecture notes aligned with the repo.
 
 ## Out Of Scope Right Now
 
-- Deep automation implementation inside \\\`08_Automation/\\\`
-- Detailed bug history and decision backlog migration
-- Repo-wide architecture audit beyond starter notes
+- Deep automation inside \\\`08_Automation/\\\`
+- Large historical migrations
+- Repo-wide audits beyond starter notes
 
 ## Working Assumptions
 
-- This repo should use exactly one vault at \\\`.agent-vault/\\\`.
-- The vault should not contain a second nested project folder.
-- Notes should remain easy to read in raw Markdown without Obsidian-specific features.
+- This repo uses one vault at \\\`.agent-vault/\\\`.
+- The vault does not contain a nested project folder.
+- Notes stay readable in raw Markdown.
 
 ## Blockers
 
@@ -63,8 +62,8 @@ _Last refreshed: YYYY-MM-DD._
 
 ## Open Questions
 
-- Which automation helpers should be implemented first: note generators, validators, or issue sync?
-- How much of the existing planning material elsewhere in the repo should later be linked or migrated into this vault?
+- Which automation helpers should land first?
+- What existing planning material should later be linked or migrated?
 
 ## Critical Bugs
 
@@ -74,9 +73,9 @@ _Last refreshed: YYYY-MM-DD._
 
 ## Next Actions
 
-- Keep the architecture notes aligned with the code as packages evolve.
-- Add the first real decision record when a non-trivial process or design tradeoff is made.
-- Start session logging once the vault is used during feature work.
+- Keep architecture notes aligned with the code.
+- Record non-trivial decisions as dedicated notes.
+- Start session logging during real feature work.
 ` as string;
 
 export const BUGS_INDEX_TEMPLATE = `---
@@ -101,9 +100,9 @@ Use this note as the manual table of contents for bug records in \\\`03_Bugs/\\\
 ## Triage Rules
 
 - Create one note per bug.
-- Give each bug a stable id such as \\\`BUG-0001\\\`.
-- Link the bug from the active phase, related decision, and session notes when relevant.
-- Close the loop by recording root cause and verification steps.
+- Use a stable id such as \\\`BUG-0001\\\`.
+- Link relevant phase, decision, and session notes.
+- Record root cause and verification.
 
 ## Status Buckets
 
@@ -141,13 +140,13 @@ Use this note as the directory for decision records in \\\`04_Decisions/\\\`.
 
 ## Logging Rules
 
-- Create a new decision note when a choice changes architecture, workflow, ownership, tooling, or long-term maintenance cost.
+- Create a decision note for durable architectural or workflow choices.
 - Do not hide decisions inside session notes.
-- When a decision is superseded, link both the old and new records.
+- Link superseded and replacement decisions.
 
 ## Starter Decision Candidates
 
-- Record the first decision as soon as the vault operating model changes in a durable way.
+- Record the first durable operating-model change as a decision.
 - A likely early candidate is the repo rule that Agent Vault lives directly in \\\`.agent-vault/\\\` with no nested project folder.
 
 ## Decision Log
@@ -203,10 +202,10 @@ This is the main launch point for the vault.
 
 ## Working Rhythm
 
-- Before work: read [[00_Home/Active_Context|Active Context]], then the target step, then the linked phase, architecture, bug, and decision notes.
+- Before work: read Active Context, then the target step and linked notes.
 - Before major work: create a session note in \\\`05_Sessions/\\\`.
-- During work: capture new bugs, decisions, and open questions as separate notes instead of burying them in one long session log.
-- After work: update notes conservatively, refresh home notes, and leave a clear next action.
+- During work: capture bugs, decisions, and open questions as separate notes.
+- After work: update notes conservatively and leave a clear next action.
 
 ## Common Paths
 
@@ -219,17 +218,17 @@ This is the main launch point for the vault.
 
 - Manual: [[README|Agent Vault README]]
 - Automation guide: [[08_Automation/README|Automation README]]
-- Preferred CLI: \\\`./.agent-vault/08_Automation/vault\\\`
-- Command catalog: \\\`./.agent-vault/08_Automation/vault help\\\`
-- Health check: \\\`./.agent-vault/08_Automation/vault-doctor\\\`
-- Refresh home notes: \\\`./.agent-vault/08_Automation/vault refresh-all-home-notes\\\`
-- Validate note integrity: \\\`./.agent-vault/08_Automation/vault validate-all\\\`
+- CLI: \\\`./.agent-vault/08_Automation/vault\\\`
+- Help: \\\`./.agent-vault/08_Automation/vault help\\\`
+- Health: \\\`./.agent-vault/08_Automation/vault-doctor\\\`
+- Refresh: \\\`./.agent-vault/08_Automation/vault refresh-all-home-notes\\\`
+- Validate: \\\`./.agent-vault/08_Automation/vault validate-all\\\`
 
 ## Maintenance Notes
 
 - Keep this page lightweight.
-- Treat this note as a hub, not a dump.
-- If a section grows beyond a screenful, split it into its own note and link it here.
+- Treat it as a hub, not a dump.
+
 ` as string;
 
 export const INBOX_TEMPLATE = `---
@@ -252,9 +251,9 @@ Use this note for fast capture only.
 
 ## How To Use It
 
-- Drop raw ideas, loose questions, and follow-ups here when you do not have time to sort them.
-- Move items into a proper [[07_Templates/Bug_Template|bug]], [[07_Templates/Decision_Template|decision]], [[07_Templates/Phase_Template|phase]], or [[07_Templates/Session_Template|session]] note during the next cleanup pass.
-- Delete or link resolved entries so the inbox stays actionable.
+- Drop raw ideas, loose questions, and follow-ups here.
+- Move items into proper bug, decision, phase, or session notes during cleanup.
+- Delete or link resolved entries.
 
 ## Related Notes
 
@@ -282,13 +281,13 @@ tags:
 
 # Roadmap
 
-This roadmap tracks the evolution of the vault itself and the operational habits around it.
+This roadmap tracks vault evolution and operating habits.
 
 ## Principles
 
 - Keep phases small enough to complete and review.
-- Prefer useful infrastructure over elaborate note sprawl.
-- Only add automation after the manual workflow is clear.
+- Prefer useful infrastructure over note sprawl.
+- Add automation only after the manual workflow is clear.
 
 ## Phase Outline
 
@@ -298,7 +297,7 @@ This roadmap tracks the evolution of the vault itself and the operational habits
 
 ## Near-Term Outcomes
 
-- A dependable home note that agents can open first.
+- A dependable home note agents can open first.
 - Reusable templates for bugs, decisions, sessions, and phases.
 - A small but real architecture map of the \\\`{{repo_name}}\\\` repo.
 
