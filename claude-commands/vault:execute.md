@@ -16,8 +16,8 @@ Workflow:
    - If nothing is supplied, infer the likely target from active context and recent sessions.
 
 2. Load the smallest useful context.
-   - Use `vault_traverse` from the target, not the vault root.
-   - For a step, read the thin step note and parent phase first.
+   - Keep context loading target-rooted: use `vault_traverse` from the target, not the vault root.
+   - For a step, read only the thin step note and parent phase first.
    - For split steps, start with `Execution Brief` and `Validation Plan`.
    - Read linked architecture, bug, decision, dependency, or handoff notes only when needed.
    - Treat `Code_Graph.md` as summary-only; use `vault_lookup_code_graph` for symbol/file discovery.

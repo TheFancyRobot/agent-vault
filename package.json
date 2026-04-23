@@ -5,7 +5,7 @@
   "publishConfig": {
     "access": "public"
   },
-  "description": "Durable project memory for coding agents. Obsidian-compatible vault with MCP server, pi package, and slash commands for Claude Code, OpenCode, and Codex.",
+  "description": "Durable project memory for coding agents. Obsidian-compatible vault with MCP server, pi package, and workflow support for Claude Code, OpenCode, pi, and Codex.",
   "bin": {
     "agent-vault": "./dist/cli.mjs"
   },

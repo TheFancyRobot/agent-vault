@@ -8,8 +8,9 @@ import { createInterface } from 'node:readline/promises';
 type CommandFormat = 'claude' | 'opencode' | 'codex';
 type InstallScope = 'global' | 'cwd';
 type PackageManager = 'bun' | 'npm';
-type ToolKind = 'claude' | 'opencode' | 'codex';
+type ToolKind = 'claude' | 'opencode' | 'codex' | 'pi';
 type McpConfigRootKey = 'mcpServers' | 'mcp';
+type PiPackageEntry = string | Record<string, unknown>;
 
 interface DetectedTool {
   kind: ToolKind;
@@ -91,6 +92,65 @@ export const buildOpenCodeMcpServerConfig = (target: InstallTarget, executablePa
   enabled: true,
 });
 
+export const buildPiPackageSource = (target: InstallTarget): string => (
+  join(target.runtimePath, 'node_modules', '@fancyrobot', 'agent-vault')
+);
+
+export const upsertPiPackageSourceInConfig = (
+  config: Record<string, unknown>,
+  packageSource: string,
+): { config: Record<string, unknown>; changed: boolean } => {
+  const currentPackages = Array.isArray(config.packages) ? [...config.packages as PiPackageEntry[]] : [];
+  const alreadyPresent = currentPackages.some((entry) => (
+    typeof entry === 'string'
+      ? entry === packageSource
+      : entry && typeof entry === 'object' && entry.source === packageSource
+  ));
+
+  if (alreadyPresent) {
+    return { config, changed: false };
+  }
+
+  return {
+    config: {
+      ...config,
+      packages: [...currentPackages, packageSource],
+    },
+    changed: true,
+  };
+};
+
+export const removePiPackageSourcesFromConfig = (
+  config: Record<string, unknown>,
+  packageSources: string[],
+): { config: Record<string, unknown>; changed: boolean } => {
+  const currentPackages = Array.isArray(config.packages) ? config.packages as PiPackageEntry[] : [];
+  const packageSourceSet = new Set(packageSources);
+  const nextPackages = currentPackages.filter((entry) => {
+    if (typeof entry === 'string') {
+      return !packageSourceSet.has(entry);
+    }
+
+    if (entry && typeof entry === 'object' && typeof entry.source === 'string') {
+      return !packageSourceSet.has(entry.source);
+    }
+
+    return true;
+  });
+
+  if (nextPackages.length === currentPackages.length) {
+    return { config, changed: false };
+  }
+
+  return {
+    config: {
+      ...config,
+      packages: nextPackages,
+    },
+    changed: true,
+  };
+};
+
 const getToolMcpRootKey = (tool: DetectedTool): McpConfigRootKey => tool.kind === 'opencode' ? 'mcp' : 'mcpServers';
 
 const buildToolMcpServerConfig = (tool: DetectedTool, target: InstallTarget) => (
@@ -98,6 +158,12 @@ const buildToolMcpServerConfig = (tool: DetectedTool, target: InstallTarget) => 
     ? buildOpenCodeMcpServerConfig(target)
     : buildMcpServerConfig(target)
 );
+
+const resolvePiSettingsPath = (
+  scope: InstallScope,
+  cwd: string = process.cwd(),
+  home: string = homedir(),
+): string => (scope === 'global' ? join(home, '.pi', 'agent', 'settings.json') : join(cwd, '.pi', 'settings.json'));
 
 export const parseInstallScope = (args: string[]): InstallScope | null => {
   if (args.includes('--global')) {
@@ -412,8 +478,10 @@ const readCommandTemplates = async (): Promise<CommandTemplate[]> => {
   }
 };
 
-const detectTools = (): DetectedTool[] => {
-  const home = homedir();
+export const detectTools = (scope: InstallScope, cwd: string = process.cwd(), home: string = homedir()): DetectedTool[] => {
+  const hasGlobalPi = existsSync(join(home, '.pi', 'agent')) || existsSync(join(home, '.pi', 'agent', 'settings.json'));
+  const hasProjectPi = existsSync(join(cwd, '.pi')) || existsSync(join(cwd, '.pi', 'settings.json'));
+
   return [
     {
       kind: 'claude',
@@ -439,6 +507,12 @@ const detectTools = (): DetectedTool[] => {
       commandsDir: join(home, '.codex', 'prompts'),
       commandFormat: 'codex',
     },
+    {
+      kind: 'pi',
+      name: 'pi',
+      configPath: resolvePiSettingsPath(scope, cwd, home),
+      detected: hasGlobalPi || hasProjectPi,
+    },
   ];
 };
 
@@ -459,10 +533,25 @@ const writeJsonSafe = async (path: string, data: unknown): Promise<void> => {
   await writeFile(path, JSON.stringify(data, null, 2) + '\n', 'utf-8');
 };
 
-const installMcpServer = async (tool: DetectedTool, target: InstallTarget, dryRun: boolean): Promise<InstallAction[]> => {
+const installToolConfiguration = async (tool: DetectedTool, target: InstallTarget, dryRun: boolean): Promise<InstallAction[]> => {
   const actions: InstallAction[] = [];
-
   const config = await readJsonSafe(tool.configPath);
+
+  if (tool.kind === 'pi') {
+    const result = upsertPiPackageSourceInConfig(config, buildPiPackageSource(target));
+    if (result.changed) {
+      if (!dryRun) {
+        await writeJsonSafe(tool.configPath, result.config);
+      }
+      actions.push({
+        tool: tool.name,
+        path: tool.configPath,
+        detail: 'Added agent-vault to pi packages',
+      });
+    }
+    return actions;
+  }
+
   const rootKey = getToolMcpRootKey(tool);
   const mcpServers = (config[rootKey] ?? {}) as Record<string, unknown>;
   const nextConfig = buildToolMcpServerConfig(tool, target);
@@ -516,6 +605,26 @@ const installToolCommands = async (tool: DetectedTool, dryRun: boolean): Promise
 const uninstallTool = async (tool: DetectedTool, dryRun: boolean): Promise<InstallAction[]> => {
   const actions: InstallAction[] = [];
   const config = await readJsonSafe(tool.configPath);
+
+  if (tool.kind === 'pi') {
+    const result = removePiPackageSourcesFromConfig(config, [
+      buildPiPackageSource(buildInstallTarget('global')),
+      buildPiPackageSource(buildInstallTarget('cwd')),
+    ]);
+
+    if (result.changed) {
+      if (!dryRun) {
+        await writeJsonSafe(tool.configPath, result.config);
+      }
+      actions.push({
+        tool: tool.name,
+        path: tool.configPath,
+        detail: 'Removed agent-vault from pi packages',
+      });
+    }
+    return actions;
+  }
+
   const rootKey = getToolMcpRootKey(tool);
   const mcpServers = (config[rootKey] ?? {}) as Record<string, unknown>;
 
@@ -569,7 +678,7 @@ export async function runInstall(args: string[]): Promise<void> {
   const dryRun = args.includes('--dry-run');
   const scope = await resolveInstallScope(args);
   const installTarget = buildInstallTarget(scope);
-  const tools = detectTools();
+  const tools = detectTools(scope);
   const detected = tools.filter((t) => t.detected);
   const selected = await resolveInstallTools(args, detected);
 
@@ -589,7 +698,7 @@ export async function runInstall(args: string[]): Promise<void> {
   const allActions: InstallAction[] = [await ensureRuntimeInstalled(installTarget, dryRun)];
 
   for (const tool of selected) {
-    const actions = await installMcpServer(tool, installTarget, dryRun);
+    const actions = await installToolConfiguration(tool, installTarget, dryRun);
     actions.push(...await installToolCommands(tool, dryRun));
     allActions.push(...actions);
   }
@@ -602,7 +711,7 @@ export async function runInstall(args: string[]): Promise<void> {
     console.log(`\nAgent Vault is ready at ${installTarget.rootPath}.`);
     if (selected.length > 0) {
       console.log(`Configured agent-vault for ${selected.map((t) => t.name).join(', ')}.`);
-      console.log('Use /vault:init in Claude Code/OpenCode or /prompts:vault-init in Codex to initialize a vault.');
+      console.log('Use /vault:init in Claude Code/OpenCode, /prompts:vault-init in Codex, or the Agent Vault pi package tools/skills in pi.');
     } else {
       console.log('No supported agent tools were configured in this run.');
     }
@@ -611,7 +720,7 @@ export async function runInstall(args: string[]): Promise<void> {
 
 export async function runUninstall(args: string[]): Promise<void> {
   const dryRun = args.includes('--dry-run');
-  const tools = detectTools();
+  const tools = detectTools('global');
   const detected = tools.filter((t) => t.detected);
 
   if (dryRun) console.log('(dry run - no changes will be made)\n');

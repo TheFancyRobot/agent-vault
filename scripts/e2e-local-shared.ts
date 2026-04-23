@@ -27,6 +27,11 @@ const TOOL_CONFIGS = [
     configPathParts: ['.codex', 'config.json'],
     commandsDirParts: ['.codex', 'prompts'],
   },
+  {
+    kind: 'pi',
+    name: 'pi',
+    configPathParts: ['.pi', 'agent', 'settings.json'],
+  },
 ] as const;
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -50,10 +55,10 @@ interface LocalE2EOptions {
 }
 
 interface ToolConfig {
-  kind: 'claude' | 'opencode' | 'codex';
+  kind: 'claude' | 'opencode' | 'codex' | 'pi';
   name: string;
   configPath: string;
-  commandsDir: string;
+  commandsDir?: string;
 }
 
 const sleep = (ms: number): Promise<void> => new Promise((resolvePromise) => {
@@ -235,6 +240,14 @@ const createFakeToolHomes = async (homeDir: string): Promise<void> => {
   for (const tool of TOOL_CONFIGS) {
     const configPath = join(homeDir, ...tool.configPathParts);
     await mkdir(dirname(configPath), { recursive: true });
+
+    if (tool.kind === 'pi') {
+      await writeFile(configPath, JSON.stringify({
+        packages: ['pi-skills'],
+      }, null, 2) + '\n', 'utf-8');
+      continue;
+    }
+
     const rootKey = tool.kind === 'opencode' ? 'mcp' : 'mcpServers';
     const existingServer = tool.kind === 'opencode'
       ? {
@@ -256,16 +269,23 @@ const createFakeToolHomes = async (homeDir: string): Promise<void> => {
   }
 };
 
-const detectTools = (homeDir: string): ToolConfig[] => TOOL_CONFIGS
+const detectTools = (homeDir: string, projectDir: string, expectedScope: InstallScope): ToolConfig[] => TOOL_CONFIGS
   .map((tool) => ({
     kind: tool.kind,
     name: tool.name,
-    configPath: join(homeDir, ...tool.configPathParts),
-    commandsDir: join(homeDir, ...tool.commandsDirParts),
+    configPath: tool.kind === 'pi'
+      ? (expectedScope === 'global'
+        ? join(homeDir, '.pi', 'agent', 'settings.json')
+        : join(projectDir, '.pi', 'settings.json'))
+      : join(homeDir, ...tool.configPathParts),
+    commandsDir: tool.commandsDirParts ? join(homeDir, ...tool.commandsDirParts) : undefined,
   }))
   .filter((tool) => {
     if (tool.kind === 'claude') {
       return existsSync(join(homeDir, '.claude')) || existsSync(tool.configPath);
+    }
+    if (tool.kind === 'pi') {
+      return existsSync(join(homeDir, '.pi', 'agent')) || existsSync(join(projectDir, '.pi'));
     }
     return existsSync(dirname(tool.configPath));
   });
@@ -333,6 +353,9 @@ const resolveExpectedInstallRoot = (scope: InstallScope, homeDir: string, projec
 
 const getManagedCommandFilenames = async (toolName: string): Promise<string[]> => {
   const sourceFiles = (await readdir(commandSourceDir)).filter((file) => file.endsWith('.md')).sort();
+  if (toolName === 'pi') {
+    return [];
+  }
   if (toolName !== 'Codex') {
     return sourceFiles;
   }
@@ -348,12 +371,23 @@ const verifyInstalledState = async (
 ): Promise<void> => {
   const runtimePackagePath = join(installRoot, '.runtime', 'node_modules', '@fancyrobot', 'agent-vault', 'package.json');
   const runtimeCliPath = join(installRoot, '.runtime', 'node_modules', '@fancyrobot', 'agent-vault', 'dist', 'cli.mjs');
+  const runtimePackageRoot = join(installRoot, '.runtime', 'node_modules', '@fancyrobot', 'agent-vault');
   const runtimePackage = await readJson(runtimePackagePath);
 
   assert.equal(runtimePackage.version, expectedVersion, 'installed runtime version should match the locally published package');
 
   for (const tool of tools) {
     const config = await readJson(tool.configPath);
+
+    if (tool.kind === 'pi') {
+      const packages = Array.isArray(config.packages) ? config.packages : [];
+      assert.ok(packages.includes(runtimePackageRoot), 'pi should include the installed Agent Vault package path');
+      if (expectExistingServerPreserved) {
+        assert.ok(packages.includes('pi-skills'), 'pi should preserve existing packages');
+      }
+      continue;
+    }
+
     const rootKey = getToolMcpRootKey(tool);
     const mcpServers = (config[rootKey] ?? {}) as Record<string, unknown>;
     const agentVault = mcpServers['agent-vault'];
@@ -365,7 +399,7 @@ const verifyInstalledState = async (
 
     const managedFilenames = await getManagedCommandFilenames(tool.name);
     for (const filename of managedFilenames) {
-      const path = join(tool.commandsDir, filename);
+      const path = join(tool.commandsDir!, filename);
       assert.ok(existsSync(path), `${tool.name} should install managed command ${filename}`);
     }
   }
@@ -379,6 +413,17 @@ const verifyCleanState = async (
 ): Promise<void> => {
   for (const tool of tools) {
     const config = await readJson(tool.configPath);
+
+    if (tool.kind === 'pi') {
+      const packages = Array.isArray(config.packages) ? config.packages : [];
+      assert.ok(!packages.includes(join(homeDir, '.agent-vault', '.runtime', 'node_modules', '@fancyrobot', 'agent-vault')), 'pi should remove the global Agent Vault package path');
+      assert.ok(!packages.includes(join(projectDir, '.agent-vault', '.runtime', 'node_modules', '@fancyrobot', 'agent-vault')), 'pi should remove the cwd Agent Vault package path');
+      if (expectExistingServerPreserved) {
+        assert.ok(packages.includes('pi-skills'), 'pi should preserve existing packages when install state is cleaned up');
+      }
+      continue;
+    }
+
     const rootKey = getToolMcpRootKey(tool);
     const mcpServers = (config[rootKey] ?? {}) as Record<string, unknown>;
 
@@ -389,7 +434,7 @@ const verifyCleanState = async (
 
     const managedFilenames = await getManagedCommandFilenames(tool.name);
     for (const filename of managedFilenames) {
-      const path = join(tool.commandsDir, filename);
+      const path = join(tool.commandsDir!, filename);
       assert.ok(!existsSync(path), `${tool.name} should not keep managed command ${filename} when install state is cleaned up`);
     }
   }
@@ -442,7 +487,7 @@ export async function runLocalE2E(options: LocalE2EOptions): Promise<void> {
   if (!useRealHome) {
     await createFakeToolHomes(workspaceHome);
   }
-  const detectedTools = detectTools(workspaceHome);
+  const detectedTools = detectTools(workspaceHome, projectDir, expectedScope);
 
   const baseEnv: NodeJS.ProcessEnv = {
     ...process.env,

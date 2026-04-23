@@ -19,7 +19,7 @@ bun run typecheck    # Type-check without emitting
 
 `bun run e2e:local` clears and recreates a dedicated temp workspace, starts a temporary Verdaccio registry, publishes a uniquely-versioned local build of `@fancyrobot/agent-vault`, runs `bunx @fancyrobot/agent-vault` in a throwaway project with a throwaway `HOME`, and verifies the installed runtime, config, and command files. The temp workspace is preserved at the end so you can keep testing against the installed package state.
 
-`bun run e2e:home` uses the same local publish flow, but installs into your real `HOME` so Claude Code and OpenCode can use the locally published build immediately. This modifies your actual agent config and command directories.
+`bun run e2e:home` uses the same local publish flow, but installs into your real `HOME` so Claude Code, OpenCode, and pi can use the locally published build immediately. This modifies your actual agent config and command directories.
 
 `bun run e2e:uninstall` follows the same setup, then runs `bunx @fancyrobot/agent-vault uninstall` and verifies that the runtime, MCP config, and managed command files are removed cleanly.
 
