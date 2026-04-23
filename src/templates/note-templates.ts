@@ -24,37 +24,31 @@ tags:
 
 # Phase Template
 
-Use this note for a bounded phase of work in \\\`02_Phases/\\\`. This note is the source of truth for why the phase exists, what is in scope, and how completion is judged. Session notes can narrate execution, but they should not replace this note as the plan of record. Keep it aligned with [[07_Templates/Note_Contracts|Note Contracts]] and link to the related architecture, bug, and decision notes rather than duplicating them here.
+Use this note for a bounded phase. Keep it focused, link outward, and avoid duplicating durable detail from architecture, bug, or decision notes. See [[07_Templates/Note_Contracts|Note Contracts]].
 
 ## Objective
 
-- State the end result in one or two sentences.
-- Write the outcome, not just the activity.
+- State the outcome, not just the activity.
 
 ## Why This Phase Exists
 
-- Explain the problem, risk, or opportunity that makes this phase worth doing.
-- Name the user, team, or system impact.
+- Explain the problem and who or what it affects.
 
 ## Scope
 
-- List the work that is included in this phase.
-- Be concrete about systems, commands, workflows, or docs that will change.
+- List the systems, commands, workflows, or docs that are in scope.
 
 ## Non-Goals
 
 - List related work that is intentionally out of scope.
-- Use this section to stop future scope creep.
 
 ## Dependencies
 
-- List required prior phases, decisions, architecture notes, tools, or external inputs.
-- Note anything that can block start or completion.
+- List prerequisites or blockers.
 
 ## Acceptance Criteria
 
-- Write a checklist of conditions that must be true before this phase is complete.
-- Prefer observable statements such as passing tests, updated docs, or verified workflows.
+- Use observable completion checks.
 
 ## Linear Context
 
@@ -91,8 +85,7 @@ Use this note for a bounded phase of work in \\\`02_Phases/\\\`. This note is th
 
 ## Notes
 
-- Capture short planning notes, risks, assumptions, or verification reminders here.
-- Put durable facts in linked decision, bug, architecture, or session notes instead of duplicating them.
+- Keep short planning notes, risks, or assumptions here.
 ` as string;
 
 export const STEP_TEMPLATE = `---
@@ -116,43 +109,22 @@ tags:
 
 # Step Template
 
-Use this note for one executable step inside a phase. This note is the source of truth for the next concrete unit of work. The goal is to make execution small, teachable, and safe for a junior developer or an automation agent to pick up without guessing. Keep the parent phase relationship explicit and link the architecture notes a reader must inspect first; use [[07_Templates/Phase_Template|Phase Template]] and [[07_Templates/Architecture_Template|Architecture Template]] as the contract references.
+Use this note as a thin index for one executable step. Keep detail in companion notes so execution can load only the smallest note needed.
 
 ## Purpose
 
-- State the exact outcome this step should produce.
-- Keep it narrow enough that success or failure is easy to observe.
-
-## Why This Step Exists
-
-- Explain why this step matters to the parent phase.
-- Call out the risk reduced, capability added, or knowledge gained.
-
-## Prerequisites
-
-- List the notes, approvals, tooling, branch state, or prior steps required before starting.
-- Include blocking commands or setup steps if they are easy to forget.
-
-## Relevant Code Paths
-
-- List the most likely files, directories, packages, tests, commands, or docs to inspect.
-- Include only the paths that help a new engineer get oriented quickly.
+- State the exact outcome.
 
 ## Required Reading
 
-- Link the minimum notes, docs, source files, or tests that must be read before editing.
-- If a reader can skip something safely, do not list it here.
+- Link only the minimum notes, docs, files, or tests that must be read first.
 
-## Execution Prompt
+## Companion Notes
 
-1. Read the phase note, this step note, and every item in Required Reading before making changes.
-2. Restate the goal in your own words and verify that you can name the exact files or workflows likely to change.
-3. Inspect the current implementation and tests first. Do not start coding until you understand the current behavior, the expected behavior, and how success will be validated.
-4. Make the smallest change that can satisfy this step. Prefer extending existing patterns over inventing a new one unless the phase or a decision note requires a new approach.
-5. As you work, record concrete findings in Implementation Notes. If you discover missing context, add it here or create the appropriate bug, decision, or architecture note instead of keeping it only in terminal history.
-6. Validate your work with the most direct checks available. Start with targeted tests or manual reproduction steps before broader project-wide commands.
-7. If validation fails, stop and document what failed, what you tried, and whether the issue is in your change or was already present.
-8. Before marking the step done, update the Agent-Managed Snapshot, Outcome Summary, and Session History so the next engineer can continue without re-discovery.
+- [[<step note directory>/Execution_Brief|Execution Brief]] - Why the step exists, prerequisites, likely code paths, and the smallest execution checklist.
+- [[<step note directory>/Validation_Plan|Validation Plan]] - Acceptance checks, commands, edge cases, and regression expectations.
+- [[<step note directory>/Implementation_Notes|Implementation Notes]] - Durable findings discovered while the step is being executed.
+- [[<step note directory>/Outcome|Outcome]] - Final result, validation evidence, and explicit follow-up.
 
 ## Agent-Managed Snapshot
 
@@ -163,14 +135,9 @@ Use this note for one executable step inside a phase. This note is the source of
 - Next action:
 <!-- AGENT-END:step-agent-managed-snapshot -->
 
-## Implementation Notes
-
-- Capture facts learned during execution.
-- Prefer short bullets with file paths, commands, and observed behavior.
-
 ## Human Notes
 
-- Use this section for judgment calls, cautions, or handoff guidance that should not be overwritten by automation.
+- Put judgment calls or cautions here.
 
 ## Session History
 
@@ -178,10 +145,10 @@ Use this note for one executable step inside a phase. This note is the source of
 - YYYY-MM-DD - Session note link - Short progress update.
 <!-- AGENT-END:step-session-history -->
 
-## Outcome Summary
+## Related Notes
 
-- Record the final result, the validation performed, and any follow-up required.
-- If the step is blocked, say exactly what is blocking it.
+- [[07_Templates/Note_Contracts|Note Contracts]]
+- [[07_Templates/Phase_Template|Phase Template]]
 ` as string;
 
 export const BUG_TEMPLATE = `---
@@ -206,22 +173,19 @@ tags:
 
 # Bug Template
 
-Use one note per bug in \\\`03_Bugs/\\\`. This note is the source of truth for one defect's reproduction, impact, root cause, workaround, and verification. It should let a new engineer reproduce the issue, understand its impact, and safely continue the investigation. Link the bug back to the relevant phase or step when known; use [[07_Templates/Phase_Template|Phase Template]] and [[07_Templates/Step_Template|Step Template]] as the relationship reference points.
+Use one note per bug. Capture reproduction, impact, root cause, workaround, and verification, then link back to the relevant phase, step, decision, or session. See [[07_Templates/Note_Contracts|Note Contracts]].
 
 ## Summary
 
-- State the defect in one or two sentences.
-- Include the affected workflow, command, or component.
+- State the defect and affected workflow, command, or component.
 
 ## Observed Behavior
 
 - Describe what actually happens.
-- Include error text, incorrect output, broken UI state, or missing side effect when relevant.
 
 ## Expected Behavior
 
 - Describe what should happen instead.
-- Keep this outcome-specific so validation is straightforward.
 
 ## Reproduction Steps
 
@@ -232,31 +196,26 @@ Use one note per bug in \\\`03_Bugs/\\\`. This note is the source of truth for o
 ## Scope / Blast Radius
 
 - List affected packages, commands, integrations, environments, or users.
-- Note whether this is isolated, widespread, data-sensitive, or release-blocking.
 
 ## Suspected Root Cause
 
-- Record current theories before the issue is proven.
-- Mark assumptions clearly.
+- Record current theories and assumptions.
 
 ## Confirmed Root Cause
 
-- Fill this in once investigation proves the cause.
-- Link the decisive evidence such as code paths, tests, or logs.
+- Record the proven cause and decisive evidence.
 
 ## Workaround
 
-- Describe any temporary mitigation.
-- Say who can use it and what risk remains.
+- Describe any temporary mitigation and remaining risk.
 
 ## Permanent Fix Plan
 
 - Describe the intended durable fix.
-- Include related steps, decisions, or validation strategy if known.
 
 ## Regression Coverage Needed
 
-- List tests, fixtures, reproductions, alerts, or docs updates needed to stop the bug from returning.
+- List tests, fixtures, reproductions, alerts, or docs updates needed.
 
 ## Related Notes
 
@@ -296,37 +255,31 @@ tags:
 
 # Decision Template
 
-Use one note per durable choice in \\\`04_Decisions/\\\`. This note is the source of truth for one decision and its supersession history. A good decision note explains not only what was chosen, but why other reasonable options were not chosen. Link each decision to the phase, bug, or architecture note that made the choice necessary; use [[07_Templates/Phase_Template|Phase Template]], [[07_Templates/Bug_Template|Bug Template]], and [[07_Templates/Architecture_Template|Architecture Template]] as the companion records.
+Use one note per durable choice. Record what was chosen, why, tradeoffs, and supersession history, and link back to the phase, bug, or architecture note that made the choice necessary. See [[07_Templates/Note_Contracts|Note Contracts]].
 
 ## Status
 
-- Use values such as \\\`proposed\\\`, \\\`accepted\\\`, \\\`superseded\\\`, or \\\`rejected\\\`.
-- Keep the frontmatter status and this section aligned.
+- Keep this section aligned with the frontmatter status.
 
 ## Context
 
-- Explain the problem, constraint, timing, and pressures that forced a choice.
-- Link the phase, bug, or architecture note that created the need.
+- Explain the problem, constraints, and links that forced a choice.
 
 ## Decision
 
-- State the chosen direction clearly.
-- Include the boundary of the choice so readers know what is and is not decided.
+- State the chosen direction and boundary clearly.
 
 ## Alternatives Considered
 
-- List realistic alternatives, not strawmen.
-- For each option, say why it was not selected.
+- List realistic alternatives and why they were not selected.
 
 ## Tradeoffs
 
-- Describe the costs, risks, complexity, migration burden, and operational implications.
-- Include short-term and long-term tradeoffs when they differ.
+- Describe costs, risks, complexity, and operational implications.
 
 ## Consequences
 
-- Record what changes now that this decision exists.
-- Note follow-up work, deprecations, or docs/tests that should change.
+- Record what changes now and any required follow-up work.
 
 ## Related Notes
 
@@ -379,17 +332,15 @@ tags:
 
 # Session Template
 
-Use one note per meaningful work session in \\\`05_Sessions/\\\`. This note records chronology, validation, and handoff state for a slice of work. The reader should be able to understand what was attempted, what changed, and what the next agent should do, but durable conclusions should still be promoted into phase, architecture, bug, or decision notes. Every session should stay anchored to its primary step; use [[07_Templates/Step_Template|Step Template]] as the companion contract.
+Use one note per meaningful work session. Record chronology, validation, and handoff state, but promote durable conclusions into phase, architecture, bug, or decision notes. See [[07_Templates/Note_Contracts|Note Contracts]].
 
 ## Objective
 
 - State the intended outcome for this session.
-- Tie it to a phase, bug, decision, or release concern.
 
 ## Planned Scope
 
 - List the specific tasks intended for this session.
-- Note explicit out-of-scope items if they could distract execution.
 
 ## Execution Log
 
@@ -401,12 +352,10 @@ Use one note per meaningful work session in \\\`05_Sessions/\\\`. This note reco
 ## Findings
 
 - Record important facts learned during the session.
-- Promote durable information into architecture, bug, or decision notes when appropriate.
 
 ## Context Handoff
 
-- Use this as the single canonical prose section for prepared context, resume notes, and handoff summaries tied to the current effective context.
-- Keep durable conclusions promoted into phase, bug, decision, or architecture notes when they outlive the session.
+- Use this as the canonical prose section for prepared context and resume notes.
 
 ## Changed Paths
 
@@ -442,7 +391,7 @@ Use one note per meaningful work session in \\\`05_Sessions/\\\`. This note reco
 
 ## Completion Summary
 
-- State what finished, what remains, and whether the session ended in a clean handoff state.
+- State what finished, what remains, and whether handoff is clean.
 ` as string;
 
 export const ARCHITECTURE_TEMPLATE = `---
@@ -464,17 +413,15 @@ tags:
 
 # Architecture Template
 
-Use this note when a subsystem or cross-cutting concern needs durable explanation. This note is the source of truth for the area it covers. A new engineer should be able to read it and understand the shape of the system before editing code. Link outward to the related phase and decision notes so this record stays connected to execution and governance; use [[07_Templates/Phase_Template|Phase Template]] and [[07_Templates/Decision_Template|Decision Template]] as the neighboring note contracts.
+Use this note when a subsystem or cross-cutting concern needs durable explanation. Keep it high-signal, path-first, and linked to the related phase and decision notes. See [[07_Templates/Note_Contracts|Note Contracts]].
 
 ## Purpose
 
 - Explain what part of the system this note covers.
-- Name the main responsibility and the key question this note answers.
 
 ## Overview
 
-- Describe the subsystem at a high level.
-- Explain how it fits into the wider product or monorepo.
+- Describe the subsystem and how it fits into the repo.
 
 ## Key Components
 
@@ -490,13 +437,11 @@ Use this note when a subsystem or cross-cutting concern needs durable explanatio
 
 ## Constraints
 
-- Record invariants, contracts, dependencies, or operational rules that should not be broken.
-- Include anything future changes must preserve.
+- Record invariants, contracts, dependencies, or operational rules that must hold.
 
 ## Failure Modes
 
-- List the ways this area can fail.
-- Include triggers, symptoms, and what to inspect first.
+- List failures, symptoms, and what to inspect first.
 
 ## Related Notes
 
@@ -514,23 +459,21 @@ Use this note as the shared contract for all Agent Vault note templates in \\\`0
 ## Shared Frontmatter Contract
 
 - Every note starts with YAML frontmatter.
-- Every note declares \\\`note_type\\\`, \\\`template_version\\\`, and \\\`contract_version\\\`.
-- Every note includes human-readable identity fields such as \\\`title\\\`, \\\`status\\\`, \\\`created\\\`, and \\\`updated\\\`.
-- Dates use \\\`YYYY-MM-DD\\\`.
-- Link collections use YAML lists even when empty so automation can append safely.
+- Every note declares \`note_type\`, \`template_version\`, and \`contract_version\`.
+- Dates use \`YYYY-MM-DD\`.
+- Link collections stay as YAML lists.
 
 ## Source Of Truth Boundaries
 
-- \\\`00_Home/\\\` notes summarize and route. They should not become the only place a durable fact exists.
-- Phase, architecture, bug, and decision notes hold durable truth for their domain.
-- Session notes capture chronology and handoff state, but important conclusions discovered there should be promoted into the canonical durable note.
-- Index notes improve discovery; they do not replace the notes they index.
+- Home notes summarize and route.
+- Phase, architecture, bug, and decision notes hold durable truth.
+- Session notes capture chronology and handoff state.
+- Index notes improve discovery only.
 
 ## Stable Heading Contract
 
-- Do not rename the required headings inside the templates.
-- Keep heading order stable unless the template contract is intentionally versioned.
-- Add detail inside sections instead of creating alternate headings for the same concept.
+- Do not rename required headings.
+- Keep heading order stable unless the template contract changes.
 
 ## Generated Block Contract
 
@@ -542,23 +485,22 @@ Use this note as the shared contract for all Agent Vault note templates in \\\`0
 <!-- AGENT-END:block-name -->
 \\\`\\\`\\\`
 
-- Block names are stable identifiers, not display text.
-- Humans may read these blocks, but automation may replace their contents.
+- Block names are stable identifiers.
+- Automation may replace block contents.
 - Do not nest generated blocks.
-- Keep one logical data set per block so future tools can patch only the intended section.
+- Keep one logical data set per block.
 
 ## Editing Rules
 
-- Human-authored narrative belongs outside generated blocks unless the template explicitly says otherwise.
-- Automation should prefer updating frontmatter lists and generated blocks before rewriting freeform prose.
-- When a note needs a new required field, bump \\\`contract_version\\\` and update the template in the same change.
+- Keep human narrative outside generated blocks.
+- Prefer updating frontmatter lists and generated blocks before rewriting prose.
+- Bump \`contract_version\` when required fields change.
 
 ## Manual-Edit Friendly Rules
 
-- Keep one logical data set per generated block.
-- Reserve generated blocks for summaries, indexes, snapshots, and append-only machine-managed history.
-- Keep judgment calls, cautions, and nuanced explanations in normal prose sections.
-- If a section grows beyond what is safe to patch mechanically, split the topic into a new note and link it.
+- Reserve generated blocks for summaries, indexes, snapshots, and append-only history.
+- Keep judgment calls and nuanced explanation in normal prose.
+- Split oversized sections into linked notes.
 
 ## Template Inventory
 

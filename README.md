@@ -150,6 +150,7 @@ After installation, these commands are available in each tool:
 | `/vault:create-phase` | `/prompts:vault-create-phase` | Create a new phase (auto-generates phase number, supports `--insert-before` to insert at a position) |
 | `/vault:create-step` | `/prompts:vault-create-step` | Create a step inside a phase |
 | `/vault:create-session` | `/prompts:vault-create-session` | Create a timestamped session linked to a step |
+| `/vault:migrate-step-notes` | `/prompts:vault-migrate-step-notes` | Upgrade legacy verbose step notes into thin step indexes with companion notes |
 | `/vault:create-bug` | `/prompts:vault-create-bug` | Create a bug note (auto-generates bug ID) |
 | `/vault:create-decision` | `/prompts:vault-create-decision` | Create a decision note (auto-generates decision ID) |
 | `/vault:plan` | `/prompts:vault-plan` | Turn a freeform request into researched phases, executable step notes, and parallelism guidance |
@@ -245,6 +246,19 @@ If you created a vault before the context subsystem was added (sessions without 
 
 3. After backfilling, run `/vault:validate --target doctor` to confirm the vault passes
 
+If you created step notes before the compact split-note layout was added, you can upgrade them in place:
+
+1. Run `vault migrate-step-notes` (or filter with `--phase PHASE-01` / `--step STEP-01-02`)
+2. The command rewrites each legacy step note into a thin index note and creates companion notes alongside it:
+   - `Execution_Brief.md`
+   - `Validation_Plan.md`
+   - `Implementation_Notes.md`
+   - `Outcome.md`
+3. The same migration pass also refreshes `01_Architecture/Code_Graph.md` into the thin summary format and regenerates `.agent-vault/08_Automation/code-graph/index.json`
+4. Re-run `vault validate-all` or `vault-doctor` after the migration
+
+The migration is idempotent: already-split step notes are skipped, and the code-graph refresh is safe to re-run.
+
 Step mirrors are optional — they appear only on step notes that have been linked to a session. Steps without linked sessions will not have mirror fields, which is normal and does not indicate a validation error.
 
 ## MCP Tools (9 tools)
@@ -262,6 +276,7 @@ These tools are exposed via the MCP server and can be called by any MCP-compatib
 | `vault_validate` | Check integrity — `target`: `all`, `frontmatter`, `structure`, `links`, `orphans`, `doctor` |
 | `vault_config` | View or update vault configuration (e.g., link resolver preference) |
 | `vault_help` | List commands or show detailed help for one |
+| `vault_lookup_code_graph` | Search the generated code-graph index for matching symbols/files without loading the full index |
 
 ### `vault_traverse`
 
@@ -283,6 +298,26 @@ Example:
   "format": "toon",
   "note_type": ["phase", "step", "architecture", "decision"],
   "status": ["active", "planned"]
+}
+```
+
+### `vault_lookup_code_graph`
+
+Searches the machine-readable code-graph index at `.agent-vault/08_Automation/code-graph/index.json` and returns only matching symbols/files.
+
+- MCP responses default to a compact TOON format for lower token overhead.
+- Set `compact: false` if you want the more verbose TOON response with repo metadata and ungrouped matches.
+- Use this instead of reading the full code-graph index directly when you need symbol lookup with low prompt cost.
+
+Example:
+
+```json
+{
+  "query": "auth",
+  "limit": 10,
+  "path_substring": "src/core",
+  "exported_only": true,
+  "compact": true
 }
 ```
 

@@ -27,32 +27,12 @@ context_summary: Advance [[02_Phases/Phase_01_built_in_vault_context_management/
 
 # Step 04 - Add tests, docs, and migration notes
 
-Use this note for one executable step inside a phase. This note is the source of truth for the next concrete unit of work. The goal is to make execution small, teachable, and safe for a junior developer or an automation agent to pick up without guessing. Keep the parent phase relationship explicit and link the architecture notes a reader must inspect first; use [[07_Templates/Phase_Template|Phase Template]] and [[07_Templates/Architecture_Template|Architecture Template]] as the contract references.
+Use this note as the thin index for one executable step inside a phase. Keep this file short and route detail into companion notes so execution can load only the smallest note needed. This note should stay readable enough to answer: what is the step, what must be read first, and where do deeper execution details live?
 
 ## Purpose
 
 - Outcome: Add tests, docs, and migration notes.
 - Parent phase: [[02_Phases/Phase_01_built_in_vault_context_management/Phase|Phase 01 built in vault context management]].
-
-## Why This Step Exists
-
-- Make the new context subsystem safe to ship by proving behavior with tests and documenting both normal and advanced/manual usage.
-- Reduce upgrade friction by recording migration notes and any required validator or template changes.
-
-## Prerequisites
-
-- Treat this as a close-out step: it should begin only after STEP-01-01 through STEP-01-03 have landed or are at least code-complete on the working branch.
-- Read the final implemented contract and workflow behavior before writing migration notes; docs must describe reality, not the plan.
-- Be prepared to touch test coverage, README guidance, workflow command docs, pi skill docs, and any template/validator migration helpers in one coordinated pass.
-- Have the broad validation commands ready before editing: `bun test` and `bun run typecheck`.
-
-## Relevant Code Paths
-
-- `test/core/` plus `test/install.test.ts` and `test/slash-commands.test.ts` for contract, mutation, rendering, and workflow coverage.
-- `README.md` for the main user-facing workflow description and examples.
-- `claude-commands/` and `pi-package/skills/` for advanced/manual command help and execution/resume/orchestrate guidance.
-- `src/templates/note-templates.ts`, `.agent-vault/07_Templates/`, and `src/core/note-validators.ts` if the new context contract changes note shape or validation rules that existing vaults must satisfy.
-- `CHANGELOG.md` or other release-facing docs if the migration affects published behavior.
 
 ## Required Reading
 
@@ -72,32 +52,12 @@ Use this note for one executable step inside a phase. This note is the source of
 - `claude-commands/`
 - `pi-package/skills/`
 
-## Execution Prompt
+## Companion Notes
 
-1. Read STEP-01-01 through STEP-01-03 plus the current README, workflow docs, and tests before editing.
-2. Inventory what changed in the implementation and map each behavior to required proof: unit tests, integration-style tests, README examples, workflow-command docs, and migration notes for existing vaults.
-3. Add or strengthen targeted tests first where coverage is thin, then update docs so the examples and command references reflect the implemented reality.
-4. Document migration expectations explicitly: what existing session/step notes may lack, whether validators will fail before migration, and how a maintainer should repair old notes safely.
-5. Keep README, slash-command docs, pi skills, templates, and validators synchronized. If the same behavior is described in multiple places, update them in the same pass.
-6. Validate with the full project suite: `bun test` and `bun run typecheck`.
-7. Record any remaining rollout caveats or deferred follow-up work in Implementation Notes and Outcome Summary.
-8. Before closing the step, confirm a junior developer can read the docs, run the tests, migrate older notes if needed, and use the new context workflows without hidden context.
-
-## Readiness Checklist
-
-- Exact outcome and success condition: add the missing proof, documentation, and migration guidance around the new context subsystem; success means the changed behavior is covered by tests, explained in user-facing docs, and accompanied by actionable migration notes for older vault content.
-- Why this step matters to the phase: the phase is not shippable until the new context model is test-proven, understandable, and safe to roll out.
-- Prerequisites, setup state, and dependencies: depends on STEP-01-01 through STEP-01-03 being implemented first.
-- Concrete starting files, directories, packages, commands, and tests: start with `test/core/`, `test/install.test.ts`, `test/slash-commands.test.ts`, `README.md`, `claude-commands/`, `pi-package/skills/`, `src/templates/note-templates.ts`, and `src/core/note-validators.ts`; validate with `bun test` and `bun run typecheck`.
-- Required reading completeness: the Required Reading list is sufficient if you read the completed implementation steps before editing docs.
-- Implementation constraints and non-goals: do not introduce v2 schema ideas here, do not leave README/examples stale, and do not hand-wave migration details with "manual update may be needed" without concrete instructions.
-- Validation commands, manual checks, and acceptance criteria mapping: run the full suite plus typecheck; manually inspect rendered command docs/examples to ensure canonical names, aliases, and workflow behavior all match the code and decision note.
-- Edge cases, failure modes, and recovery expectations: cover legacy notes missing `context`, legacy sessions without `Context Handoff`, stale workflow docs, and command-rendering regressions for Claude/OpenCode/Codex.
-- Security considerations or explicit not-applicable judgment: docs should tell users not to place secrets in context summaries or migration examples.
-- Performance considerations or explicit not-applicable judgment: ensure the final docs and tests reinforce the lean-current-state model rather than encouraging oversized frontmatter.
-- Integration touchpoints and downstream effects: this step touches all user-facing surfaces and the final regression bar for the phase.
-- Blockers, unresolved decisions, and handoff expectations: no blocker is currently recorded; if migration semantics are unclear after implementation, record a follow-up decision or bug instead of shipping vague instructions.
-- Junior-developer readiness verdict: PASS once a new engineer can verify the feature with tests and follow the migration/docs trail without needing prior conversation history.
+- [[02_Phases/Phase_01_built_in_vault_context_management/Steps/Step_04_add-tests-docs-and-migration-notes/Execution_Brief|Execution Brief]] - Why the step exists, prerequisites, likely code paths, and the smallest execution checklist.
+- [[02_Phases/Phase_01_built_in_vault_context_management/Steps/Step_04_add-tests-docs-and-migration-notes/Validation_Plan|Validation Plan]] - Acceptance checks, commands, edge cases, and regression expectations.
+- [[02_Phases/Phase_01_built_in_vault_context_management/Steps/Step_04_add-tests-docs-and-migration-notes/Implementation_Notes|Implementation Notes]] - Durable findings discovered while the step is being executed.
+- [[02_Phases/Phase_01_built_in_vault_context_management/Steps/Step_04_add-tests-docs-and-migration-notes/Outcome|Outcome]] - Final result, validation evidence, and explicit follow-up.
 
 ## Agent-Managed Snapshot
 
@@ -108,18 +68,6 @@ Use this note for one executable step inside a phase. This note is the source of
 - Next action: PHASE-01 complete. No further action required.
 <!-- AGENT-END:step-agent-managed-snapshot -->
 
-## Implementation Notes
-
-- Capture facts learned during execution.
-- Prefer short bullets with file paths, commands, and observed behavior.
-- Added "Step mirrors" section to README.md documenting mirror fields, update triggers, and the canonical-source principle.
-- Added "Upgrading existing vaults" section to README.md with concrete migration instructions using dot-path mutations.
-- Updated `vault_mutate` docs in README.md to mention dot-path deep-merge support.
-- Added negative test: "update-frontmatter does not re-mirror when non-context fields change on a session" — confirms the auto-re-mirror wiring is scoped to `context.*` updates only.
-- Backfilled the legacy session note `2026-04-20-013545` (from STEP-01-01) with a canonical `context` field using the dot-path migration pattern. This fixes the pre-existing `vault_validate doctor` error and serves as live proof that the migration docs work.
-- After backfill, `vault_validate doctor` reports clean (0 errors, 0 warnings).
-- All 101 tests pass, typecheck clean.
-
 ## Human Notes
 
 - Use this section for judgment calls, cautions, or handoff guidance that should not be overwritten by automation.
@@ -129,13 +77,3 @@ Use this note for one executable step inside a phase. This note is the source of
 <!-- AGENT-START:step-session-history -->
 - 2026-04-20 - [[05_Sessions/2026-04-20-022929-add-tests-docs-and-migration-notes-implementer|SESSION-2026-04-20-022929 implementer session for Add tests, docs, and migration notes]] - Session created.
 <!-- AGENT-END:step-session-history -->
-
-## Outcome Summary
-
-- Record the final result, the validation performed, and any follow-up required.
-- If the step is blocked, say exactly what is blocking it.
-- STEP-01-04 is complete. The new context subsystem (STEP-01-01 through STEP-01-03) is now fully tested, documented, and safe to ship.
-- README updated with step-mirror docs and migration guidance.
-- Legacy session note backfilled as proof of migration path.
-- Vault doctor passes clean.
-- PHASE-01 is ready to be marked completed.

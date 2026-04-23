@@ -1,0 +1,3553 @@
+{
+  "version": 2,
+  "generatedAt": "2026-04-23T03:50:40.843Z",
+  "repoName": "agent-vault",
+  "totalFiles": 33,
+  "totalSymbols": 548,
+  "directories": [
+    {
+      "directory": "src/core",
+      "files": 12,
+      "exportedSymbols": 110,
+      "internalSymbols": 228,
+      "totalSymbols": 338
+    },
+    {
+      "directory": "src/scaffold",
+      "files": 4,
+      "exportedSymbols": 18,
+      "internalSymbols": 41,
+      "totalSymbols": 59
+    },
+    {
+      "directory": "src",
+      "files": 3,
+      "exportedSymbols": 10,
+      "internalSymbols": 46,
+      "totalSymbols": 56
+    },
+    {
+      "directory": "src/templates",
+      "files": 8,
+      "exportedSymbols": 33,
+      "internalSymbols": 2,
+      "totalSymbols": 35
+    },
+    {
+      "directory": "scripts",
+      "files": 2,
+      "exportedSymbols": 1,
+      "internalSymbols": 31,
+      "totalSymbols": 32
+    },
+    {
+      "directory": "pi-package/skills/vault-resume",
+      "files": 2,
+      "exportedSymbols": 0,
+      "internalSymbols": 21,
+      "totalSymbols": 21
+    },
+    {
+      "directory": "test",
+      "files": 1,
+      "exportedSymbols": 3,
+      "internalSymbols": 1,
+      "totalSymbols": 4
+    },
+    {
+      "directory": "pi-package/extensions",
+      "files": 1,
+      "exportedSymbols": 0,
+      "internalSymbols": 3,
+      "totalSymbols": 3
+    }
+  ],
+  "files": [
+    {
+      "path": "pi-package/extensions/index.ts",
+      "language": "TypeScript",
+      "symbols": [
+        {
+          "name": "CommandHandler",
+          "kind": "type",
+          "line": 42,
+          "exported": false
+        },
+        {
+          "name": "captureOutput",
+          "kind": "const",
+          "line": 44,
+          "exported": false
+        },
+        {
+          "name": "noArgs",
+          "kind": "const",
+          "line": 60,
+          "exported": false
+        }
+      ]
+    },
+    {
+      "path": "pi-package/skills/vault-resume/index.js",
+      "language": "JavaScript",
+      "symbols": [
+        {
+          "name": "fs",
+          "kind": "const",
+          "line": 5,
+          "exported": false
+        },
+        {
+          "name": "path",
+          "kind": "const",
+          "line": 6,
+          "exported": false
+        },
+        {
+          "name": "vaultResume",
+          "kind": "function",
+          "line": 13,
+          "exported": false
+        },
+        {
+          "name": "locatePreviousSession",
+          "kind": "function",
+          "line": 63,
+          "exported": false
+        },
+        {
+          "name": "extractTimestampFromFilename",
+          "kind": "function",
+          "line": 122,
+          "exported": false
+        },
+        {
+          "name": "parseYaml",
+          "kind": "function",
+          "line": 139,
+          "exported": false
+        },
+        {
+          "name": "parseSessionNote",
+          "kind": "function",
+          "line": 167,
+          "exported": false
+        },
+        {
+          "name": "determineContinuationTarget",
+          "kind": "function",
+          "line": 190,
+          "exported": false
+        },
+        {
+          "name": "findNextPlannedPhase",
+          "kind": "function",
+          "line": 302,
+          "exported": false
+        },
+        {
+          "name": "askUserConfirmation",
+          "kind": "function",
+          "line": 349,
+          "exported": false
+        },
+        {
+          "name": "loadContinuationContext",
+          "kind": "function",
+          "line": 378,
+          "exported": false
+        },
+        {
+          "name": "createContinuationSession",
+          "kind": "function",
+          "line": 407,
+          "exported": false
+        },
+        {
+          "name": "runReadinessCheck",
+          "kind": "function",
+          "line": 512,
+          "exported": false
+        }
+      ]
+    },
+    {
+      "path": "pi-package/skills/vault-resume/test.js",
+      "language": "JavaScript",
+      "symbols": [
+        {
+          "name": "fs",
+          "kind": "const",
+          "line": 13,
+          "exported": false
+        },
+        {
+          "name": "path",
+          "kind": "const",
+          "line": 14,
+          "exported": false
+        },
+        {
+          "name": "createMockVault",
+          "kind": "function",
+          "line": 17,
+          "exported": false
+        },
+        {
+          "name": "cleanupMockVault",
+          "kind": "function",
+          "line": 137,
+          "exported": false
+        },
+        {
+          "name": "testResumeFromMostRecent",
+          "kind": "function",
+          "line": 143,
+          "exported": false
+        },
+        {
+          "name": "testResumeFromSpecificSession",
+          "kind": "function",
+          "line": 174,
+          "exported": false
+        },
+        {
+          "name": "testNoSessionsFound",
+          "kind": "function",
+          "line": 196,
+          "exported": false
+        },
+        {
+          "name": "runAllTests",
+          "kind": "function",
+          "line": 213,
+          "exported": false
+        }
+      ]
+    },
+    {
+      "path": "scripts/context-report.ts",
+      "language": "TypeScript",
+      "symbols": [
+        {
+          "name": "root",
+          "kind": "const",
+          "line": 5,
+          "exported": false
+        },
+        {
+          "name": "report",
+          "kind": "const",
+          "line": 7,
+          "exported": false
+        }
+      ]
+    },
+    {
+      "path": "scripts/e2e-local-shared.ts",
+      "language": "TypeScript",
+      "symbols": [
+        {
+          "name": "PACKAGE_NAME",
+          "kind": "const",
+          "line": 10,
+          "exported": false
+        },
+        {
+          "name": "TOOL_CONFIGS",
+          "kind": "const",
+          "line": 11,
+          "exported": false
+        },
+        {
+          "name": "__dirname",
+          "kind": "const",
+          "line": 32,
+          "exported": false
+        },
+        {
+          "name": "repoRoot",
+          "kind": "const",
+          "line": 33,
+          "exported": false
+        },
+        {
+          "name": "commandSourceDir",
+          "kind": "const",
+          "line": 34,
+          "exported": false
+        },
+        {
+          "name": "InstallScope",
+          "kind": "type",
+          "line": 36,
+          "exported": false
+        },
+        {
+          "name": "RunningProcess",
+          "kind": "type",
+          "line": 38,
+          "exported": false
+        },
+        {
+          "name": "LocalE2EOptions",
+          "kind": "interface",
+          "line": 44,
+          "exported": false
+        },
+        {
+          "name": "ToolConfig",
+          "kind": "interface",
+          "line": 52,
+          "exported": false
+        },
+        {
+          "name": "sleep",
+          "kind": "const",
+          "line": 59,
+          "exported": false
+        },
+        {
+          "name": "getFreePort",
+          "kind": "const",
+          "line": 63,
+          "exported": false
+        },
+        {
+          "name": "runCommand",
+          "kind": "const",
+          "line": 83,
+          "exported": false
+        },
+        {
+          "name": "startVerdaccio",
+          "kind": "const",
+          "line": 108,
+          "exported": false
+        },
+        {
+          "name": "waitForRegistry",
+          "kind": "const",
+          "line": 132,
+          "exported": false
+        },
+        {
+          "name": "stopVerdaccio",
+          "kind": "const",
+          "line": 154,
+          "exported": false
+        },
+        {
+          "name": "writeRegistryConfig",
+          "kind": "const",
+          "line": 173,
+          "exported": false
+        },
+        {
+          "name": "createVerdaccioConfig",
+          "kind": "const",
+          "line": 188,
+          "exported": false
+        },
+        {
+          "name": "stagePackageForPublish",
+          "kind": "const",
+          "line": 218,
+          "exported": false
+        },
+        {
+          "name": "createFakeToolHomes",
+          "kind": "const",
+          "line": 234,
+          "exported": false
+        },
+        {
+          "name": "detectTools",
+          "kind": "const",
+          "line": 259,
+          "exported": false
+        },
+        {
+          "name": "getToolMcpRootKey",
+          "kind": "const",
+          "line": 273,
+          "exported": false
+        },
+        {
+          "name": "assertValidToolMcpConfig",
+          "kind": "const",
+          "line": 277,
+          "exported": false
+        },
+        {
+          "name": "readJson",
+          "kind": "const",
+          "line": 301,
+          "exported": false
+        },
+        {
+          "name": "getCommandFileCount",
+          "kind": "const",
+          "line": 306,
+          "exported": false
+        },
+        {
+          "name": "resolveExpectedInstallScope",
+          "kind": "const",
+          "line": 318,
+          "exported": false
+        },
+        {
+          "name": "resolveExpectedInstallRoot",
+          "kind": "const",
+          "line": 330,
+          "exported": false
+        },
+        {
+          "name": "getManagedCommandFilenames",
+          "kind": "const",
+          "line": 334,
+          "exported": false
+        },
+        {
+          "name": "verifyInstalledState",
+          "kind": "const",
+          "line": 343,
+          "exported": false
+        },
+        {
+          "name": "verifyCleanState",
+          "kind": "const",
+          "line": 374,
+          "exported": false
+        },
+        {
+          "name": "runLocalE2E",
+          "kind": "function",
+          "line": 408,
+          "exported": true
+        }
+      ]
+    },
+    {
+      "path": "src/cli.ts",
+      "language": "TypeScript",
+      "symbols": [
+        {
+          "name": "args",
+          "kind": "const",
+          "line": 1,
+          "exported": false
+        },
+        {
+          "name": "command",
+          "kind": "const",
+          "line": 2,
+          "exported": false
+        },
+        {
+          "name": "main",
+          "kind": "function",
+          "line": 4,
+          "exported": false
+        }
+      ]
+    },
+    {
+      "path": "src/core/code-graph-lookup.ts",
+      "language": "TypeScript",
+      "symbols": [
+        {
+          "name": "CodeGraphLookupMatch",
+          "kind": "interface",
+          "line": 9,
+          "exported": true
+        },
+        {
+          "name": "QueryCodeGraphIndexInput",
+          "kind": "interface",
+          "line": 15,
+          "exported": true
+        },
+        {
+          "name": "FormatCodeGraphLookupToonOptions",
+          "kind": "interface",
+          "line": 22,
+          "exported": true
+        },
+        {
+          "name": "CODE_GRAPH_INDEX_PATH",
+          "kind": "const",
+          "line": 26,
+          "exported": false
+        },
+        {
+          "name": "normalize",
+          "kind": "const",
+          "line": 28,
+          "exported": false
+        },
+        {
+          "name": "parsePositiveIntOption",
+          "kind": "const",
+          "line": 30,
+          "exported": false
+        },
+        {
+          "name": "loadCodeGraphIndex",
+          "kind": "function",
+          "line": 41,
+          "exported": true
+        },
+        {
+          "name": "queryCodeGraphIndex",
+          "kind": "function",
+          "line": 46,
+          "exported": true
+        },
+        {
+          "name": "parseLookupArgs",
+          "kind": "const",
+          "line": 77,
+          "exported": false
+        },
+        {
+          "name": "formatCodeGraphLookupResults",
+          "kind": "function",
+          "line": 125,
+          "exported": true
+        },
+        {
+          "name": "formatCodeGraphLookupResultsAsToon",
+          "kind": "function",
+          "line": 141,
+          "exported": true
+        },
+        {
+          "name": "handleLookupCodeGraphCommand",
+          "kind": "function",
+          "line": 178,
+          "exported": true
+        }
+      ]
+    },
+    {
+      "path": "src/core/command-catalog.ts",
+      "language": "TypeScript",
+      "symbols": [
+        {
+          "name": "AgentVaultCommandName",
+          "kind": "type",
+          "line": 3,
+          "exported": true
+        },
+        {
+          "name": "CommandGroup",
+          "kind": "type",
+          "line": 27,
+          "exported": false
+        },
+        {
+          "name": "AgentVaultCommandDefinition",
+          "kind": "interface",
+          "line": 29,
+          "exported": false
+        },
+        {
+          "name": "getCommandDefinition",
+          "kind": "const",
+          "line": 334,
+          "exported": true
+        },
+        {
+          "name": "formatCommandUsage",
+          "kind": "const",
+          "line": 337,
+          "exported": true
+        },
+        {
+          "name": "formatCommandHelp",
+          "kind": "const",
+          "line": 346,
+          "exported": true
+        },
+        {
+          "name": "formatCommandCatalog",
+          "kind": "const",
+          "line": 368,
+          "exported": true
+        }
+      ]
+    },
+    {
+      "path": "src/core/context-contract.ts",
+      "language": "TypeScript",
+      "symbols": [
+        {
+          "name": "CONTEXT_STATUS_VALUES",
+          "kind": "const",
+          "line": 1,
+          "exported": true
+        },
+        {
+          "name": "CONTEXT_LAST_ACTION_TYPES",
+          "kind": "const",
+          "line": 3,
+          "exported": true
+        },
+        {
+          "name": "CONTEXT_RESUME_TARGET_TYPES",
+          "kind": "const",
+          "line": 12,
+          "exported": true
+        },
+        {
+          "name": "CONTEXT_HANDOFF_SECTION_HEADING",
+          "kind": "const",
+          "line": 14,
+          "exported": true
+        },
+        {
+          "name": "STEP_MIRROR_CONTEXT_ID_KEY",
+          "kind": "const",
+          "line": 33,
+          "exported": true
+        },
+        {
+          "name": "STEP_MIRROR_SESSION_ID_KEY",
+          "kind": "const",
+          "line": 34,
+          "exported": true
+        },
+        {
+          "name": "STEP_MIRROR_STATUS_KEY",
+          "kind": "const",
+          "line": 35,
+          "exported": true
+        },
+        {
+          "name": "STEP_MIRROR_SUMMARY_KEY",
+          "kind": "const",
+          "line": 36,
+          "exported": true
+        },
+        {
+          "name": "STEP_MIRROR_REQUIRED_KEYS",
+          "kind": "const",
+          "line": 38,
+          "exported": true
+        },
+        {
+          "name": "StepMirrorState",
+          "kind": "interface",
+          "line": 45,
+          "exported": true
+        },
+        {
+          "name": "BuildStepMirrorInput",
+          "kind": "interface",
+          "line": 52,
+          "exported": true
+        },
+        {
+          "name": "buildStepMirror",
+          "kind": "const",
+          "line": 60,
+          "exported": true
+        },
+        {
+          "name": "CONTEXT_PREPARE_AUTO_WRITE_FIELDS",
+          "kind": "const",
+          "line": 72,
+          "exported": true
+        },
+        {
+          "name": "CONTEXT_MANUAL_COMMANDS",
+          "kind": "const",
+          "line": 79,
+          "exported": true
+        },
+        {
+          "name": "ContextStatus",
+          "kind": "type",
+          "line": 86,
+          "exported": true
+        },
+        {
+          "name": "ContextLastActionType",
+          "kind": "type",
+          "line": 87,
+          "exported": true
+        },
+        {
+          "name": "ContextResumeTargetType",
+          "kind": "type",
+          "line": 88,
+          "exported": true
+        },
+        {
+          "name": "ContextCommandDefinition",
+          "kind": "interface",
+          "line": 90,
+          "exported": true
+        },
+        {
+          "name": "SessionContextFocus",
+          "kind": "interface",
+          "line": 95,
+          "exported": true
+        },
+        {
+          "name": "SessionContextResumeTarget",
+          "kind": "interface",
+          "line": 100,
+          "exported": true
+        },
+        {
+          "name": "SessionContextLastAction",
+          "kind": "interface",
+          "line": 106,
+          "exported": true
+        },
+        {
+          "name": "SessionContextState",
+          "kind": "interface",
+          "line": 110,
+          "exported": true
+        },
+        {
+          "name": "CreateDefaultSessionContextInput",
+          "kind": "interface",
+          "line": 119,
+          "exported": true
+        },
+        {
+          "name": "createDefaultSessionContext",
+          "kind": "const",
+          "line": 125,
+          "exported": true
+        },
+        {
+          "name": "isValidContextStatus",
+          "kind": "const",
+          "line": 147,
+          "exported": true
+        },
+        {
+          "name": "formatContextManualCommandSummary",
+          "kind": "const",
+          "line": 150,
+          "exported": true
+        }
+      ]
+    },
+    {
+      "path": "src/core/context-footprint.ts",
+      "language": "TypeScript",
+      "symbols": [
+        {
+          "name": "ContextFootprintCategory",
+          "kind": "type",
+          "line": 4,
+          "exported": true
+        },
+        {
+          "name": "ContextFootprintEntry",
+          "kind": "interface",
+          "line": 10,
+          "exported": true
+        },
+        {
+          "name": "ContextFootprintCategorySummary",
+          "kind": "interface",
+          "line": 17,
+          "exported": true
+        },
+        {
+          "name": "ContextFootprintReport",
+          "kind": "interface",
+          "line": 24,
+          "exported": true
+        },
+        {
+          "name": "IGNORED_DIRS",
+          "kind": "const",
+          "line": 33,
+          "exported": false
+        },
+        {
+          "name": "WORKFLOW_PROMPT_FILENAMES",
+          "kind": "const",
+          "line": 34,
+          "exported": false
+        },
+        {
+          "name": "estimateTokens",
+          "kind": "const",
+          "line": 36,
+          "exported": false
+        },
+        {
+          "name": "normalizePath",
+          "kind": "const",
+          "line": 38,
+          "exported": false
+        },
+        {
+          "name": "classifyPath",
+          "kind": "const",
+          "line": 40,
+          "exported": false
+        },
+        {
+          "name": "collectFiles",
+          "kind": "const",
+          "line": 49,
+          "exported": false
+        },
+        {
+          "name": "generateContextFootprintReport",
+          "kind": "const",
+          "line": 68,
+          "exported": true
+        },
+        {
+          "name": "formatContextFootprintReport",
+          "kind": "const",
+          "line": 114,
+          "exported": true
+        }
+      ]
+    },
+    {
+      "path": "src/core/dispatcher.ts",
+      "language": "TypeScript",
+      "symbols": [
+        {
+          "name": "CommandHandler",
+          "kind": "type",
+          "line": 28,
+          "exported": false
+        },
+        {
+          "name": "handleVaultCommand",
+          "kind": "function",
+          "line": 53,
+          "exported": true
+        }
+      ]
+    },
+    {
+      "path": "src/core/mcp-response-format.ts",
+      "language": "TypeScript",
+      "symbols": [
+        {
+          "name": "formatScanResultAsToon",
+          "kind": "const",
+          "line": 6,
+          "exported": true
+        },
+        {
+          "name": "formatInitResultAsToon",
+          "kind": "const",
+          "line": 9,
+          "exported": true
+        }
+      ]
+    },
+    {
+      "path": "src/core/note-generators.ts",
+      "language": "TypeScript",
+      "symbols": [
+        {
+          "name": "AgentVaultCommandIO",
+          "kind": "interface",
+          "line": 24,
+          "exported": true
+        },
+        {
+          "name": "AgentVaultCommandEnvironment",
+          "kind": "interface",
+          "line": 29,
+          "exported": true
+        },
+        {
+          "name": "ParsedArgs",
+          "kind": "interface",
+          "line": 36,
+          "exported": false
+        },
+        {
+          "name": "PhaseInfo",
+          "kind": "interface",
+          "line": 41,
+          "exported": false
+        },
+        {
+          "name": "ResolvedStepNote",
+          "kind": "interface",
+          "line": 47,
+          "exported": true
+        },
+        {
+          "name": "ResolvedPhaseNote",
+          "kind": "interface",
+          "line": 57,
+          "exported": false
+        },
+        {
+          "name": "ResolvedSessionNote",
+          "kind": "interface",
+          "line": 65,
+          "exported": false
+        },
+        {
+          "name": "ResolvedBugNote",
+          "kind": "interface",
+          "line": 75,
+          "exported": false
+        },
+        {
+          "name": "IndexedVaultNote",
+          "kind": "interface",
+          "line": 83,
+          "exported": false
+        },
+        {
+          "name": "SummaryItem",
+          "kind": "interface",
+          "line": 89,
+          "exported": false
+        },
+        {
+          "name": "DEFAULT_IO",
+          "kind": "const",
+          "line": 94,
+          "exported": false
+        },
+        {
+          "name": "PHASE_TEMPLATE_PATH",
+          "kind": "const",
+          "line": 99,
+          "exported": false
+        },
+        {
+          "name": "STEP_TEMPLATE_PATH",
+          "kind": "const",
+          "line": 100,
+          "exported": false
+        },
+        {
+          "name": "SESSION_TEMPLATE_PATH",
+          "kind": "const",
+          "line": 101,
+          "exported": false
+        },
+        {
+          "name": "BUG_TEMPLATE_PATH",
+          "kind": "const",
+          "line": 102,
+          "exported": false
+        },
+        {
+          "name": "DECISION_TEMPLATE_PATH",
+          "kind": "const",
+          "line": 103,
+          "exported": false
+        },
+        {
+          "name": "BUGS_INDEX_PATH",
+          "kind": "const",
+          "line": 104,
+          "exported": false
+        },
+        {
+          "name": "DECISIONS_INDEX_PATH",
+          "kind": "const",
+          "line": 105,
+          "exported": false
+        },
+        {
+          "name": "ACTIVE_CONTEXT_PATH",
+          "kind": "const",
+          "line": 106,
+          "exported": false
+        },
+        {
+          "name": "LINEAR_FIELD_NAMES",
+          "kind": "const",
+          "line": 107,
+          "exported": false
+        },
+        {
+          "name": "EMPTY_CELL",
+          "kind": "const",
+          "line": 108,
+          "exported": false
+        },
+        {
+          "name": "ACTIVE_SESSION_STATUSES",
+          "kind": "const",
+          "line": 109,
+          "exported": false
+        },
+        {
+          "name": "ACTIVE_WORK_STATUSES",
+          "kind": "const",
+          "line": 110,
+          "exported": false
+        },
+        {
+          "name": "BLOCKER_STATUSES",
+          "kind": "const",
+          "line": 111,
+          "exported": false
+        },
+        {
+          "name": "COMPLETED_WORK_STATUSES",
+          "kind": "const",
+          "line": 112,
+          "exported": false
+        },
+        {
+          "name": "joinTemplatePath",
+          "kind": "const",
+          "line": 114,
+          "exported": false
+        },
+        {
+          "name": "slugify",
+          "kind": "const",
+          "line": 116,
+          "exported": false
+        },
+        {
+          "name": "padNumber",
+          "kind": "const",
+          "line": 126,
+          "exported": false
+        },
+        {
+          "name": "formatDate",
+          "kind": "const",
+          "line": 134,
+          "exported": false
+        },
+        {
+          "name": "formatTime",
+          "kind": "const",
+          "line": 136,
+          "exported": false
+        },
+        {
+          "name": "formatTimestamp",
+          "kind": "const",
+          "line": 142,
+          "exported": false
+        },
+        {
+          "name": "replaceFirstHeading",
+          "kind": "const",
+          "line": 149,
+          "exported": false
+        },
+        {
+          "name": "ensureHeadingSection",
+          "kind": "const",
+          "line": 151,
+          "exported": false
+        },
+        {
+          "name": "parseArgs",
+          "kind": "const",
+          "line": 178,
+          "exported": false
+        },
+        {
+          "name": "getRequiredOption",
+          "kind": "const",
+          "line": 204,
+          "exported": false
+        },
+        {
+          "name": "getVaultRoot",
+          "kind": "const",
+          "line": 215,
+          "exported": false
+        },
+        {
+          "name": "toWikiTarget",
+          "kind": "const",
+          "line": 218,
+          "exported": false
+        },
+        {
+          "name": "toWikiLink",
+          "kind": "const",
+          "line": 220,
+          "exported": false
+        },
+        {
+          "name": "resolvePhaseNotePathFromLink",
+          "kind": "const",
+          "line": 222,
+          "exported": false
+        },
+        {
+          "name": "parseStringField",
+          "kind": "const",
+          "line": 233,
+          "exported": false
+        },
+        {
+          "name": "parseOptionalStringField",
+          "kind": "const",
+          "line": 240,
+          "exported": false
+        },
+        {
+          "name": "normalizeMetadataKey",
+          "kind": "const",
+          "line": 253,
+          "exported": false
+        },
+        {
+          "name": "getFirstPresentStringField",
+          "kind": "const",
+          "line": 255,
+          "exported": false
+        },
+        {
+          "name": "parseDateValue",
+          "kind": "const",
+          "line": 269,
+          "exported": false
+        },
+        {
+          "name": "parseSeverityRank",
+          "kind": "const",
+          "line": 278,
+          "exported": false
+        },
+        {
+          "name": "BUG_STATUS_ORDER",
+          "kind": "const",
+          "line": 287,
+          "exported": false
+        },
+        {
+          "name": "DECISION_STATUS_ORDER",
+          "kind": "const",
+          "line": 295,
+          "exported": false
+        },
+        {
+          "name": "compareSummaryItems",
+          "kind": "const",
+          "line": 302,
+          "exported": false
+        },
+        {
+          "name": "escapeMarkdownTableCell",
+          "kind": "const",
+          "line": 315,
+          "exported": false
+        },
+        {
+          "name": "escapeMarkdownLinkLabel",
+          "kind": "const",
+          "line": 317,
+          "exported": false
+        },
+        {
+          "name": "toMarkdownLink",
+          "kind": "const",
+          "line": 320,
+          "exported": false
+        },
+        {
+          "name": "toDisplayCell",
+          "kind": "const",
+          "line": 325,
+          "exported": false
+        },
+        {
+          "name": "buildMarkdownTable",
+          "kind": "const",
+          "line": 327,
+          "exported": false
+        },
+        {
+          "name": "buildSummaryLine",
+          "kind": "const",
+          "line": 340,
+          "exported": false
+        },
+        {
+          "name": "isStatusInSet",
+          "kind": "const",
+          "line": 368,
+          "exported": false
+        },
+        {
+          "name": "isOpenWorkStatus",
+          "kind": "const",
+          "line": 371,
+          "exported": false
+        },
+        {
+          "name": "compareByUpdatedDesc",
+          "kind": "const",
+          "line": 376,
+          "exported": false
+        },
+        {
+          "name": "formatMetadataBits",
+          "kind": "const",
+          "line": 393,
+          "exported": false
+        },
+        {
+          "name": "withMetadataSuffix",
+          "kind": "const",
+          "line": 395,
+          "exported": false
+        },
+        {
+          "name": "summarizeOverflow",
+          "kind": "const",
+          "line": 400,
+          "exported": false
+        },
+        {
+          "name": "displayPhaseName",
+          "kind": "const",
+          "line": 403,
+          "exported": false
+        },
+        {
+          "name": "buildPhaseLink",
+          "kind": "const",
+          "line": 411,
+          "exported": false
+        },
+        {
+          "name": "buildPhaseId",
+          "kind": "const",
+          "line": 414,
+          "exported": false
+        },
+        {
+          "name": "listPhaseDirectoryNames",
+          "kind": "const",
+          "line": 416,
+          "exported": false
+        },
+        {
+          "name": "parsePhaseNumberFromDirectory",
+          "kind": "const",
+          "line": 422,
+          "exported": false
+        },
+        {
+          "name": "getNextPhaseNumber",
+          "kind": "const",
+          "line": 427,
+          "exported": false
+        },
+        {
+          "name": "parseInsertBeforeTarget",
+          "kind": "const",
+          "line": 435,
+          "exported": false
+        },
+        {
+          "name": "renumberPhasesFrom",
+          "kind": "const",
+          "line": 444,
+          "exported": false
+        },
+        {
+          "name": "findPreviousPhase",
+          "kind": "const",
+          "line": 497,
+          "exported": false
+        },
+        {
+          "name": "findPhase",
+          "kind": "const",
+          "line": 525,
+          "exported": false
+        },
+        {
+          "name": "readTemplate",
+          "kind": "const",
+          "line": 555,
+          "exported": false
+        },
+        {
+          "name": "readNoteFrontmatter",
+          "kind": "const",
+          "line": 558,
+          "exported": false
+        },
+        {
+          "name": "tryReadNoteFrontmatter",
+          "kind": "const",
+          "line": 563,
+          "exported": false
+        },
+        {
+          "name": "resolveDirectNotePath",
+          "kind": "const",
+          "line": 571,
+          "exported": false
+        },
+        {
+          "name": "resolveStepReference",
+          "kind": "const",
+          "line": 597,
+          "exported": false
+        },
+        {
+          "name": "resolvePhaseReference",
+          "kind": "const",
+          "line": 651,
+          "exported": false
+        },
+        {
+          "name": "resolveSessionReference",
+          "kind": "const",
+          "line": 707,
+          "exported": false
+        },
+        {
+          "name": "resolveBugReference",
+          "kind": "const",
+          "line": 762,
+          "exported": false
+        },
+        {
+          "name": "nextBugId",
+          "kind": "const",
+          "line": 814,
+          "exported": false
+        },
+        {
+          "name": "validateBugId",
+          "kind": "const",
+          "line": 840,
+          "exported": false
+        },
+        {
+          "name": "nextDecisionId",
+          "kind": "const",
+          "line": 847,
+          "exported": false
+        },
+        {
+          "name": "validateDecisionId",
+          "kind": "const",
+          "line": 873,
+          "exported": false
+        },
+        {
+          "name": "parseStringListField",
+          "kind": "const",
+          "line": 880,
+          "exported": false
+        },
+        {
+          "name": "appendUniqueString",
+          "kind": "const",
+          "line": 892,
+          "exported": false
+        },
+        {
+          "name": "normalizeBlockBody",
+          "kind": "const",
+          "line": 895,
+          "exported": false
+        },
+        {
+          "name": "appendUniqueGeneratedLine",
+          "kind": "const",
+          "line": 897,
+          "exported": false
+        },
+        {
+          "name": "updateBackreferenceNote",
+          "kind": "const",
+          "line": 915,
+          "exported": false
+        },
+        {
+          "name": "appendUniqueFrontmatterLink",
+          "kind": "const",
+          "line": 932,
+          "exported": false
+        },
+        {
+          "name": "appendUniqueGeneratedBlockLine",
+          "kind": "const",
+          "line": 943,
+          "exported": false
+        },
+        {
+          "name": "tryApplyBackreference",
+          "kind": "const",
+          "line": 955,
+          "exported": false
+        },
+        {
+          "name": "linkStepBackToPhase",
+          "kind": "const",
+          "line": 967,
+          "exported": false
+        },
+        {
+          "name": "linkSessionBackToStep",
+          "kind": "const",
+          "line": 986,
+          "exported": false
+        },
+        {
+          "name": "updateStepMirrors",
+          "kind": "const",
+          "line": 1021,
+          "exported": true
+        },
+        {
+          "name": "linkBugBackToStep",
+          "kind": "const",
+          "line": 1060,
+          "exported": false
+        },
+        {
+          "name": "linkBugBackToSession",
+          "kind": "const",
+          "line": 1068,
+          "exported": false
+        },
+        {
+          "name": "linkBugBackToPhase",
+          "kind": "const",
+          "line": 1085,
+          "exported": false
+        },
+        {
+          "name": "linkDecisionBackToPhase",
+          "kind": "const",
+          "line": 1107,
+          "exported": false
+        },
+        {
+          "name": "linkDecisionBackToSession",
+          "kind": "const",
+          "line": 1124,
+          "exported": false
+        },
+        {
+          "name": "linkDecisionBackToBug",
+          "kind": "const",
+          "line": 1141,
+          "exported": false
+        },
+        {
+          "name": "linkPhaseForwardFromPreviousPhase",
+          "kind": "const",
+          "line": 1158,
+          "exported": false
+        },
+        {
+          "name": "createPhaseContent",
+          "kind": "const",
+          "line": 1173,
+          "exported": false
+        },
+        {
+          "name": "createStepContent",
+          "kind": "const",
+          "line": 1221,
+          "exported": false
+        },
+        {
+          "name": "createStepCompanionContent",
+          "kind": "const",
+          "line": 1266,
+          "exported": false
+        },
+        {
+          "name": "ParsedTopLevelSections",
+          "kind": "interface",
+          "line": 1271,
+          "exported": false
+        },
+        {
+          "name": "parseTopLevelSections",
+          "kind": "const",
+          "line": 1279,
+          "exported": false
+        },
+        {
+          "name": "formatCompanionSections",
+          "kind": "const",
+          "line": 1317,
+          "exported": false
+        },
+        {
+          "name": "isLegacyStepNoteContent",
+          "kind": "const",
+          "line": 1322,
+          "exported": false
+        },
+        {
+          "name": "createSessionContent",
+          "kind": "const",
+          "line": 1325,
+          "exported": false
+        },
+        {
+          "name": "createBugContent",
+          "kind": "const",
+          "line": 1376,
+          "exported": false
+        },
+        {
+          "name": "createDecisionContent",
+          "kind": "const",
+          "line": 1407,
+          "exported": false
+        },
+        {
+          "name": "collectIndexedNotes",
+          "kind": "const",
+          "line": 1442,
+          "exported": false
+        },
+        {
+          "name": "updateGeneratedBlockFile",
+          "kind": "const",
+          "line": 1471,
+          "exported": false
+        },
+        {
+          "name": "buildBugsIndexBlock",
+          "kind": "const",
+          "line": 1487,
+          "exported": false
+        },
+        {
+          "name": "buildDecisionsIndexBlock",
+          "kind": "const",
+          "line": 1574,
+          "exported": false
+        },
+        {
+          "name": "buildPhaseSummary",
+          "kind": "const",
+          "line": 1658,
+          "exported": false
+        },
+        {
+          "name": "buildStepSummary",
+          "kind": "const",
+          "line": 1671,
+          "exported": false
+        },
+        {
+          "name": "buildSessionSummary",
+          "kind": "const",
+          "line": 1684,
+          "exported": false
+        },
+        {
+          "name": "buildBugSummary",
+          "kind": "const",
+          "line": 1697,
+          "exported": false
+        },
+        {
+          "name": "buildCurrentFocusBlock",
+          "kind": "const",
+          "line": 1711,
+          "exported": false
+        },
+        {
+          "name": "buildBlockersBlock",
+          "kind": "const",
+          "line": 1775,
+          "exported": false
+        },
+        {
+          "name": "buildCriticalBugsBlock",
+          "kind": "const",
+          "line": 1803,
+          "exported": false
+        },
+        {
+          "name": "ensureParentDirectory",
+          "kind": "const",
+          "line": 1836,
+          "exported": false
+        },
+        {
+          "name": "writeNewNote",
+          "kind": "const",
+          "line": 1840,
+          "exported": false
+        },
+        {
+          "name": "emitCreatedNote",
+          "kind": "const",
+          "line": 1852,
+          "exported": false
+        },
+        {
+          "name": "handleCreateStepCommand",
+          "kind": "function",
+          "line": 1856,
+          "exported": true
+        },
+        {
+          "name": "handleMigrateStepNotesCommand",
+          "kind": "function",
+          "line": 1928,
+          "exported": true
+        },
+        {
+          "name": "handleCreatePhaseCommand",
+          "kind": "function",
+          "line": 2019,
+          "exported": true
+        },
+        {
+          "name": "handleCreateSessionCommand",
+          "kind": "function",
+          "line": 2149,
+          "exported": true
+        },
+        {
+          "name": "handleCreateBugCommand",
+          "kind": "function",
+          "line": 2219,
+          "exported": true
+        },
+        {
+          "name": "handleCreateDecisionCommand",
+          "kind": "function",
+          "line": 2275,
+          "exported": true
+        },
+        {
+          "name": "handleUpdateFrontmatterCommand",
+          "kind": "function",
+          "line": 2346,
+          "exported": true
+        },
+        {
+          "name": "handleAppendSectionCommand",
+          "kind": "function",
+          "line": 2446,
+          "exported": true
+        },
+        {
+          "name": "handleRebuildIndexesCommand",
+          "kind": "function",
+          "line": 2494,
+          "exported": true
+        },
+        {
+          "name": "handleRebuildBugsIndexCommand",
+          "kind": "function",
+          "line": 2543,
+          "exported": true
+        },
+        {
+          "name": "handleRebuildDecisionsIndexCommand",
+          "kind": "function",
+          "line": 2570,
+          "exported": true
+        },
+        {
+          "name": "handleRefreshActiveContextCommand",
+          "kind": "function",
+          "line": 2597,
+          "exported": true
+        },
+        {
+          "name": "handleRefreshAllHomeNotesCommand",
+          "kind": "function",
+          "line": 2653,
+          "exported": true
+        }
+      ]
+    },
+    {
+      "path": "src/core/note-mutations.ts",
+      "language": "TypeScript",
+      "symbols": [
+        {
+          "name": "MutationErrorCode",
+          "kind": "type",
+          "line": 11,
+          "exported": true
+        },
+        {
+          "name": "AgentVaultMutationError",
+          "kind": "class",
+          "line": 23,
+          "exported": true
+        },
+        {
+          "name": "NoteMutation",
+          "kind": "interface",
+          "line": 35,
+          "exported": true
+        },
+        {
+          "name": "MutationResult",
+          "kind": "interface",
+          "line": 41,
+          "exported": true
+        },
+        {
+          "name": "ParsedFrontmatter",
+          "kind": "interface",
+          "line": 47,
+          "exported": true
+        },
+        {
+          "name": "HeadingMatch",
+          "kind": "interface",
+          "line": 56,
+          "exported": false
+        },
+        {
+          "name": "ResolvedGeneratedBlockRange",
+          "kind": "interface",
+          "line": 64,
+          "exported": false
+        },
+        {
+          "name": "GENERATED_MARKER_PATTERN",
+          "kind": "const",
+          "line": 70,
+          "exported": false
+        },
+        {
+          "name": "HEADING_PATTERN",
+          "kind": "const",
+          "line": 71,
+          "exported": false
+        },
+        {
+          "name": "DEFAULT_NOTE_PATH",
+          "kind": "const",
+          "line": 72,
+          "exported": false
+        },
+        {
+          "name": "mutationError",
+          "kind": "const",
+          "line": 74,
+          "exported": false
+        },
+        {
+          "name": "detectLineEnding",
+          "kind": "const",
+          "line": 78,
+          "exported": false
+        },
+        {
+          "name": "toNoteLineEnding",
+          "kind": "const",
+          "line": 80,
+          "exported": false
+        },
+        {
+          "name": "trimBoundaryNewlines",
+          "kind": "const",
+          "line": 83,
+          "exported": false
+        },
+        {
+          "name": "applyMutation",
+          "kind": "const",
+          "line": 85,
+          "exported": false
+        },
+        {
+          "name": "isPlainObject",
+          "kind": "const",
+          "line": 95,
+          "exported": false
+        },
+        {
+          "name": "getClosingFrontmatterDelimiter",
+          "kind": "const",
+          "line": 98,
+          "exported": false
+        },
+        {
+          "name": "parseYamlFrontmatter",
+          "kind": "const",
+          "line": 129,
+          "exported": true
+        },
+        {
+          "name": "dumpFrontmatter",
+          "kind": "const",
+          "line": 176,
+          "exported": false
+        },
+        {
+          "name": "lineStartAt",
+          "kind": "const",
+          "line": 189,
+          "exported": false
+        },
+        {
+          "name": "nextLineBreakLength",
+          "kind": "const",
+          "line": 194,
+          "exported": false
+        },
+        {
+          "name": "ensureStandaloneLine",
+          "kind": "const",
+          "line": 200,
+          "exported": false
+        },
+        {
+          "name": "collectStandaloneTokenIndexes",
+          "kind": "const",
+          "line": 212,
+          "exported": false
+        },
+        {
+          "name": "normalizeInsertedContent",
+          "kind": "const",
+          "line": 227,
+          "exported": false
+        },
+        {
+          "name": "trailingWhitespace",
+          "kind": "const",
+          "line": 230,
+          "exported": false
+        },
+        {
+          "name": "leadingBlankLines",
+          "kind": "const",
+          "line": 235,
+          "exported": false
+        },
+        {
+          "name": "buildSectionReplacement",
+          "kind": "const",
+          "line": 240,
+          "exported": false
+        },
+        {
+          "name": "buildAppendedSectionReplacement",
+          "kind": "const",
+          "line": 261,
+          "exported": false
+        },
+        {
+          "name": "scanHeadings",
+          "kind": "const",
+          "line": 281,
+          "exported": false
+        },
+        {
+          "name": "resolveHeadingRange",
+          "kind": "const",
+          "line": 324,
+          "exported": false
+        },
+        {
+          "name": "resolveGeneratedBlockRange",
+          "kind": "const",
+          "line": 357,
+          "exported": false
+        },
+        {
+          "name": "updateFrontmatter",
+          "kind": "const",
+          "line": 404,
+          "exported": true
+        },
+        {
+          "name": "replaceGeneratedBlock",
+          "kind": "const",
+          "line": 445,
+          "exported": true
+        },
+        {
+          "name": "readGeneratedBlockContent",
+          "kind": "const",
+          "line": 463,
+          "exported": true
+        },
+        {
+          "name": "replaceHeadingSection",
+          "kind": "const",
+          "line": 473,
+          "exported": true
+        },
+        {
+          "name": "appendToAppendOnlySection",
+          "kind": "const",
+          "line": 499,
+          "exported": true
+        }
+      ]
+    },
+    {
+      "path": "src/core/note-validators.ts",
+      "language": "TypeScript",
+      "symbols": [
+        {
+          "name": "FrontmatterNoteType",
+          "kind": "type",
+          "line": 13,
+          "exported": false
+        },
+        {
+          "name": "StructureKind",
+          "kind": "type",
+          "line": 23,
+          "exported": false
+        },
+        {
+          "name": "ValidationSeverity",
+          "kind": "type",
+          "line": 24,
+          "exported": false
+        },
+        {
+          "name": "ValidationIssue",
+          "kind": "interface",
+          "line": 26,
+          "exported": false
+        },
+        {
+          "name": "ValidationSummary",
+          "kind": "interface",
+          "line": 33,
+          "exported": false
+        },
+        {
+          "name": "NoteClassification",
+          "kind": "interface",
+          "line": 40,
+          "exported": false
+        },
+        {
+          "name": "ParsedNote",
+          "kind": "interface",
+          "line": 47,
+          "exported": false
+        },
+        {
+          "name": "GraphNote",
+          "kind": "interface",
+          "line": 57,
+          "exported": false
+        },
+        {
+          "name": "DEFAULT_IO",
+          "kind": "const",
+          "line": 62,
+          "exported": false
+        },
+        {
+          "name": "FRONTMATTER_NOTE_TYPES",
+          "kind": "const",
+          "line": 90,
+          "exported": false
+        },
+        {
+          "name": "CONTEXT_STATUS_SET",
+          "kind": "const",
+          "line": 100,
+          "exported": false
+        },
+        {
+          "name": "CONTEXT_RESUME_TARGET_TYPE_SET",
+          "kind": "const",
+          "line": 101,
+          "exported": false
+        },
+        {
+          "name": "CONTEXT_LAST_ACTION_TYPE_SET",
+          "kind": "const",
+          "line": 102,
+          "exported": false
+        },
+        {
+          "name": "MARKER_LINE_PATTERN",
+          "kind": "const",
+          "line": 104,
+          "exported": false
+        },
+        {
+          "name": "HEADING_PATTERN",
+          "kind": "const",
+          "line": 105,
+          "exported": false
+        },
+        {
+          "name": "getVaultRoot",
+          "kind": "const",
+          "line": 107,
+          "exported": false
+        },
+        {
+          "name": "classifyNotePath",
+          "kind": "const",
+          "line": 110,
+          "exported": false
+        },
+        {
+          "name": "parseFrontmatterNoteType",
+          "kind": "const",
+          "line": 159,
+          "exported": false
+        },
+        {
+          "name": "readAllNotes",
+          "kind": "const",
+          "line": 166,
+          "exported": false
+        },
+        {
+          "name": "makeIssue",
+          "kind": "const",
+          "line": 185,
+          "exported": false
+        },
+        {
+          "name": "isRecord",
+          "kind": "const",
+          "line": 192,
+          "exported": false
+        },
+        {
+          "name": "isNonEmptyString",
+          "kind": "const",
+          "line": 194,
+          "exported": false
+        },
+        {
+          "name": "validateSessionContext",
+          "kind": "const",
+          "line": 196,
+          "exported": false
+        },
+        {
+          "name": "scanHeadings",
+          "kind": "const",
+          "line": 251,
+          "exported": false
+        },
+        {
+          "name": "validateGeneratedBlocks",
+          "kind": "const",
+          "line": 281,
+          "exported": false
+        },
+        {
+          "name": "hasLinkTo",
+          "kind": "const",
+          "line": 330,
+          "exported": false
+        },
+        {
+          "name": "isTemplateNote",
+          "kind": "const",
+          "line": 339,
+          "exported": false
+        },
+        {
+          "name": "buildSummary",
+          "kind": "const",
+          "line": 341,
+          "exported": false
+        },
+        {
+          "name": "writeSummary",
+          "kind": "const",
+          "line": 348,
+          "exported": false
+        },
+        {
+          "name": "validateFrontmatter",
+          "kind": "const",
+          "line": 361,
+          "exported": false
+        },
+        {
+          "name": "validateStructure",
+          "kind": "const",
+          "line": 417,
+          "exported": false
+        },
+        {
+          "name": "validateRequiredLinks",
+          "kind": "const",
+          "line": 448,
+          "exported": false
+        },
+        {
+          "name": "detectOrphans",
+          "kind": "const",
+          "line": 500,
+          "exported": false
+        },
+        {
+          "name": "runValidation",
+          "kind": "const",
+          "line": 541,
+          "exported": false
+        },
+        {
+          "name": "handleValidateFrontmatterCommand",
+          "kind": "function",
+          "line": 556,
+          "exported": true
+        },
+        {
+          "name": "handleValidateNoteStructureCommand",
+          "kind": "function",
+          "line": 568,
+          "exported": true
+        },
+        {
+          "name": "handleValidateRequiredLinksCommand",
+          "kind": "function",
+          "line": 580,
+          "exported": true
+        },
+        {
+          "name": "handleDetectOrphansCommand",
+          "kind": "function",
+          "line": 592,
+          "exported": true
+        },
+        {
+          "name": "handleValidateAllCommand",
+          "kind": "function",
+          "line": 604,
+          "exported": true
+        },
+        {
+          "name": "handleVaultDoctorCommand",
+          "kind": "function",
+          "line": 645,
+          "exported": true
+        }
+      ]
+    },
+    {
+      "path": "src/core/vault-config.ts",
+      "language": "TypeScript",
+      "symbols": [
+        {
+          "name": "execFile",
+          "kind": "const",
+          "line": 8,
+          "exported": false
+        },
+        {
+          "name": "CONFIG_FILENAME",
+          "kind": "const",
+          "line": 10,
+          "exported": false
+        },
+        {
+          "name": "VaultConfig",
+          "kind": "interface",
+          "line": 12,
+          "exported": true
+        },
+        {
+          "name": "DEFAULT_CONFIG",
+          "kind": "const",
+          "line": 16,
+          "exported": false
+        },
+        {
+          "name": "VALID_RESOLVERS",
+          "kind": "const",
+          "line": 20,
+          "exported": false
+        },
+        {
+          "name": "readVaultConfig",
+          "kind": "const",
+          "line": 22,
+          "exported": true
+        },
+        {
+          "name": "writeVaultConfig",
+          "kind": "const",
+          "line": 40,
+          "exported": true
+        },
+        {
+          "name": "updateVaultConfig",
+          "kind": "const",
+          "line": 45,
+          "exported": true
+        },
+        {
+          "name": "probeObsidianCli",
+          "kind": "const",
+          "line": 57,
+          "exported": true
+        }
+      ]
+    },
+    {
+      "path": "src/core/vault-files.ts",
+      "language": "TypeScript",
+      "symbols": [
+        {
+          "name": "VaultFileRecord",
+          "kind": "interface",
+          "line": 5,
+          "exported": true
+        },
+        {
+          "name": "isProjectVault",
+          "kind": "const",
+          "line": 15,
+          "exported": true
+        },
+        {
+          "name": "resolveVaultRoot",
+          "kind": "const",
+          "line": 18,
+          "exported": true
+        },
+        {
+          "name": "getRelativeNotePath",
+          "kind": "const",
+          "line": 36,
+          "exported": true
+        },
+        {
+          "name": "assertWithinVaultRoot",
+          "kind": "const",
+          "line": 39,
+          "exported": true
+        },
+        {
+          "name": "resolveVaultRelativePath",
+          "kind": "const",
+          "line": 52,
+          "exported": true
+        },
+        {
+          "name": "listMarkdownFiles",
+          "kind": "const",
+          "line": 58,
+          "exported": true
+        },
+        {
+          "name": "scanVaultMarkdownFiles",
+          "kind": "const",
+          "line": 78,
+          "exported": true
+        },
+        {
+          "name": "readUtf8File",
+          "kind": "const",
+          "line": 91,
+          "exported": true
+        }
+      ]
+    },
+    {
+      "path": "src/core/vault-graph.ts",
+      "language": "TypeScript",
+      "symbols": [
+        {
+          "name": "execFile",
+          "kind": "const",
+          "line": 9,
+          "exported": false
+        },
+        {
+          "name": "WIKI_LINK_PATTERN",
+          "kind": "const",
+          "line": 11,
+          "exported": false
+        },
+        {
+          "name": "MARKDOWN_LINK_PATTERN",
+          "kind": "const",
+          "line": 12,
+          "exported": false
+        },
+        {
+          "name": "HEADING_PATTERN",
+          "kind": "const",
+          "line": 13,
+          "exported": false
+        },
+        {
+          "name": "ROOT_CONTENT_EXCERPT_LIMIT",
+          "kind": "const",
+          "line": 14,
+          "exported": false
+        },
+        {
+          "name": "CONTENT_EXCERPT_LIMIT",
+          "kind": "const",
+          "line": 15,
+          "exported": false
+        },
+        {
+          "name": "MIN_CONTENT_EXCERPT_LIMIT",
+          "kind": "const",
+          "line": 16,
+          "exported": false
+        },
+        {
+          "name": "TOTAL_CONTENT_LIMIT",
+          "kind": "const",
+          "line": 17,
+          "exported": false
+        },
+        {
+          "name": "TRUNCATION_SUFFIX",
+          "kind": "const",
+          "line": 18,
+          "exported": false
+        },
+        {
+          "name": "OBSIDIAN_TIMEOUT_MS",
+          "kind": "const",
+          "line": 19,
+          "exported": false
+        },
+        {
+          "name": "VaultGraphResolver",
+          "kind": "type",
+          "line": 21,
+          "exported": true
+        },
+        {
+          "name": "VaultTraverseDirection",
+          "kind": "type",
+          "line": 22,
+          "exported": true
+        },
+        {
+          "name": "VaultGraphNode",
+          "kind": "interface",
+          "line": 24,
+          "exported": true
+        },
+        {
+          "name": "VaultGraph",
+          "kind": "interface",
+          "line": 39,
+          "exported": true
+        },
+        {
+          "name": "VaultTraverseParams",
+          "kind": "interface",
+          "line": 47,
+          "exported": true
+        },
+        {
+          "name": "VaultTraverseResultNode",
+          "kind": "interface",
+          "line": 58,
+          "exported": true
+        },
+        {
+          "name": "VaultTraverseResultEdge",
+          "kind": "interface",
+          "line": 67,
+          "exported": true
+        },
+        {
+          "name": "VaultTraverseResult",
+          "kind": "interface",
+          "line": 72,
+          "exported": true
+        },
+        {
+          "name": "CachedVaultGraph",
+          "kind": "interface",
+          "line": 89,
+          "exported": false
+        },
+        {
+          "name": "ParsedVaultNote",
+          "kind": "interface",
+          "line": 94,
+          "exported": false
+        },
+        {
+          "name": "GRAPH_CACHE_MAX_SIZE",
+          "kind": "const",
+          "line": 107,
+          "exported": false
+        },
+        {
+          "name": "graphCache",
+          "kind": "const",
+          "line": 108,
+          "exported": false
+        },
+        {
+          "name": "setGraphCache",
+          "kind": "const",
+          "line": 110,
+          "exported": false
+        },
+        {
+          "name": "normalizePathLikeValue",
+          "kind": "const",
+          "line": 121,
+          "exported": false
+        },
+        {
+          "name": "getCanonicalTarget",
+          "kind": "const",
+          "line": 123,
+          "exported": false
+        },
+        {
+          "name": "parseOptionalString",
+          "kind": "const",
+          "line": 125,
+          "exported": false
+        },
+        {
+          "name": "extractTitle",
+          "kind": "const",
+          "line": 136,
+          "exported": false
+        },
+        {
+          "name": "normalizeLinkTarget",
+          "kind": "const",
+          "line": 150,
+          "exported": false
+        },
+        {
+          "name": "collectLinks",
+          "kind": "const",
+          "line": 172,
+          "exported": true
+        },
+        {
+          "name": "loadParsedVaultNotes",
+          "kind": "const",
+          "line": 196,
+          "exported": false
+        },
+        {
+          "name": "buildSignature",
+          "kind": "const",
+          "line": 221,
+          "exported": false
+        },
+        {
+          "name": "extractObsidianPaths",
+          "kind": "const",
+          "line": 229,
+          "exported": false
+        },
+        {
+          "name": "readObsidianCliLinks",
+          "kind": "const",
+          "line": 255,
+          "exported": false
+        },
+        {
+          "name": "buildFilesystemGraph",
+          "kind": "const",
+          "line": 269,
+          "exported": false
+        },
+        {
+          "name": "buildObsidianGraph",
+          "kind": "const",
+          "line": 310,
+          "exported": false
+        },
+        {
+          "name": "invalidateVaultGraphCache",
+          "kind": "const",
+          "line": 362,
+          "exported": true
+        },
+        {
+          "name": "ensureVaultGraph",
+          "kind": "const",
+          "line": 371,
+          "exported": true
+        },
+        {
+          "name": "resolveTraversalRoot",
+          "kind": "const",
+          "line": 407,
+          "exported": false
+        },
+        {
+          "name": "normalizeFilterValues",
+          "kind": "const",
+          "line": 426,
+          "exported": false
+        },
+        {
+          "name": "getTraversalNeighbors",
+          "kind": "const",
+          "line": 438,
+          "exported": false
+        },
+        {
+          "name": "nodeMatchesFilters",
+          "kind": "const",
+          "line": 453,
+          "exported": false
+        },
+        {
+          "name": "excerptContent",
+          "kind": "const",
+          "line": 469,
+          "exported": false
+        },
+        {
+          "name": "allocateContentExcerpts",
+          "kind": "const",
+          "line": 487,
+          "exported": false
+        },
+        {
+          "name": "traverseVaultGraph",
+          "kind": "const",
+          "line": 538,
+          "exported": true
+        },
+        {
+          "name": "formatVaultTraverseResultAsJson",
+          "kind": "const",
+          "line": 699,
+          "exported": true
+        },
+        {
+          "name": "formatVaultTraverseResultAsToon",
+          "kind": "const",
+          "line": 702,
+          "exported": true
+        }
+      ]
+    },
+    {
+      "path": "src/install.ts",
+      "language": "TypeScript",
+      "symbols": [
+        {
+          "name": "CommandFormat",
+          "kind": "type",
+          "line": 8,
+          "exported": false
+        },
+        {
+          "name": "InstallScope",
+          "kind": "type",
+          "line": 9,
+          "exported": false
+        },
+        {
+          "name": "PackageManager",
+          "kind": "type",
+          "line": 10,
+          "exported": false
+        },
+        {
+          "name": "ToolKind",
+          "kind": "type",
+          "line": 11,
+          "exported": false
+        },
+        {
+          "name": "McpConfigRootKey",
+          "kind": "type",
+          "line": 12,
+          "exported": false
+        },
+        {
+          "name": "DetectedTool",
+          "kind": "interface",
+          "line": 14,
+          "exported": false
+        },
+        {
+          "name": "InstallAction",
+          "kind": "interface",
+          "line": 23,
+          "exported": false
+        },
+        {
+          "name": "InstallTarget",
+          "kind": "interface",
+          "line": 29,
+          "exported": false
+        },
+        {
+          "name": "PACKAGE_NAME",
+          "kind": "const",
+          "line": 35,
+          "exported": false
+        },
+        {
+          "name": "INSTALL_DIRNAME",
+          "kind": "const",
+          "line": 36,
+          "exported": false
+        },
+        {
+          "name": "RUNTIME_DIRNAME",
+          "kind": "const",
+          "line": 37,
+          "exported": false
+        },
+        {
+          "name": "COMMAND_SOURCE_DIR",
+          "kind": "const",
+          "line": 39,
+          "exported": false
+        },
+        {
+          "name": "CLAUDE_LEGACY_COMMANDS",
+          "kind": "const",
+          "line": 40,
+          "exported": false
+        },
+        {
+          "name": "CommandTemplate",
+          "kind": "interface",
+          "line": 46,
+          "exported": false
+        },
+        {
+          "name": "RenderedCommand",
+          "kind": "interface",
+          "line": 52,
+          "exported": false
+        },
+        {
+          "name": "isBunRuntime",
+          "kind": "const",
+          "line": 58,
+          "exported": false
+        },
+        {
+          "name": "getPackageManager",
+          "kind": "const",
+          "line": 60,
+          "exported": false
+        },
+        {
+          "name": "resolveInstallRoot",
+          "kind": "const",
+          "line": 62,
+          "exported": true
+        },
+        {
+          "name": "buildInstallTarget",
+          "kind": "const",
+          "line": 68,
+          "exported": true
+        },
+        {
+          "name": "buildMcpServerConfig",
+          "kind": "const",
+          "line": 82,
+          "exported": true
+        },
+        {
+          "name": "buildOpenCodeMcpServerConfig",
+          "kind": "const",
+          "line": 88,
+          "exported": true
+        },
+        {
+          "name": "getToolMcpRootKey",
+          "kind": "const",
+          "line": 94,
+          "exported": false
+        },
+        {
+          "name": "buildToolMcpServerConfig",
+          "kind": "const",
+          "line": 96,
+          "exported": false
+        },
+        {
+          "name": "parseInstallScope",
+          "kind": "const",
+          "line": 102,
+          "exported": true
+        },
+        {
+          "name": "parseNumberedSelection",
+          "kind": "const",
+          "line": 114,
+          "exported": true
+        },
+        {
+          "name": "writeRuntimeManifest",
+          "kind": "const",
+          "line": 142,
+          "exported": false
+        },
+        {
+          "name": "runPackageInstall",
+          "kind": "const",
+          "line": 154,
+          "exported": false
+        },
+        {
+          "name": "promptForInstallScope",
+          "kind": "const",
+          "line": 180,
+          "exported": false
+        },
+        {
+          "name": "resolveInstallScope",
+          "kind": "const",
+          "line": 207,
+          "exported": false
+        },
+        {
+          "name": "promptForInstallTools",
+          "kind": "const",
+          "line": 220,
+          "exported": false
+        },
+        {
+          "name": "resolveInstallTools",
+          "kind": "const",
+          "line": 248,
+          "exported": false
+        },
+        {
+          "name": "ensureRuntimeInstalled",
+          "kind": "const",
+          "line": 260,
+          "exported": false
+        },
+        {
+          "name": "maybeRemoveEmptyDir",
+          "kind": "const",
+          "line": 277,
+          "exported": false
+        },
+        {
+          "name": "uninstallInstalledRuntime",
+          "kind": "const",
+          "line": 294,
+          "exported": false
+        },
+        {
+          "name": "toCodexPromptName",
+          "kind": "const",
+          "line": 331,
+          "exported": false
+        },
+        {
+          "name": "getFirstNonEmptyLine",
+          "kind": "const",
+          "line": 333,
+          "exported": false
+        },
+        {
+          "name": "getCommandBody",
+          "kind": "const",
+          "line": 343,
+          "exported": false
+        },
+        {
+          "name": "withDescriptionFrontmatter",
+          "kind": "const",
+          "line": 359,
+          "exported": false
+        },
+        {
+          "name": "renderSlashCommandReference",
+          "kind": "const",
+          "line": 364,
+          "exported": false
+        },
+        {
+          "name": "renderToolCommand",
+          "kind": "const",
+          "line": 372,
+          "exported": true
+        },
+        {
+          "name": "readCommandTemplates",
+          "kind": "const",
+          "line": 399,
+          "exported": false
+        },
+        {
+          "name": "detectTools",
+          "kind": "const",
+          "line": 415,
+          "exported": false
+        },
+        {
+          "name": "readJsonSafe",
+          "kind": "const",
+          "line": 445,
+          "exported": false
+        },
+        {
+          "name": "writeJsonSafe",
+          "kind": "const",
+          "line": 457,
+          "exported": false
+        },
+        {
+          "name": "installMcpServer",
+          "kind": "const",
+          "line": 462,
+          "exported": false
+        },
+        {
+          "name": "installToolCommands",
+          "kind": "const",
+          "line": 488,
+          "exported": false
+        },
+        {
+          "name": "uninstallTool",
+          "kind": "const",
+          "line": 516,
+          "exported": false
+        },
+        {
+          "name": "runInstall",
+          "kind": "function",
+          "line": 568,
+          "exported": true
+        },
+        {
+          "name": "runUninstall",
+          "kind": "function",
+          "line": 612,
+          "exported": true
+        }
+      ]
+    },
+    {
+      "path": "src/mcp-server.ts",
+      "language": "TypeScript",
+      "symbols": [
+        {
+          "name": "CommandHandler",
+          "kind": "type",
+          "line": 42,
+          "exported": false
+        },
+        {
+          "name": "captureOutput",
+          "kind": "const",
+          "line": 44,
+          "exported": false
+        },
+        {
+          "name": "noArgs",
+          "kind": "const",
+          "line": 59,
+          "exported": false
+        },
+        {
+          "name": "startServer",
+          "kind": "function",
+          "line": 61,
+          "exported": true
+        }
+      ]
+    },
+    {
+      "path": "src/scaffold/backfill-planning.ts",
+      "language": "TypeScript",
+      "symbols": [
+        {
+          "name": "PlanningBackfillResult",
+          "kind": "interface",
+          "line": 12,
+          "exported": true
+        },
+        {
+          "name": "GsdPhase",
+          "kind": "interface",
+          "line": 24,
+          "exported": false
+        },
+        {
+          "name": "GsdPlan",
+          "kind": "interface",
+          "line": 33,
+          "exported": false
+        },
+        {
+          "name": "GsdSummary",
+          "kind": "interface",
+          "line": 41,
+          "exported": false
+        },
+        {
+          "name": "EMPTY_RESULT",
+          "kind": "const",
+          "line": 52,
+          "exported": false
+        },
+        {
+          "name": "parseFrontmatter",
+          "kind": "const",
+          "line": 67,
+          "exported": false
+        },
+        {
+          "name": "getBody",
+          "kind": "const",
+          "line": 135,
+          "exported": false
+        },
+        {
+          "name": "extractTaskNames",
+          "kind": "const",
+          "line": 143,
+          "exported": false
+        },
+        {
+          "name": "extractObjective",
+          "kind": "const",
+          "line": 157,
+          "exported": false
+        },
+        {
+          "name": "scanPlanningPhases",
+          "kind": "const",
+          "line": 172,
+          "exported": false
+        },
+        {
+          "name": "extractSection",
+          "kind": "const",
+          "line": 277,
+          "exported": false
+        },
+        {
+          "name": "backfillFromPlanning",
+          "kind": "function",
+          "line": 302,
+          "exported": true
+        },
+        {
+          "name": "enrichArchitectureStub",
+          "kind": "const",
+          "line": 646,
+          "exported": false
+        },
+        {
+          "name": "titleCase",
+          "kind": "const",
+          "line": 671,
+          "exported": false
+        },
+        {
+          "name": "slugify",
+          "kind": "const",
+          "line": 677,
+          "exported": false
+        }
+      ]
+    },
+    {
+      "path": "src/scaffold/code-graph.ts",
+      "language": "TypeScript",
+      "symbols": [
+        {
+          "name": "CodeSymbol",
+          "kind": "interface",
+          "line": 4,
+          "exported": true
+        },
+        {
+          "name": "FileSymbols",
+          "kind": "interface",
+          "line": 11,
+          "exported": true
+        },
+        {
+          "name": "CodeGraphResult",
+          "kind": "interface",
+          "line": 17,
+          "exported": true
+        },
+        {
+          "name": "CodeGraphDirectorySummary",
+          "kind": "interface",
+          "line": 23,
+          "exported": true
+        },
+        {
+          "name": "CodeGraphIndexPayload",
+          "kind": "interface",
+          "line": 31,
+          "exported": true
+        },
+        {
+          "name": "SKIP_DIRS",
+          "kind": "const",
+          "line": 41,
+          "exported": false
+        },
+        {
+          "name": "parseNamesFromBraces",
+          "kind": "const",
+          "line": 69,
+          "exported": false
+        },
+        {
+          "name": "SymbolExtractor",
+          "kind": "type",
+          "line": 81,
+          "exported": false
+        },
+        {
+          "name": "extractTypeScript",
+          "kind": "const",
+          "line": 83,
+          "exported": false
+        },
+        {
+          "name": "extractPython",
+          "kind": "const",
+          "line": 158,
+          "exported": false
+        },
+        {
+          "name": "extractGo",
+          "kind": "const",
+          "line": 196,
+          "exported": false
+        },
+        {
+          "name": "extractRust",
+          "kind": "const",
+          "line": 229,
+          "exported": false
+        },
+        {
+          "name": "extractJava",
+          "kind": "const",
+          "line": 271,
+          "exported": false
+        },
+        {
+          "name": "extractKotlin",
+          "kind": "const",
+          "line": 309,
+          "exported": false
+        },
+        {
+          "name": "extractRuby",
+          "kind": "const",
+          "line": 339,
+          "exported": false
+        },
+        {
+          "name": "extractCSharp",
+          "kind": "const",
+          "line": 364,
+          "exported": false
+        },
+        {
+          "name": "extractSwift",
+          "kind": "const",
+          "line": 402,
+          "exported": false
+        },
+        {
+          "name": "extractPHP",
+          "kind": "const",
+          "line": 438,
+          "exported": false
+        },
+        {
+          "name": "extractScala",
+          "kind": "const",
+          "line": 468,
+          "exported": false
+        },
+        {
+          "name": "extractElixir",
+          "kind": "const",
+          "line": 495,
+          "exported": false
+        },
+        {
+          "name": "walkSourceFiles",
+          "kind": "function",
+          "line": 532,
+          "exported": false
+        },
+        {
+          "name": "buildCodeGraph",
+          "kind": "function",
+          "line": 578,
+          "exported": true
+        },
+        {
+          "name": "summarizeCodeGraph",
+          "kind": "function",
+          "line": 588,
+          "exported": true
+        },
+        {
+          "name": "buildCodeGraphIndexPayload",
+          "kind": "function",
+          "line": 618,
+          "exported": true
+        },
+        {
+          "name": "renderCodeGraphMarkdown",
+          "kind": "function",
+          "line": 630,
+          "exported": true
+        },
+        {
+          "name": "writeCodeGraph",
+          "kind": "function",
+          "line": 726,
+          "exported": true
+        },
+        {
+          "name": "findSymbols",
+          "kind": "function",
+          "line": 746,
+          "exported": true
+        },
+        {
+          "name": "getSymbolsForFiles",
+          "kind": "function",
+          "line": 764,
+          "exported": true
+        }
+      ]
+    },
+    {
+      "path": "src/scaffold/init.ts",
+      "language": "TypeScript",
+      "symbols": [
+        {
+          "name": "InitResult",
+          "kind": "interface",
+          "line": 52,
+          "exported": true
+        },
+        {
+          "name": "fillPlaceholders",
+          "kind": "const",
+          "line": 62,
+          "exported": false
+        },
+        {
+          "name": "writeIfNotExists",
+          "kind": "const",
+          "line": 80,
+          "exported": false
+        },
+        {
+          "name": "initVault",
+          "kind": "function",
+          "line": 92,
+          "exported": true
+        }
+      ]
+    },
+    {
+      "path": "src/scaffold/scan.ts",
+      "language": "TypeScript",
+      "symbols": [
+        {
+          "name": "ScanResult",
+          "kind": "interface",
+          "line": 5,
+          "exported": true
+        },
+        {
+          "name": "SKIP_DIRS",
+          "kind": "const",
+          "line": 48,
+          "exported": false
+        },
+        {
+          "name": "countFilesByExtension",
+          "kind": "const",
+          "line": 54,
+          "exported": false
+        },
+        {
+          "name": "detectFrameworks",
+          "kind": "const",
+          "line": 76,
+          "exported": false
+        },
+        {
+          "name": "detectPackageManager",
+          "kind": "const",
+          "line": 121,
+          "exported": false
+        },
+        {
+          "name": "detectMonorepo",
+          "kind": "const",
+          "line": 134,
+          "exported": false
+        },
+        {
+          "name": "detectKeyDirectories",
+          "kind": "const",
+          "line": 171,
+          "exported": false
+        },
+        {
+          "name": "detectTestFramework",
+          "kind": "const",
+          "line": 190,
+          "exported": false
+        },
+        {
+          "name": "detectBuildSystem",
+          "kind": "const",
+          "line": 221,
+          "exported": false
+        },
+        {
+          "name": "detectCISystem",
+          "kind": "const",
+          "line": 246,
+          "exported": false
+        },
+        {
+          "name": "detectEntryPoints",
+          "kind": "const",
+          "line": 257,
+          "exported": false
+        },
+        {
+          "name": "scanProject",
+          "kind": "function",
+          "line": 288,
+          "exported": true
+        }
+      ]
+    },
+    {
+      "path": "src/templates/agents-md.ts",
+      "language": "TypeScript",
+      "symbols": [
+        {
+          "name": "AGENTS_MD_TEMPLATE",
+          "kind": "const",
+          "line": 5,
+          "exported": true
+        }
+      ]
+    },
+    {
+      "path": "src/templates/architecture.ts",
+      "language": "TypeScript",
+      "symbols": [
+        {
+          "name": "SYSTEM_OVERVIEW_STUB",
+          "kind": "const",
+          "line": 7,
+          "exported": true
+        },
+        {
+          "name": "CODE_MAP_STUB",
+          "kind": "const",
+          "line": 68,
+          "exported": true
+        },
+        {
+          "name": "AGENT_WORKFLOW_STUB",
+          "kind": "const",
+          "line": 125,
+          "exported": true
+        },
+        {
+          "name": "DOMAIN_MODEL_STUB",
+          "kind": "const",
+          "line": 181,
+          "exported": true
+        },
+        {
+          "name": "INTEGRATION_MAP_STUB",
+          "kind": "const",
+          "line": 236,
+          "exported": true
+        }
+      ]
+    },
+    {
+      "path": "src/templates/home.ts",
+      "language": "TypeScript",
+      "symbols": [
+        {
+          "name": "ACTIVE_CONTEXT_TEMPLATE",
+          "kind": "const",
+          "line": 6,
+          "exported": true
+        },
+        {
+          "name": "BUGS_INDEX_TEMPLATE",
+          "kind": "const",
+          "line": 82,
+          "exported": true
+        },
+        {
+          "name": "DECISIONS_INDEX_TEMPLATE",
+          "kind": "const",
+          "line": 123,
+          "exported": true
+        },
+        {
+          "name": "DASHBOARD_TEMPLATE",
+          "kind": "const",
+          "line": 168,
+          "exported": true
+        },
+        {
+          "name": "INBOX_TEMPLATE",
+          "kind": "const",
+          "line": 235,
+          "exported": true
+        },
+        {
+          "name": "ROADMAP_TEMPLATE",
+          "kind": "const",
+          "line": 269,
+          "exported": true
+        }
+      ]
+    },
+    {
+      "path": "src/templates/note-templates.ts",
+      "language": "TypeScript",
+      "symbols": [
+        {
+          "name": "PHASE_TEMPLATE",
+          "kind": "const",
+          "line": 6,
+          "exported": true
+        },
+        {
+          "name": "STEP_TEMPLATE",
+          "kind": "const",
+          "line": 98,
+          "exported": true
+        },
+        {
+          "name": "BUG_TEMPLATE",
+          "kind": "const",
+          "line": 158,
+          "exported": true
+        },
+        {
+          "name": "DECISION_TEMPLATE",
+          "kind": "const",
+          "line": 249,
+          "exported": true
+        },
+        {
+          "name": "SESSION_TEMPLATE",
+          "kind": "const",
+          "line": 318,
+          "exported": true
+        },
+        {
+          "name": "ARCHITECTURE_TEMPLATE",
+          "kind": "const",
+          "line": 419,
+          "exported": true
+        },
+        {
+          "name": "NOTE_CONTRACTS",
+          "kind": "const",
+          "line": 481,
+          "exported": true
+        }
+      ]
+    },
+    {
+      "path": "src/templates/obsidian-config.ts",
+      "language": "TypeScript",
+      "symbols": [
+        {
+          "name": "OBSIDIAN_APP_CONFIG",
+          "kind": "const",
+          "line": 6,
+          "exported": true
+        },
+        {
+          "name": "OBSIDIAN_APPEARANCE_CONFIG",
+          "kind": "const",
+          "line": 8,
+          "exported": true
+        },
+        {
+          "name": "OBSIDIAN_COMMUNITY_PLUGINS",
+          "kind": "const",
+          "line": 10,
+          "exported": true
+        },
+        {
+          "name": "OBSIDIAN_CORE_PLUGINS",
+          "kind": "const",
+          "line": 12,
+          "exported": true
+        },
+        {
+          "name": "OBSIDIAN_GRAPH_CONFIG",
+          "kind": "const",
+          "line": 46,
+          "exported": true
+        }
+      ]
+    },
+    {
+      "path": "src/templates/readme.ts",
+      "language": "TypeScript",
+      "symbols": [
+        {
+          "name": "README_MD_TEMPLATE",
+          "kind": "const",
+          "line": 5,
+          "exported": true
+        }
+      ]
+    },
+    {
+      "path": "src/templates/root-agents-md.ts",
+      "language": "TypeScript",
+      "symbols": [
+        {
+          "name": "AGENT_VAULT_MARKER",
+          "kind": "const",
+          "line": 6,
+          "exported": false
+        },
+        {
+          "name": "AGENT_VAULT_MARKER_END",
+          "kind": "const",
+          "line": 7,
+          "exported": false
+        },
+        {
+          "name": "AGENT_VAULT_MARKER",
+          "kind": "const",
+          "line": 9,
+          "exported": true
+        },
+        {
+          "name": "AGENT_VAULT_MARKER_END",
+          "kind": "const",
+          "line": 9,
+          "exported": true
+        },
+        {
+          "name": "ROOT_AGENTS_MD_SECTION",
+          "kind": "const",
+          "line": 11,
+          "exported": true
+        }
+      ]
+    },
+    {
+      "path": "src/templates/shared-knowledge.ts",
+      "language": "TypeScript",
+      "symbols": [
+        {
+          "name": "CODING_STANDARDS",
+          "kind": "const",
+          "line": 7,
+          "exported": true
+        },
+        {
+          "name": "PROMPT_STANDARDS",
+          "kind": "const",
+          "line": 34,
+          "exported": true
+        },
+        {
+          "name": "BUG_TAXONOMY",
+          "kind": "const",
+          "line": 78,
+          "exported": true
+        },
+        {
+          "name": "DEFINITION_OF_DONE",
+          "kind": "const",
+          "line": 125,
+          "exported": true
+        },
+        {
+          "name": "AGENT_WORKFLOW_PLAYBOOKS",
+          "kind": "const",
+          "line": 157,
+          "exported": true
+        }
+      ]
+    },
+    {
+      "path": "test/helpers.ts",
+      "language": "TypeScript",
+      "symbols": [
+        {
+          "name": "REPO_VAULT_ROOT",
+          "kind": "const",
+          "line": 11,
+          "exported": false
+        },
+        {
+          "name": "copyTemplate",
+          "kind": "const",
+          "line": 13,
+          "exported": true
+        },
+        {
+          "name": "copyHomeNote",
+          "kind": "const",
+          "line": 20,
+          "exported": true
+        },
+        {
+          "name": "makeIo",
+          "kind": "const",
+          "line": 27,
+          "exported": true
+        }
+      ]
+    }
+  ]
+}

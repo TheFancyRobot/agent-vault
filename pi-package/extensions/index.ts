@@ -25,6 +25,7 @@ import {
 } from "../../src/core/note-validators";
 import { formatCommandCatalog, formatCommandHelp } from "../../src/core/command-catalog";
 import type { AgentVaultCommandName } from "../../src/core/command-catalog";
+import { loadCodeGraphIndex, queryCodeGraphIndex } from "../../src/core/code-graph-lookup";
 import {
   ensureVaultGraph,
   formatVaultTraverseResultAsJson,
@@ -313,6 +314,59 @@ export default function (pi: ExtensionAPI) {
         content: [{ type: "text", text }],
         details: {},
       };
+    },
+  });
+
+  // ── vault_lookup_code_graph ───────────────────────────────────────
+  pi.registerTool({
+    name: "vault_lookup_code_graph",
+    label: "Vault Code Graph Lookup",
+    description: [
+      "Search the machine-readable code graph index without loading the full JSON blob into prompt context.",
+      '- Reads `.agent-vault/08_Automation/code-graph/index.json`.',
+      '- Returns only matching symbols and file paths.',
+    ].join("\n"),
+    parameters: Type.Object({
+      query: Type.String({ description: "Case-insensitive symbol substring to search for" }),
+      limit: Type.Integer({ minimum: 1, maximum: 200, default: 10, description: "Maximum matches to return" }),
+      path_substring: Type.Optional(Type.String({ description: "Optional file-path substring filter" })),
+      exported_only: Type.Boolean({ default: false, description: "When true, only return exported/public symbols" }),
+    }),
+    promptSnippet:
+      "Use vault_lookup_code_graph to search the generated code-graph index and return only matching symbols/files without loading the whole index into context.",
+    async execute(_toolCallId, params, _signal, _onUpdate, _ctx) {
+      try {
+        const vaultRoot = resolveVaultRoot(process.cwd());
+        const index = await loadCodeGraphIndex(vaultRoot);
+        const matches = queryCodeGraphIndex(index, {
+          query: params.query,
+          limit: params.limit ?? 10,
+          pathSubstring: params.path_substring,
+          exportedOnly: params.exported_only ?? false,
+        });
+        return {
+          content: [{
+            type: "text",
+            text: JSON.stringify({
+              repoName: index.repoName,
+              generatedAt: index.generatedAt,
+              query: params.query,
+              matchCount: matches.length,
+              matches,
+            }, null, 2),
+          }],
+          details: {},
+        };
+      } catch (err) {
+        return {
+          isError: true,
+          content: [{
+            type: "text",
+            text: `Failed to query code graph index: ${err instanceof Error ? err.message : String(err)}`,
+          }],
+          details: {},
+        };
+      }
     },
   });
 

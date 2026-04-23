@@ -1,6 +1,8 @@
 import { existsSync } from 'fs';
 import { mkdir, readFile, readdir, rename, writeFile } from 'fs/promises';
 import { basename, dirname, join, relative, resolve } from 'path';
+import { scanProject } from '../scaffold/scan';
+import { writeCodeGraph } from '../scaffold/code-graph';
 import {
   appendToAppendOnlySection,
   parseYamlFrontmatter,
@@ -1223,6 +1225,12 @@ const createStepContent = (
   stepNumber: string,
   phaseLink: string,
   date: string,
+  companionLinks: {
+    executionBrief: string,
+    validationPlan: string,
+    implementationNotes: string,
+    outcome: string,
+  },
 ): string => {
   let content = template;
   content = replaceFirstHeading(content, `Step ${stepNumber} - ${title}`);
@@ -1234,15 +1242,92 @@ const createStepContent = (
     updated: date,
   }).content;
   content = replaceHeadingSection(content, 'Purpose', `- Outcome: ${title}.\n- Parent phase: ${phaseLink}.`).content;
+  content = replaceHeadingSection(content, 'Required Reading', [
+    `- ${phaseLink}`,
+    `- ${companionLinks.executionBrief}`,
+    `- ${companionLinks.validationPlan}`,
+  ].join('\n')).content;
+  content = replaceHeadingSection(content, 'Companion Notes', [
+    `- ${companionLinks.executionBrief} - Why the step exists, prerequisites, likely code paths, and the smallest execution checklist.`,
+    `- ${companionLinks.validationPlan} - Acceptance checks, commands, edge cases, and regression expectations.`,
+    `- ${companionLinks.implementationNotes} - Durable findings discovered while the step is being executed.`,
+    `- ${companionLinks.outcome} - Final result, validation evidence, and explicit follow-up.`,
+  ].join('\n')).content;
   content = replaceGeneratedBlock(content, 'step-agent-managed-snapshot', [
     '- Status: planned',
     '- Current owner: ',
     `- Last touched: ${date}`,
-    `- Next action: Start ${stepId}.`,
+    `- Next action: Read ${companionLinks.executionBrief} and ${companionLinks.validationPlan}.`,
   ].join('\n')).content;
   content = replaceGeneratedBlock(content, 'step-session-history', '- No sessions yet.').content;
   return content;
 };
+
+const createStepCompanionContent = (
+  heading: string,
+  body: string,
+  relatedNotes: string[] = [],
+): string => [
+  `# ${heading}`,
+  '',
+  body,
+  ...(relatedNotes.length > 0 ? ['', '## Related Notes', '', ...relatedNotes] : []),
+  '',
+].join('\n');
+
+interface ParsedTopLevelSections {
+  readonly frontmatter: Record<string, unknown>;
+  readonly title: string;
+  readonly intro: string;
+  readonly sections: Map<string, string>;
+  readonly generatedBlocks: Map<string, string>;
+}
+
+const parseTopLevelSections = (content: string, notePath: string): ParsedTopLevelSections => {
+  const frontmatter = parseYamlFrontmatter(content, notePath);
+  const body = content.slice(frontmatter.bodyStart);
+  const firstHeadingMatch = /^#\s+(.+)$/m.exec(body);
+  if (!firstHeadingMatch || firstHeadingMatch.index === undefined) {
+    throw new Error(`Step note is missing a top-level heading: ${notePath}`);
+  }
+
+  const firstHeadingLineStart = firstHeadingMatch.index;
+  const firstHeadingLineEnd = body.indexOf('\n', firstHeadingLineStart);
+  const title = firstHeadingMatch[1].trim();
+  const afterFirstHeading = body.slice(firstHeadingLineEnd === -1 ? body.length : firstHeadingLineEnd + 1);
+  const sectionMatches = Array.from(afterFirstHeading.matchAll(/^##\s+(.+)$/gm));
+  const introEnd = sectionMatches[0]?.index ?? afterFirstHeading.length;
+  const intro = afterFirstHeading.slice(0, introEnd).trim();
+  const sections = new Map<string, string>();
+
+  for (let index = 0; index < sectionMatches.length; index++) {
+    const match = sectionMatches[index];
+    const heading = match[1].trim();
+    const start = (match.index ?? 0) + match[0].length;
+    const bodyStart = afterFirstHeading.slice(start).startsWith('\n\n') ? start + 2 : afterFirstHeading.slice(start).startsWith('\n') ? start + 1 : start;
+    const end = index + 1 < sectionMatches.length ? (sectionMatches[index + 1].index ?? afterFirstHeading.length) : afterFirstHeading.length;
+    sections.set(heading, afterFirstHeading.slice(bodyStart, end).trim());
+  }
+
+  const generatedBlocks = new Map<string, string>();
+  for (const blockName of ['step-agent-managed-snapshot', 'step-session-history']) {
+    try {
+      generatedBlocks.set(blockName, readGeneratedBlockContent(content, blockName, notePath));
+    } catch {
+      // ignore absent blocks in legacy/handwritten notes
+    }
+  }
+
+  return { frontmatter: frontmatter.data, title, intro, sections, generatedBlocks };
+};
+
+const formatCompanionSections = (sections: Array<{ heading: string; body: string }>): string => sections
+  .filter(({ body }) => body.trim().length > 0)
+  .map(({ heading, body }) => `## ${heading}\n\n${body.trim()}`)
+  .join('\n\n');
+
+const isLegacyStepNoteContent = (content: string): boolean =>
+  content.includes('## Execution Prompt') || content.includes('## Implementation Notes') || content.includes('## Outcome Summary');
 
 const createSessionContent = (
   template: string,
@@ -1803,18 +1888,138 @@ export async function handleCreateStepCommand(
     const template = await readTemplate(vaultRoot, STEP_TEMPLATE_PATH);
     const date = formatDate(environment.now?.() ?? new Date());
     const stepId = `STEP-${phaseNumber}-${stepNumber}`;
+    const stepBaseName = `Step_${stepNumber}_${slugify(title)}`;
     const filePath = join(
       phase.absolutePath,
       'Steps',
-      `Step_${stepNumber}_${slugify(title)}.md`,
+      `${stepBaseName}.md`,
     );
+    const companionDirectory = join(phase.absolutePath, 'Steps', stepBaseName);
+    const companionLinks = {
+      executionBrief: toWikiLink(getRelativeNotePath(vaultRoot, join(companionDirectory, 'Execution_Brief.md')), 'Execution Brief'),
+      validationPlan: toWikiLink(getRelativeNotePath(vaultRoot, join(companionDirectory, 'Validation_Plan.md')), 'Validation Plan'),
+      implementationNotes: toWikiLink(getRelativeNotePath(vaultRoot, join(companionDirectory, 'Implementation_Notes.md')), 'Implementation Notes'),
+      outcome: toWikiLink(getRelativeNotePath(vaultRoot, join(companionDirectory, 'Outcome.md')), 'Outcome'),
+    };
 
-    const content = createStepContent(template, title, stepId, stepNumber, phase.phaseLink, date);
+    const content = createStepContent(template, title, stepId, stepNumber, phase.phaseLink, date, companionLinks);
     await writeNewNote(filePath, content);
     const stepLink = toWikiLink(getRelativeNotePath(vaultRoot, filePath), `${stepId} ${title}`);
+    const companionRelatedNotes = [
+      `- Step: ${stepLink}`,
+      `- Phase: ${phase.phaseLink}`,
+    ];
+    await writeNewNote(join(companionDirectory, 'Execution_Brief.md'), createStepCompanionContent('Execution Brief', [
+      '- Record why the step exists, prerequisites, likely code paths, and the smallest execution checklist here.',
+    ].join('\n'), companionRelatedNotes));
+    await writeNewNote(join(companionDirectory, 'Validation_Plan.md'), createStepCompanionContent('Validation Plan', [
+      '- Record the direct validation commands, acceptance checks, edge cases, and regression expectations here.',
+    ].join('\n'), companionRelatedNotes));
+    await writeNewNote(join(companionDirectory, 'Implementation_Notes.md'), createStepCompanionContent('Implementation Notes', [
+      '- Capture durable findings learned during execution. Prefer short bullets with file paths, commands, and observed behavior.',
+    ].join('\n'), companionRelatedNotes));
+    await writeNewNote(join(companionDirectory, 'Outcome.md'), createStepCompanionContent('Outcome', [
+      '- Record the final result, validation performed, and explicit follow-up here.',
+    ].join('\n'), companionRelatedNotes));
     await tryApplyBackreference(io, `phase step list for ${phase.directoryName}`, () =>
       linkStepBackToPhase(join(phase.absolutePath, 'Phase.md'), stepLink, date));
     emitCreatedNote(io, vaultRoot, filePath);
+    return 0;
+  } catch (error) {
+    io.stderr(error instanceof Error ? error.message : String(error));
+    return 1;
+  }
+}
+
+export async function handleMigrateStepNotesCommand(
+  argv: string[],
+  environment: AgentVaultCommandEnvironment = {},
+): Promise<number> {
+  const io = environment.io ?? DEFAULT_IO;
+
+  try {
+    if (argv.includes('--help') || argv.includes('-h')) {
+      io.stdout(formatCommandHelp('migrate-step-notes'));
+      return 0;
+    }
+
+    const { options } = parseArgs(argv);
+    const vaultRoot = getVaultRoot(environment);
+    const phaseRef = getRequiredOption(options, 'phase');
+    const stepRef = getRequiredOption(options, 'step');
+    const template = await readTemplate(vaultRoot, STEP_TEMPLATE_PATH);
+    const date = formatDate(environment.now?.() ?? new Date());
+
+    const stepFilter = stepRef ? await resolveStepReference(vaultRoot, stepRef) : undefined;
+    const phaseFilter = phaseRef ? await resolvePhaseReference(vaultRoot, phaseRef) : undefined;
+    const allStepFiles = await listMarkdownFiles(join(vaultRoot, '02_Phases'));
+    let migratedCount = 0;
+
+    for (const filePath of allStepFiles) {
+      const relativePath = getRelativeNotePath(vaultRoot, filePath);
+      if (!/^02_Phases\/[^/]+\/Steps\/[^/]+\.md$/.test(relativePath)) continue;
+      if (stepFilter && relativePath !== stepFilter.vaultRelativePath) continue;
+      if (phaseFilter) {
+        const phaseDirectory = basename(dirname(phaseFilter.absolutePath));
+        if (!relativePath.startsWith(`02_Phases/${phaseDirectory}/Steps/`)) continue;
+      }
+
+      const content = await readFile(filePath, 'utf-8');
+      if (!isLegacyStepNoteContent(content) || content.includes('## Companion Notes')) continue;
+
+      const parsed = parseTopLevelSections(content, filePath);
+      const frontmatter = parsed.frontmatter;
+      if (frontmatter.note_type !== 'step') continue;
+
+      const title = parseStringField(filePath, 'title', frontmatter.title);
+      const stepId = parseStringField(filePath, 'step_id', frontmatter.step_id);
+      const phaseLink = parseStringField(filePath, 'phase', frontmatter.phase);
+      const stepNumber = stepId.split('-').at(-1) ?? '00';
+      const stepBaseName = basename(filePath, '.md');
+      const companionDirectory = join(dirname(filePath), stepBaseName);
+      const companionLinks = {
+        executionBrief: toWikiLink(getRelativeNotePath(vaultRoot, join(companionDirectory, 'Execution_Brief.md')), 'Execution Brief'),
+        validationPlan: toWikiLink(getRelativeNotePath(vaultRoot, join(companionDirectory, 'Validation_Plan.md')), 'Validation Plan'),
+        implementationNotes: toWikiLink(getRelativeNotePath(vaultRoot, join(companionDirectory, 'Implementation_Notes.md')), 'Implementation Notes'),
+        outcome: toWikiLink(getRelativeNotePath(vaultRoot, join(companionDirectory, 'Outcome.md')), 'Outcome'),
+      };
+      const stepLink = toWikiLink(getRelativeNotePath(vaultRoot, filePath), `${stepId} ${title}`);
+      const companionRelatedNotes = [
+        `- Step: ${stepLink}`,
+        `- Phase: ${phaseLink}`,
+      ];
+
+      await mkdir(companionDirectory, { recursive: true });
+      await writeNewNote(join(companionDirectory, 'Execution_Brief.md'), createStepCompanionContent('Execution Brief', formatCompanionSections([
+        { heading: 'Step Overview', body: parsed.intro },
+        { heading: 'Why This Step Exists', body: parsed.sections.get('Why This Step Exists') ?? '' },
+        { heading: 'Prerequisites', body: parsed.sections.get('Prerequisites') ?? '' },
+        { heading: 'Relevant Code Paths', body: parsed.sections.get('Relevant Code Paths') ?? '' },
+        { heading: 'Execution Prompt', body: parsed.sections.get('Execution Prompt') ?? '' },
+      ]), companionRelatedNotes));
+      await writeNewNote(join(companionDirectory, 'Validation_Plan.md'), createStepCompanionContent('Validation Plan', formatCompanionSections([
+        { heading: 'Readiness Checklist', body: parsed.sections.get('Readiness Checklist') ?? '' },
+      ]), companionRelatedNotes));
+      await writeNewNote(join(companionDirectory, 'Implementation_Notes.md'), createStepCompanionContent('Implementation Notes', parsed.sections.get('Implementation Notes') ?? '- No implementation findings were migrated.', companionRelatedNotes));
+      await writeNewNote(join(companionDirectory, 'Outcome.md'), createStepCompanionContent('Outcome', parsed.sections.get('Outcome Summary') ?? '- No outcome summary was migrated.', companionRelatedNotes));
+
+      let nextContent = createStepContent(template, title, stepId, stepNumber, phaseLink, date, companionLinks);
+      nextContent = updateFrontmatter(nextContent, frontmatter).content;
+      if (parsed.sections.has('Purpose')) nextContent = replaceHeadingSection(nextContent, 'Purpose', parsed.sections.get('Purpose')!).content;
+      if (parsed.sections.has('Required Reading')) nextContent = replaceHeadingSection(nextContent, 'Required Reading', parsed.sections.get('Required Reading')!).content;
+      if (parsed.sections.has('Human Notes')) nextContent = replaceHeadingSection(nextContent, 'Human Notes', parsed.sections.get('Human Notes')!).content;
+      if (parsed.generatedBlocks.has('step-agent-managed-snapshot')) nextContent = replaceGeneratedBlock(nextContent, 'step-agent-managed-snapshot', parsed.generatedBlocks.get('step-agent-managed-snapshot')!, filePath).content;
+      if (parsed.generatedBlocks.has('step-session-history')) nextContent = replaceGeneratedBlock(nextContent, 'step-session-history', parsed.generatedBlocks.get('step-session-history')!, filePath).content;
+      await writeFile(filePath, nextContent, 'utf-8');
+      migratedCount++;
+    }
+
+    const projectRoot = basename(vaultRoot) === '.agent-vault' ? dirname(vaultRoot) : vaultRoot;
+    const scan = await scanProject(projectRoot);
+    const graph = await writeCodeGraph(projectRoot, vaultRoot, scan.repoName);
+
+    io.stdout(`Migrated ${migratedCount} legacy step note${migratedCount === 1 ? '' : 's'}.`);
+    io.stdout(`Code graph refreshed: ${graph.totalFiles} files, ${graph.totalSymbols} symbols indexed.`);
     return 0;
   } catch (error) {
     io.stderr(error instanceof Error ? error.message : String(error));

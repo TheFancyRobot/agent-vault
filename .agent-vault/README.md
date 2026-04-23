@@ -96,6 +96,8 @@ Agent Vault is the repo-local operating memory for this repository. It keeps the
 - List commands: \`./.agent-vault/08_Automation/vault help\`
 - Show detailed help for one command: \`./.agent-vault/08_Automation/vault help create-step\`
 - Create a new phase: \`./.agent-vault/08_Automation/vault create-phase "Workflow Adoption"\`
+- Look up symbols/files cheaply: \`./.agent-vault/08_Automation/vault lookup-code-graph auth --path src/core --exports-only\`
+- Migrate older verbose step notes: \`./.agent-vault/08_Automation/vault migrate-step-notes\`
 - Refresh home notes: \`./.agent-vault/08_Automation/vault refresh-all-home-notes\`
 - Validate vault integrity: \`./.agent-vault/08_Automation/vault validate-all\`
 - Run a strict health report: \`./.agent-vault/08_Automation/vault-doctor\`

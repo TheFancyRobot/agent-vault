@@ -447,6 +447,19 @@ describe('Agent Vault note validators', () => {
     expect(harness.stdout.some((line) => line.includes('07_Templates/'))).toBe(false);
   });
 
+  it('ignores nested step companion notes for strict step validation', async () => {
+    const vaultRoot = await createTempVault();
+    const companionDir = join(vaultRoot, '02_Phases', 'Phase_01_Testing', 'Steps', 'Step_01_missing-links');
+    await mkdir(companionDir, { recursive: true });
+    await writeFile(join(companionDir, 'Execution_Brief.md'), '# Execution Brief\n\nUnstructured helper note.\n', 'utf-8');
+
+    const harness = makeIo();
+    const exitCode = await handleValidateAllCommand([], { vaultRoot, io: harness.io });
+
+    expect(exitCode).toBe(0);
+    expect(harness.stdout.some((line) => line.includes('ERROR') && line.includes('Execution_Brief.md'))).toBe(false);
+  });
+
   it('detect-orphans reports fully isolated notes as warnings', async () => {
     const vaultRoot = await createTempVault();
     await writeFile(join(vaultRoot, '01_Architecture', 'Orphan.md'), [

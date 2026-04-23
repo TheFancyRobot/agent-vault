@@ -84,7 +84,7 @@ const STRUCTURE_REQUIRED_HEADINGS: Record<StructureKind, readonly string[]> = {
   home_context: ['Current Objective', 'Repo Snapshot', 'In Scope Right Now', 'Out Of Scope Right Now', 'Working Assumptions', 'Blockers', 'Open Questions', 'Critical Bugs', 'Next Actions'],
   phase: ['Objective', 'Why This Phase Exists', 'Scope', 'Non-Goals', 'Dependencies', 'Acceptance Criteria', 'Linear Context', 'Related Architecture', 'Related Decisions', 'Related Bugs', 'Steps', 'Notes'],
   session: ['Objective', 'Planned Scope', 'Execution Log', 'Findings', 'Context Handoff', 'Changed Paths', 'Validation Run', 'Bugs Encountered', 'Decisions Made or Updated', 'Follow-Up Work', 'Completion Summary'],
-  step: ['Purpose', 'Why This Step Exists', 'Prerequisites', 'Relevant Code Paths', 'Required Reading', 'Execution Prompt', 'Agent-Managed Snapshot', 'Implementation Notes', 'Human Notes', 'Session History', 'Outcome Summary'],
+  step: ['Purpose', 'Required Reading', 'Companion Notes', 'Agent-Managed Snapshot', 'Human Notes', 'Session History'],
 };
 
 const FRONTMATTER_NOTE_TYPES = new Set<FrontmatterNoteType>([
@@ -138,7 +138,7 @@ const classifyNotePath = (relativePath: string): NoteClassification => {
   if (relativePath.startsWith('02_Phases/') && relativePath.endsWith('/Phase.md')) {
     return { inferredType: 'phase', structureKind: 'phase', starterWarning: true, skipFrontmatterValidation: false };
   }
-  if (relativePath.startsWith('02_Phases/') && relativePath.includes('/Steps/') && relativePath.endsWith('.md')) {
+  if (/^02_Phases\/[^/]+\/Steps\/[^/]+\.md$/.test(relativePath)) {
     return { inferredType: 'step', structureKind: 'step', starterWarning: false, skipFrontmatterValidation: false };
   }
   if (relativePath.startsWith('03_Bugs/') && relativePath.endsWith('.md')) {

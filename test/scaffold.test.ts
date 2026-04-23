@@ -271,7 +271,7 @@ describe('vault init', () => {
     // Verify step notes inherit architecture links from parent phase
     const stepsDir = join(phase1Path, phase1DirName!, 'Steps');
     const stepFiles = (await import('fs/promises')).readdir(stepsDir);
-    const firstStep = (await stepFiles).find((f: string) => f.startsWith('Step_01'));
+    const firstStep = (await stepFiles).find((f: string) => f.startsWith('Step_01') && f.endsWith('.md'));
     expect(firstStep).toBeDefined();
     const stepContent = await readFile(join(stepsDir, firstStep!), 'utf-8');
     expect(stepContent).toContain('System Overview');
@@ -283,7 +283,7 @@ describe('vault init', () => {
     expect(phase2DirName).toBeDefined();
     const phase2StepsDir = join(phase1Path, phase2DirName!, 'Steps');
     const phase2StepFiles = await (await import('fs/promises')).readdir(phase2StepsDir);
-    const phase2Step = phase2StepFiles.find((f: string) => f.startsWith('Step_01'));
+    const phase2Step = phase2StepFiles.find((f: string) => f.startsWith('Step_01') && f.endsWith('.md'));
     expect(phase2Step).toBeDefined();
     const phase2StepContent = await readFile(join(phase2StepsDir, phase2Step!), 'utf-8');
     expect(phase2StepContent).toContain('System Overview');
@@ -478,17 +478,25 @@ describe('vault init', () => {
     expect(result.codeGraph!.totalFiles).toBeGreaterThanOrEqual(2);
     expect(result.codeGraph!.totalSymbols).toBeGreaterThanOrEqual(6);
 
-    // Verify Code_Graph.md was written
+    // Verify thin Code_Graph.md summary + machine-readable JSON index were written
     const graphPath = join(result.vaultRoot, '01_Architecture', 'Code_Graph.md');
+    const graphIndexPath = join(result.vaultRoot, '08_Automation', 'code-graph', 'index.json');
     expect(existsSync(graphPath)).toBe(true);
+    expect(existsSync(graphIndexPath)).toBe(true);
 
     const graphContent = await readFile(graphPath, 'utf-8');
-    expect(graphContent).toContain('greet');
-    expect(graphContent).toContain('UserService');
-    expect(graphContent).toContain('Config');
-    expect(graphContent).toContain('slugify');
-    expect(graphContent).toContain('fetchData');
-    expect(graphContent).toContain('src/index.ts');
+    expect(graphContent).toContain('Files indexed:');
+    expect(graphContent).toContain('How to Use');
+    expect(graphContent).toContain('08_Automation/code-graph/index.json');
+    expect(graphContent).not.toContain('greet');
+    expect(graphContent).not.toContain('UserService');
+    expect(graphContent).not.toContain('slugify');
+
+    const graphIndex = JSON.parse(await readFile(graphIndexPath, 'utf-8')) as { files: Array<{ path: string; symbols: Array<{ name: string }> }> };
+    expect(graphIndex.files.map((file) => file.path)).toEqual(expect.arrayContaining(['src/index.ts', 'src/utils.ts']));
+    expect(graphIndex.files.flatMap((file) => file.symbols.map((symbol) => symbol.name))).toEqual(
+      expect.arrayContaining(['greet', 'UserService', 'Config', 'slugify', 'fetchData']),
+    );
   });
 });
 

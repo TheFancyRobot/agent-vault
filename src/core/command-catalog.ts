@@ -4,9 +4,11 @@ export type AgentVaultCommandName =
   | 'vault'
   | 'vault-doctor'
   | 'help'
+  | 'lookup-code-graph'
   | 'create-phase'
   | 'create-step'
   | 'create-session'
+  | 'migrate-step-notes'
   | 'create-bug'
   | 'create-decision'
   | 'update-frontmatter'
@@ -74,6 +76,20 @@ const COMMANDS: readonly AgentVaultCommandDefinition[] = [
     ],
   },
   {
+    name: 'lookup-code-graph',
+    group: 'Discovery',
+    usage: 'lookup-code-graph <query> [--limit <number>] [--path <substring>] [--exports-only]',
+    summary: 'Search the machine-readable code graph index without loading the full JSON blob into prompt context.',
+    examples: [
+      'vault lookup-code-graph auth',
+      'vault lookup-code-graph token --path src/core --exports-only',
+    ],
+    notes: [
+      'Searches `.agent-vault/08_Automation/code-graph/index.json`.',
+      'Use this when you need symbol-to-file lookup but want to keep prompt context small.',
+    ],
+  },
+  {
     name: 'create-phase',
     group: 'Create Notes',
     usage: 'create-phase <title> [--phase-number <number>] [--previous <related-phase>] [--insert-before <phase-ref>]',
@@ -113,6 +129,22 @@ const COMMANDS: readonly AgentVaultCommandDefinition[] = [
     ],
     notes: [
       'Use this before major work so execution has a chronological home.',
+    ],
+  },
+  {
+    name: 'migrate-step-notes',
+    group: 'Create Notes',
+    usage: 'migrate-step-notes [--phase <PHASE-01>] [--step <STEP-01-02>]',
+    summary: 'Split legacy verbose step notes into thin step indexes and refresh compact code-graph artifacts.',
+    examples: [
+      'vault migrate-step-notes',
+      'vault migrate-step-notes --phase PHASE-01',
+      'vault migrate-step-notes --step STEP-01-02',
+    ],
+    notes: [
+      'Migration is idempotent: already-split step notes are skipped.',
+      'Use this to upgrade older vaults to the compact step-note layout.',
+      'Also refreshes Code_Graph.md into the thin summary format and regenerates `.agent-vault/08_Automation/code-graph/index.json`.',
     ],
   },
   {
@@ -318,26 +350,21 @@ export const formatCommandHelp = (name: AgentVaultCommandName): string => {
   }
 
   return [
-    `${command.name}`,
-    '',
+    command.name,
     formatCommandUsage(name),
-    '',
     command.summary,
-    '',
     'Examples:',
     ...command.examples.map((example) => `- ${example}`),
-    '',
     'Notes:',
-    '- Commands auto-discover `.agent-vault` from the current working directory.',
+    '- Auto-discovers `.agent-vault` from cwd.',
     ...command.notes.map((note) => `- ${note}`),
   ].join('\n');
 };
 
 export const formatCommandCatalog = (): string => {
   const lines = [
-    'Agent Vault automation commands',
-    '',
-    'Run these from anywhere inside the repository. Each command auto-discovers `.agent-vault`.',
+    'Agent Vault commands',
+    'Run from anywhere inside the repo; `.agent-vault` is auto-discovered.',
     '',
   ];
 
@@ -353,7 +380,6 @@ export const formatCommandCatalog = (): string => {
 
   lines.push(...formatContextManualCommandSummary());
   lines.push('');
-  lines.push('For command-specific help, use the vault_help MCP tool with `command` set to the command name.');
-  lines.push('For graph-based context loading, use the `vault_traverse` MCP tool.');
+  lines.push('Use `vault_help` for one command and `vault_traverse` for graph context.');
   return lines.join('\n');
 };

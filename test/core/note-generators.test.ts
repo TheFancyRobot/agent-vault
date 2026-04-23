@@ -12,6 +12,7 @@ import {
   handleCreateSessionCommand,
   handleRefreshAllHomeNotesCommand,
   handleCreateStepCommand,
+  handleMigrateStepNotesCommand,
   handleRefreshActiveContextCommand,
   handleRebuildBugsIndexCommand,
   handleRebuildDecisionsIndexCommand,
@@ -178,7 +179,7 @@ describe('Agent Vault note generators', () => {
     expect(previousPhaseContent).toContain('- Next phase: [[02_Phases/Phase_02_workflow_adoption/Phase|PHASE-02 Workflow Adoption]]');
   });
 
-  it('create-step builds a step note inside the phase steps folder', async () => {
+  it('create-step builds a thin step note plus companion notes', async () => {
     const vaultRoot = await createTempVault();
     const harness = makeIo();
 
@@ -188,7 +189,9 @@ describe('Agent Vault note generators', () => {
     );
 
     expect(exitCode).toBe(0);
-    const notePath = join(vaultRoot, '02_Phases', 'Phase_01_Foundation', 'Steps', 'Step_02_add-agent-vault-generators.md');
+    const stepBaseName = 'Step_02_add-agent-vault-generators';
+    const notePath = join(vaultRoot, '02_Phases', 'Phase_01_Foundation', 'Steps', `${stepBaseName}.md`);
+    const companionDir = join(vaultRoot, '02_Phases', 'Phase_01_Foundation', 'Steps', stepBaseName);
     const content = await readFile(notePath, 'utf-8');
     const frontmatter = parseYamlFrontmatter(content, notePath).data;
 
@@ -197,11 +200,180 @@ describe('Agent Vault note generators', () => {
     expect(frontmatter.step_id).toBe('STEP-01-02');
     expect(frontmatter.phase).toBe('[[02_Phases/Phase_01_Foundation/Phase|Phase 01 Foundation]]');
     expect(content).toContain('# Step 02 - Add Agent Vault generators');
+    expect(content).toContain('## Companion Notes');
+    expect(content).toContain(`[[02_Phases/Phase_01_Foundation/Steps/${stepBaseName}/Execution_Brief|Execution Brief]]`);
+    expect(content).toContain(`[[02_Phases/Phase_01_Foundation/Steps/${stepBaseName}/Validation_Plan|Validation Plan]]`);
+    expect(content).toContain(`[[02_Phases/Phase_01_Foundation/Steps/${stepBaseName}/Implementation_Notes|Implementation Notes]]`);
+    expect(content).toContain(`[[02_Phases/Phase_01_Foundation/Steps/${stepBaseName}/Outcome|Outcome]]`);
+    expect(content).not.toContain('## Execution Prompt');
+    expect(content).not.toContain('## Implementation Notes');
     expect(content).toContain('- No sessions yet.');
     expect(harness.stdout[0]).toBe('Created 02_Phases/Phase_01_Foundation/Steps/Step_02_add-agent-vault-generators.md');
 
+    expect(await readFile(join(companionDir, 'Execution_Brief.md'), 'utf-8')).toContain('# Execution Brief');
+    expect(await readFile(join(companionDir, 'Validation_Plan.md'), 'utf-8')).toContain('# Validation Plan');
+    expect(await readFile(join(companionDir, 'Implementation_Notes.md'), 'utf-8')).toContain('# Implementation Notes');
+    expect(await readFile(join(companionDir, 'Outcome.md'), 'utf-8')).toContain('# Outcome');
+
     const phaseContent = await readFile(join(vaultRoot, '02_Phases', 'Phase_01_Foundation', 'Phase.md'), 'utf-8');
     expect(phaseContent).toContain('- [ ] [[02_Phases/Phase_01_Foundation/Steps/Step_02_add-agent-vault-generators|STEP-01-02 Add Agent Vault generators]]');
+  });
+
+  it('migrate-step-notes also upgrades the code graph to thin markdown plus JSON sidecar', async () => {
+    const vaultRoot = await createTempVault();
+    await mkdir(join(vaultRoot, 'src'), { recursive: true });
+    await writeFile(join(vaultRoot, 'src', 'index.ts'), 'export function greet() { return "hi"; }\n', 'utf-8');
+    await mkdir(join(vaultRoot, '01_Architecture'), { recursive: true });
+    await writeFile(join(vaultRoot, '01_Architecture', 'Code_Graph.md'), [
+      '---',
+      'note_type: architecture',
+      'template_version: 2',
+      'contract_version: 1',
+      'title: Code Graph',
+      'architecture_id: "ARCH-0006"',
+      'status: active',
+      'owner: ""',
+      'reviewed_on: "2026-03-14"',
+      'created: "2026-03-14"',
+      'updated: "2026-03-14"',
+      'related_notes:',
+      '  - "[[01_Architecture/Code_Map|Code Map]]"',
+      'tags:',
+      '  - agent-vault',
+      '  - architecture',
+      '---',
+      '',
+      '# Code Graph',
+      '',
+      '## Exports by File',
+      '',
+      '**`src/index.ts`** *(TypeScript)*',
+      '- `function` **greet** (line 1)',
+    ].join('\n'), 'utf-8');
+
+    const harness = makeIo();
+    const exitCode = await handleMigrateStepNotesCommand([], { vaultRoot, io: harness.io, now: () => FIXED_NOW });
+
+    expect(exitCode).toBe(0);
+    const graphContent = await readFile(join(vaultRoot, '01_Architecture', 'Code_Graph.md'), 'utf-8');
+    expect(graphContent).toContain('## How to Use');
+    expect(graphContent).toContain('.agent-vault/08_Automation/code-graph/index.json');
+    expect(graphContent).not.toContain('## Exports by File');
+
+    const graphIndexPath = join(vaultRoot, '08_Automation', 'code-graph', 'index.json');
+    expect(existsSync(graphIndexPath)).toBe(true);
+    const graphIndex = JSON.parse(await readFile(graphIndexPath, 'utf-8')) as { files: Array<{ path: string; symbols: Array<{ name: string }> }> };
+    expect(graphIndex.files.map((file) => file.path)).toContain('src/index.ts');
+    expect(graphIndex.files.flatMap((file) => file.symbols.map((symbol) => symbol.name))).toContain('greet');
+    expect(harness.stdout.some((line) => line.includes('Code graph'))).toBe(true);
+  });
+
+  it('migrate-step-notes splits legacy step notes into companion files and is idempotent', async () => {
+    const vaultRoot = await createTempVault();
+    const legacyPath = join(vaultRoot, '02_Phases', 'Phase_01_Foundation', 'Steps', 'Step_02_legacy-step.md');
+    await writeFile(legacyPath, [
+      '---',
+      'note_type: step',
+      'template_version: 2',
+      'contract_version: 1',
+      'title: Legacy step',
+      'step_id: STEP-01-02',
+      'phase: "[[02_Phases/Phase_01_Foundation/Phase|Phase 01 Foundation]]"',
+      'status: completed',
+      'owner: "agent"',
+      'created: "2026-03-14"',
+      'updated: "2026-03-15"',
+      'depends_on: []',
+      'related_sessions: []',
+      'related_bugs: []',
+      'context_status: completed',
+      'tags:',
+      '  - agent-vault',
+      '  - step',
+      '---',
+      '',
+      '# Step 02 - Legacy step',
+      '',
+      'Legacy intro paragraph.',
+      '',
+      '## Purpose',
+      '',
+      '- Outcome: Legacy step.',
+      '',
+      '## Why This Step Exists',
+      '',
+      '- Because it existed before the split.',
+      '',
+      '## Prerequisites',
+      '',
+      '- Install tools.',
+      '',
+      '## Relevant Code Paths',
+      '',
+      '- `src/legacy.ts`',
+      '',
+      '## Required Reading',
+      '',
+      '- [[01_Architecture/System_Overview|System Overview]]',
+      '',
+      '## Execution Prompt',
+      '',
+      '1. Do the legacy thing.',
+      '',
+      '## Readiness Checklist',
+      '',
+      '- Ready.',
+      '',
+      '## Agent-Managed Snapshot',
+      '',
+      '<!-- AGENT-START:step-agent-managed-snapshot -->',
+      '- Status: completed',
+      '- Current owner: agent',
+      '- Last touched: 2026-03-15',
+      '- Next action: none.',
+      '<!-- AGENT-END:step-agent-managed-snapshot -->',
+      '',
+      '## Implementation Notes',
+      '',
+      '- Found a thing.',
+      '',
+      '## Human Notes',
+      '',
+      '- Keep this warning.',
+      '',
+      '## Session History',
+      '',
+      '<!-- AGENT-START:step-session-history -->',
+      '- No sessions yet.',
+      '<!-- AGENT-END:step-session-history -->',
+      '',
+      '## Outcome Summary',
+      '',
+      '- It worked.',
+    ].join('\n'), 'utf-8');
+
+    const harness = makeIo();
+    const exitCode = await handleMigrateStepNotesCommand([], { vaultRoot, io: harness.io, now: () => FIXED_NOW });
+
+    expect(exitCode).toBe(0);
+    const migrated = await readFile(legacyPath, 'utf-8');
+    const companionDir = join(vaultRoot, '02_Phases', 'Phase_01_Foundation', 'Steps', 'Step_02_legacy-step');
+    expect(migrated).toContain('## Companion Notes');
+    expect(migrated).not.toContain('## Execution Prompt');
+    expect(migrated).not.toContain('## Implementation Notes');
+    expect(migrated).not.toContain('## Outcome Summary');
+    expect(migrated).toContain('- Keep this warning.');
+    expect(await readFile(join(companionDir, 'Execution_Brief.md'), 'utf-8')).toContain('## Execution Prompt');
+    expect(await readFile(join(companionDir, 'Execution_Brief.md'), 'utf-8')).toContain('Legacy intro paragraph.');
+    expect(await readFile(join(companionDir, 'Validation_Plan.md'), 'utf-8')).toContain('## Readiness Checklist');
+    expect(await readFile(join(companionDir, 'Implementation_Notes.md'), 'utf-8')).toContain('- Found a thing.');
+    expect(await readFile(join(companionDir, 'Outcome.md'), 'utf-8')).toContain('- It worked.');
+    expect(harness.stdout.some((line) => line.includes('Migrated 1 legacy step note'))).toBe(true);
+
+    const rerun = makeIo();
+    const rerunExit = await handleMigrateStepNotesCommand([], { vaultRoot, io: rerun.io, now: () => FIXED_NOW });
+    expect(rerunExit).toBe(0);
+    expect(rerun.stdout.some((line) => line.includes('Migrated 0 legacy step notes'))).toBe(true);
   });
 
   it('rejects mutation paths that escape the vault root', async () => {
