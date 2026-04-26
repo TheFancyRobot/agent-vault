@@ -11,9 +11,9 @@ describe('workflow prompt budgets', () => {
     ['pi-package/skills/vault-execute/SKILL.md', 6500],
     ['pi-package/skills/vault-resume/SKILL.md', 5000],
     ['pi-package/skills/vault-orchestrate/SKILL.md', 5000],
-    ['claude-commands/vault:execute.md', 6500],
-    ['claude-commands/vault:resume.md', 5000],
-    ['claude-commands/vault:orchestrate.md', 5000],
+    ['prompts/vault:execute.md', 6500],
+    ['prompts/vault:resume.md', 5000],
+    ['prompts/vault:orchestrate.md', 5000],
   ] as const;
 
   it.each(budgets)('%s stays within its size budget', async (path, maxChars) => {
@@ -24,7 +24,7 @@ describe('workflow prompt budgets', () => {
   it('vault-execute still emphasizes narrow target-rooted loading', async () => {
     const [skill, command] = await Promise.all([
       read('pi-package/skills/vault-execute/SKILL.md'),
-      read('claude-commands/vault:execute.md'),
+      read('prompts/vault:execute.md'),
     ]);
 
     for (const content of [skill, command]) {
@@ -37,7 +37,7 @@ describe('workflow prompt budgets', () => {
   it('vault-resume still limits handoff loading to the latest relevant sections', async () => {
     const [skill, command] = await Promise.all([
       read('pi-package/skills/vault-resume/SKILL.md'),
-      read('claude-commands/vault:resume.md'),
+      read('prompts/vault:resume.md'),
     ]);
 
     for (const content of [skill, command]) {
@@ -51,13 +51,28 @@ describe('workflow prompt budgets', () => {
   it('vault-orchestrate still enforces fresh subagents and no git inside them', async () => {
     const [skill, command] = await Promise.all([
       read('pi-package/skills/vault-orchestrate/SKILL.md'),
-      read('claude-commands/vault:orchestrate.md'),
+      read('prompts/vault:orchestrate.md'),
     ]);
 
     for (const content of [skill, command]) {
       expect(content).toContain('fresh');
       expect(content).toContain('git add');
       expect(content).toContain('vault-execute');
+    }
+  });
+
+  it('vault-plan stays in planning mode and requires durable write-back', async () => {
+    const [skill, prompt] = await Promise.all([
+      read('pi-package/skills/vault-plan/SKILL.md'),
+      read('prompts/vault:plan.md'),
+    ]);
+
+    for (const content of [skill, prompt]) {
+      expect(content).toContain('Do not implement product or source-code changes outside the vault');
+      expect(content).toContain('Report the exact note paths');
+      expect(content).toContain('vault_refresh');
+      expect(content).toContain('vault_validate');
+      expect(content).toContain('If no durable phase or step notes were written');
     }
   });
 });

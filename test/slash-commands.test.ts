@@ -3,7 +3,7 @@ import { readdir, readFile } from 'fs/promises';
 import { join } from 'path';
 import { renderToolCommand } from '../src/install';
 
-const COMMANDS_DIR = join(import.meta.dirname, '..', 'claude-commands');
+const COMMANDS_DIR = join(import.meta.dirname, '..', 'prompts');
 
 const NAMESPACE = 'vault';
 

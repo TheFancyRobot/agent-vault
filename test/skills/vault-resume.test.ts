@@ -1,5 +1,4 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import * as fs from 'fs';
 import { mkdir, mkdtemp, rm, writeFile } from 'fs/promises';
 import { createRequire } from 'module';
 import { tmpdir } from 'os';
@@ -112,6 +111,7 @@ describe('vault-resume skill', () => {
       '.agent-vault/02_Phases/Phase_01_Foundation/Steps/Step_02_Newer.md',
       stepNote('STEP-01-02', 'in-progress', 'SESSION-NEWER'),
     );
+    // Create files with explicit timestamp names - locatePreviousSession sorts by filename timestamp
     await writeNote(
       root,
       '.agent-vault/05_Sessions/2026-04-20-010000-older-session.md',
@@ -123,18 +123,7 @@ describe('vault-resume skill', () => {
       sessionNote('SESSION-NEWER'),
     );
 
-    const originalReaddirSync = fs.readdirSync;
-    vi.spyOn(fs, 'readdirSync').mockImplementation(((targetPath: fs.PathLike, options?: never) => {
-      if (String(targetPath).endsWith(join('.agent-vault', '05_Sessions'))) {
-        return [
-          '2026-04-20-010000-older-session.md',
-          '2026-04-20-020000-newer-session.md',
-        ] as ReturnType<typeof fs.readdirSync>;
-      }
-
-      return originalReaddirSync(targetPath, options as never);
-    }) as typeof fs.readdirSync);
-
+    // No ESM-namespace spy needed - real fs + timestamp sort gives correct newest-first order
     const result = await vaultResume();
 
     expect(result?.continuationTarget?.type).toBe('step');

@@ -7,7 +7,7 @@ phase_id: PHASE-01
 status: completed
 owner: Pi
 created: '2026-04-20'
-updated: '2026-04-23'
+updated: '2026-04-25'
 depends_on: []
 related_architecture:
   - '[[01_Architecture/Agent_Workflow|Agent Workflow]]'
@@ -72,7 +72,7 @@ Use this note for a bounded phase of work in \`02_Phases/\`. This note is the so
 <!-- AGENT-START:phase-linear-context -->
 - Previous phase: none.
 - Current phase status: completed
-- Next phase: not planned yet.
+- Next phase: [[02_Phases/Phase_02_targeted_context_extraction/Phase|PHASE-02 Targeted context extraction]]
 <!-- AGENT-END:phase-linear-context -->
 
 ## Related Architecture

@@ -27,9 +27,18 @@ Use this note as the manual table of contents for bug records in `03_Bugs/`.
 ## Status Buckets
 
 <!-- AGENT-START:bugs-index -->
-_Last rebuilt: 2026-04-20._
+_Last rebuilt: 2026-04-26._
 
-- No bug notes yet.
+- Notes indexed: 5
+- Status summary: new (2), resolved (3)
+
+| Id | Title | Status | Severity | Reported | Fixed | Linear |
+| --- | --- | --- | --- | --- | --- | --- |
+| BUG-0003 | [Pi create-phase workflow implements work instead of creating a plan and fails to persist corrected plan](../03_Bugs/BUG-0003_pi-create-phase-workflow-implements-work-instead-of-creating-a-plan-and-fails-to-persist-corrected-plan.md) | new | sev-3 | 2026-04-26 | - | - |
+| BUG-0001 | [Built-in context management inflates prompt prefill to 100k+ tokens](../03_Bugs/BUG-0001_built-in-context-management-inflates-prompt-prefill-to-100k-tokens.md) | new | sev-3 | 2026-04-23 | - | - |
+| BUG-0005 | [vault_help casts arbitrary command string and can throw unhandled MCP/extension error](../03_Bugs/BUG-0005_vault-help-casts-arbitrary-command-string-and-can-throw-unhandled-mcp-extension-error.md) | resolved | sev-3 | 2026-04-26 | 2026-04-26 | - |
+| BUG-0004 | [docs Prompt templates call non-existent vault_validate_all / vault_refresh_all MCP tools](../03_Bugs/BUG-0004_docs-prompt-templates-call-non-existent-vault-validate-all-vault-refresh-all-mcp-tools.md) | resolved | sev-3 | 2026-04-26 | 2026-04-26 | - |
+| BUG-0002 | [Full test suite fails on vault-resume ESM fs spy](../03_Bugs/BUG-0002_full-test-suite-fails-on-vault-resume-esm-fs-spy.md) | resolved | sev-3 | 2026-04-25 | 2026-04-25 | - |
 <!-- AGENT-END:bugs-index -->
 
 ## Useful Links

@@ -63,6 +63,8 @@ interface HeadingMatch {
 
 interface ResolvedGeneratedBlockRange {
   readonly lineEnding: '\n' | '\r\n';
+  readonly markerStart: number;
+  readonly markerEnd: number;
   readonly contentStart: number;
   readonly contentEnd: number;
 }
@@ -391,6 +393,8 @@ const resolveGeneratedBlockRange = (
 
   return {
     lineEnding,
+    markerStart: startIndex,
+    markerEnd: endIndex + endToken.length + nextLineBreakLength(content, endIndex + endToken.length),
     contentStart,
     contentEnd,
   };
@@ -467,6 +471,26 @@ export const readGeneratedBlockContent = (
 ): string => {
   const { contentStart, contentEnd } = resolveGeneratedBlockRange(content, blockName, notePath);
   return content.slice(contentStart, contentEnd);
+};
+
+/** Read a named generated block including its start/end markers for bounded context excerpts. */
+export const readGeneratedBlockWithMarkers = (
+  content: string,
+  blockName: string,
+  notePath = DEFAULT_NOTE_PATH
+): string => {
+  const { markerStart, markerEnd } = resolveGeneratedBlockRange(content, blockName, notePath);
+  return content.slice(markerStart, markerEnd);
+};
+
+/** Read a heading section, including the heading line and any nested subsections. */
+export const readHeadingSectionContent = (
+  content: string,
+  headingText: string,
+  notePath = DEFAULT_NOTE_PATH
+): string => {
+  const { target, sectionEnd } = resolveHeadingRange(content, headingText, notePath);
+  return content.slice(target.start, sectionEnd);
 };
 
 /** Replace the body of a leaf heading section without disturbing neighboring sections. */

@@ -101,7 +101,7 @@ describe('renderToolCommand', () => {
 
 Usage: /vault:create-phase <title> [--phase-number N] [--previous PHASE-ID]
 
-Call the \`vault_create_phase\` MCP tool. The phase number is auto-generated if omitted.
+Call the \`vault_create\` MCP tool with \`type: "phase"\`. The phase number is auto-generated if omitted.
 
 Example: /vault:create-phase "Workflow Adoption"
 `,
@@ -155,7 +155,7 @@ If no sessions exist, suggest /vault:execute instead. Do not create a new sessio
 
   it('renders rich workflow commands for OpenCode', async () => {
     for (const file of ['vault:plan.md', 'vault:refine.md', 'vault:execute.md', 'vault:resume.md']) {
-      const content = await readFile(join(import.meta.dirname, '..', 'claude-commands', file), 'utf-8');
+      const content = await readFile(join(import.meta.dirname, '..', 'prompts', file), 'utf-8');
       const rendered = renderToolCommand({
         sourceFilename: file,
         sourceCommandName: file.replace('.md', ''),
@@ -172,7 +172,7 @@ If no sessions exist, suggest /vault:execute instead. Do not create a new sessio
   it('renders rich workflow commands for Codex', async () => {
     for (const file of ['vault:plan.md', 'vault:refine.md', 'vault:execute.md', 'vault:resume.md']) {
       const sourceCommandName = file.replace('.md', '');
-      const content = await readFile(join(import.meta.dirname, '..', 'claude-commands', file), 'utf-8');
+      const content = await readFile(join(import.meta.dirname, '..', 'prompts', file), 'utf-8');
       const rendered = renderToolCommand({ sourceFilename: file, sourceCommandName, content }, 'codex');
 
       expect(rendered.filename).toBe(file.replace(':', '-'));
@@ -199,6 +199,35 @@ describe('install target helpers', () => {
 
   it('ships the migrate-step-notes skill in the pi package', () => {
     expect(existsSync(join(import.meta.dirname, '..', 'pi-package', 'skills', 'vault-migrate-step-notes', 'SKILL.md'))).toBe(true);
+  });
+
+  it('ships shared prompt templates for pi package workflows', () => {
+    expect(existsSync(join(import.meta.dirname, '..', 'prompts', 'vault:plan.md'))).toBe(true);
+    expect(existsSync(join(import.meta.dirname, '..', 'prompts', 'vault:create-phase.md'))).toBe(true);
+  });
+
+  it('workflow prompts reference current MCP tool names', async () => {
+    const [initPrompt, refreshPrompt, validatePrompt, createPhasePrompt] = await Promise.all([
+      readFile(join(import.meta.dirname, '..', 'prompts', 'vault:init.md'), 'utf-8'),
+      readFile(join(import.meta.dirname, '..', 'prompts', 'vault:refresh.md'), 'utf-8'),
+      readFile(join(import.meta.dirname, '..', 'prompts', 'vault:validate.md'), 'utf-8'),
+      readFile(join(import.meta.dirname, '..', 'prompts', 'vault:create-phase.md'), 'utf-8'),
+    ]);
+
+    expect(initPrompt).toContain('vault_refresh');
+    expect(initPrompt).toContain('vault_validate');
+    expect(initPrompt).not.toContain('vault_refresh_all');
+    expect(initPrompt).not.toContain('vault_validate_all');
+
+    expect(refreshPrompt).toContain('vault_refresh');
+    expect(refreshPrompt).not.toContain('vault_refresh_all');
+
+    expect(validatePrompt).toContain('vault_validate');
+    expect(validatePrompt).not.toContain('vault_validate_all');
+
+    expect(createPhasePrompt).toContain('vault_create');
+    expect(createPhasePrompt).toContain('type: "phase"');
+    expect(createPhasePrompt).not.toContain('vault_create_phase');
   });
 
   it('parses explicit install scope flags', () => {

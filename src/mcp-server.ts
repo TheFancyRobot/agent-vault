@@ -34,6 +34,7 @@ import {
   traverseVaultGraph,
 } from './core/vault-graph';
 import { readVaultConfig, updateVaultConfig } from './core/vault-config';
+import { extractVaultNoteTarget } from './core/vault-extract';
 import { isProjectVault, resolveVaultRoot } from './core/vault-files';
 import { initVault } from './scaffold/init';
 import { scanProject } from './scaffold/scan';
@@ -195,6 +196,48 @@ export async function startServer(): Promise<void> {
         : formatVaultTraverseResultAsToon(result);
 
       return { content: [{ type: 'text', text }] };
+    },
+  );
+
+  // ── vault_extract ──────────────────────────────────────────────────
+  server.tool(
+    'vault_extract',
+    'Extract a bounded note section by markdown heading or generated block without returning the full note.',
+    {
+      note_path: z.string().describe('Vault-relative note path. .md is optional.'),
+      heading: z.string().optional().describe('Exact markdown heading text to extract, excluding # markers.'),
+      block: z.string().optional().describe('Generated block name to extract, e.g. phase-steps.'),
+      include_markers: z.boolean().default(true).describe('For block extraction, include AGENT-START/END markers.'),
+    },
+    async ({ note_path, heading, block, include_markers }) => {
+      try {
+        const vaultRoot = resolveVaultRoot(process.cwd());
+        const result = await extractVaultNoteTarget(vaultRoot, {
+          notePath: note_path,
+          heading,
+          block,
+          includeMarkers: include_markers,
+        });
+        return {
+          content: [{
+            type: 'text',
+            text: [
+              `notePath: ${result.notePath}`,
+              `selector: ${result.selector}`,
+              'content: |',
+              ...result.content.split('\n').map((line) => `  ${line}`),
+            ].join('\n'),
+          }],
+        };
+      } catch (err) {
+        return {
+          isError: true,
+          content: [{
+            type: 'text',
+            text: `Failed to extract vault note target: ${err instanceof Error ? err.message : String(err)}`,
+          }],
+        };
+      }
     },
   );
 
@@ -371,10 +414,20 @@ export async function startServer(): Promise<void> {
     'List commands or show help for one command.',
     { command: z.string().optional().describe('Command name.') },
     async ({ command }) => {
-      const text = command
-        ? formatCommandHelp(command as Parameters<typeof formatCommandHelp>[0])
-        : formatCommandCatalog();
-      return { content: [{ type: 'text', text }] };
+      try {
+        const text = command
+          ? formatCommandHelp(command as Parameters<typeof formatCommandHelp>[0])
+          : formatCommandCatalog();
+        return { content: [{ type: 'text', text }] };
+      } catch (error) {
+        return {
+          isError: true,
+          content: [{
+            type: 'text',
+            text: error instanceof Error ? error.message : String(error),
+          }],
+        };
+      }
     },
   );
 

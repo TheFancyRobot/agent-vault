@@ -11,7 +11,7 @@
   },
   "files": [
     "dist/",
-    "claude-commands/",
+    "prompts/",
     "pi-package/",
     "src/",
     "README.md",
@@ -80,6 +80,9 @@
     ],
     "skills": [
       "./pi-package/skills"
+    ],
+    "prompts": [
+      "./prompts"
     ],
     "image": "https://raw.githubusercontent.com/fancyrobot/agent-vault/main/assets/preview.png"
   },

@@ -36,7 +36,7 @@ const TOOL_CONFIGS = [
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(__dirname, '..');
-const commandSourceDir = join(repoRoot, 'claude-commands');
+const commandSourceDir = join(repoRoot, 'prompts');
 
 type InstallScope = 'global' | 'cwd';
 
@@ -229,7 +229,7 @@ const stagePackageForPublish = async (tempRoot: string): Promise<{ publishDir: s
   await mkdir(publishDir, { recursive: true });
   await writeFile(join(publishDir, 'package.json'), JSON.stringify(packageJson, null, 2) + '\n', 'utf-8');
   await cp(join(repoRoot, 'dist'), join(publishDir, 'dist'), { recursive: true });
-  await cp(join(repoRoot, 'claude-commands'), join(publishDir, 'claude-commands'), { recursive: true });
+  await cp(join(repoRoot, 'prompts'), join(publishDir, 'prompts'), { recursive: true });
   await cp(join(repoRoot, 'README.md'), join(publishDir, 'README.md'));
   await cp(join(repoRoot, 'LICENSE'), join(publishDir, 'LICENSE'));
 

@@ -1,16 +1,23 @@
 {
   "version": 2,
-  "generatedAt": "2026-04-23T03:50:40.843Z",
+  "generatedAt": "2026-04-25T05:42:32.714Z",
   "repoName": "agent-vault",
-  "totalFiles": 33,
-  "totalSymbols": 548,
+  "totalFiles": 34,
+  "totalSymbols": 564,
   "directories": [
     {
       "directory": "src/core",
-      "files": 12,
-      "exportedSymbols": 110,
-      "internalSymbols": 228,
-      "totalSymbols": 338
+      "files": 13,
+      "exportedSymbols": 116,
+      "internalSymbols": 232,
+      "totalSymbols": 348
+    },
+    {
+      "directory": "src",
+      "files": 3,
+      "exportedSymbols": 14,
+      "internalSymbols": 47,
+      "totalSymbols": 61
     },
     {
       "directory": "src/scaffold",
@@ -20,18 +27,11 @@
       "totalSymbols": 59
     },
     {
-      "directory": "src",
-      "files": 3,
-      "exportedSymbols": 10,
-      "internalSymbols": 46,
-      "totalSymbols": 56
-    },
-    {
       "directory": "src/templates",
       "files": 8,
       "exportedSymbols": 33,
-      "internalSymbols": 2,
-      "totalSymbols": 35
+      "internalSymbols": 3,
+      "totalSymbols": 36
     },
     {
       "directory": "scripts",
@@ -262,169 +262,169 @@
         {
           "name": "__dirname",
           "kind": "const",
-          "line": 32,
+          "line": 37,
           "exported": false
         },
         {
           "name": "repoRoot",
           "kind": "const",
-          "line": 33,
+          "line": 38,
           "exported": false
         },
         {
           "name": "commandSourceDir",
           "kind": "const",
-          "line": 34,
+          "line": 39,
           "exported": false
         },
         {
           "name": "InstallScope",
           "kind": "type",
-          "line": 36,
+          "line": 41,
           "exported": false
         },
         {
           "name": "RunningProcess",
           "kind": "type",
-          "line": 38,
+          "line": 43,
           "exported": false
         },
         {
           "name": "LocalE2EOptions",
           "kind": "interface",
-          "line": 44,
+          "line": 49,
           "exported": false
         },
         {
           "name": "ToolConfig",
           "kind": "interface",
-          "line": 52,
+          "line": 57,
           "exported": false
         },
         {
           "name": "sleep",
           "kind": "const",
-          "line": 59,
+          "line": 64,
           "exported": false
         },
         {
           "name": "getFreePort",
           "kind": "const",
-          "line": 63,
+          "line": 68,
           "exported": false
         },
         {
           "name": "runCommand",
           "kind": "const",
-          "line": 83,
+          "line": 88,
           "exported": false
         },
         {
           "name": "startVerdaccio",
           "kind": "const",
-          "line": 108,
+          "line": 113,
           "exported": false
         },
         {
           "name": "waitForRegistry",
           "kind": "const",
-          "line": 132,
+          "line": 137,
           "exported": false
         },
         {
           "name": "stopVerdaccio",
           "kind": "const",
-          "line": 154,
+          "line": 159,
           "exported": false
         },
         {
           "name": "writeRegistryConfig",
           "kind": "const",
-          "line": 173,
+          "line": 178,
           "exported": false
         },
         {
           "name": "createVerdaccioConfig",
           "kind": "const",
-          "line": 188,
+          "line": 193,
           "exported": false
         },
         {
           "name": "stagePackageForPublish",
           "kind": "const",
-          "line": 218,
+          "line": 223,
           "exported": false
         },
         {
           "name": "createFakeToolHomes",
           "kind": "const",
-          "line": 234,
+          "line": 239,
           "exported": false
         },
         {
           "name": "detectTools",
           "kind": "const",
-          "line": 259,
+          "line": 272,
           "exported": false
         },
         {
           "name": "getToolMcpRootKey",
           "kind": "const",
-          "line": 273,
+          "line": 293,
           "exported": false
         },
         {
           "name": "assertValidToolMcpConfig",
           "kind": "const",
-          "line": 277,
+          "line": 297,
           "exported": false
         },
         {
           "name": "readJson",
           "kind": "const",
-          "line": 301,
+          "line": 321,
           "exported": false
         },
         {
           "name": "getCommandFileCount",
           "kind": "const",
-          "line": 306,
+          "line": 326,
           "exported": false
         },
         {
           "name": "resolveExpectedInstallScope",
           "kind": "const",
-          "line": 318,
+          "line": 338,
           "exported": false
         },
         {
           "name": "resolveExpectedInstallRoot",
           "kind": "const",
-          "line": 330,
+          "line": 350,
           "exported": false
         },
         {
           "name": "getManagedCommandFilenames",
           "kind": "const",
-          "line": 334,
+          "line": 354,
           "exported": false
         },
         {
           "name": "verifyInstalledState",
           "kind": "const",
-          "line": 343,
+          "line": 366,
           "exported": false
         },
         {
           "name": "verifyCleanState",
           "kind": "const",
-          "line": 374,
+          "line": 408,
           "exported": false
         },
         {
           "name": "runLocalE2E",
           "kind": "function",
-          "line": 408,
+          "line": 453,
           "exported": true
         }
       ]
@@ -574,7 +574,7 @@
         {
           "name": "formatCommandCatalog",
           "kind": "const",
-          "line": 368,
+          "line": 364,
           "exported": true
         }
       ]
@@ -842,15 +842,33 @@
       "language": "TypeScript",
       "symbols": [
         {
-          "name": "formatScanResultAsToon",
+          "name": "pruneForToon",
           "kind": "const",
           "line": 6,
+          "exported": false
+        },
+        {
+          "name": "encodePruned",
+          "kind": "const",
+          "line": 28,
+          "exported": false
+        },
+        {
+          "name": "formatScanResultAsToon",
+          "kind": "const",
+          "line": 31,
           "exported": true
         },
         {
           "name": "formatInitResultAsToon",
           "kind": "const",
-          "line": 9,
+          "line": 34,
+          "exported": true
+        },
+        {
+          "name": "formatVaultConfigAsToon",
+          "kind": "const",
+          "line": 46,
           "exported": true
         }
       ]
@@ -1480,205 +1498,205 @@
         {
           "name": "ParsedTopLevelSections",
           "kind": "interface",
-          "line": 1271,
+          "line": 1278,
           "exported": false
         },
         {
           "name": "parseTopLevelSections",
           "kind": "const",
-          "line": 1279,
+          "line": 1286,
           "exported": false
         },
         {
           "name": "formatCompanionSections",
           "kind": "const",
-          "line": 1317,
+          "line": 1324,
           "exported": false
         },
         {
           "name": "isLegacyStepNoteContent",
           "kind": "const",
-          "line": 1322,
+          "line": 1329,
           "exported": false
         },
         {
           "name": "createSessionContent",
           "kind": "const",
-          "line": 1325,
+          "line": 1332,
           "exported": false
         },
         {
           "name": "createBugContent",
           "kind": "const",
-          "line": 1376,
+          "line": 1383,
           "exported": false
         },
         {
           "name": "createDecisionContent",
           "kind": "const",
-          "line": 1407,
+          "line": 1414,
           "exported": false
         },
         {
           "name": "collectIndexedNotes",
           "kind": "const",
-          "line": 1442,
+          "line": 1449,
           "exported": false
         },
         {
           "name": "updateGeneratedBlockFile",
           "kind": "const",
-          "line": 1471,
+          "line": 1478,
           "exported": false
         },
         {
           "name": "buildBugsIndexBlock",
           "kind": "const",
-          "line": 1487,
+          "line": 1494,
           "exported": false
         },
         {
           "name": "buildDecisionsIndexBlock",
           "kind": "const",
-          "line": 1574,
+          "line": 1581,
           "exported": false
         },
         {
           "name": "buildPhaseSummary",
           "kind": "const",
-          "line": 1658,
+          "line": 1665,
           "exported": false
         },
         {
           "name": "buildStepSummary",
           "kind": "const",
-          "line": 1671,
+          "line": 1678,
           "exported": false
         },
         {
           "name": "buildSessionSummary",
           "kind": "const",
-          "line": 1684,
+          "line": 1691,
           "exported": false
         },
         {
           "name": "buildBugSummary",
           "kind": "const",
-          "line": 1697,
+          "line": 1704,
           "exported": false
         },
         {
           "name": "buildCurrentFocusBlock",
           "kind": "const",
-          "line": 1711,
+          "line": 1718,
           "exported": false
         },
         {
           "name": "buildBlockersBlock",
           "kind": "const",
-          "line": 1775,
+          "line": 1782,
           "exported": false
         },
         {
           "name": "buildCriticalBugsBlock",
           "kind": "const",
-          "line": 1803,
+          "line": 1810,
           "exported": false
         },
         {
           "name": "ensureParentDirectory",
           "kind": "const",
-          "line": 1836,
+          "line": 1843,
           "exported": false
         },
         {
           "name": "writeNewNote",
           "kind": "const",
-          "line": 1840,
+          "line": 1847,
           "exported": false
         },
         {
           "name": "emitCreatedNote",
           "kind": "const",
-          "line": 1852,
+          "line": 1859,
           "exported": false
         },
         {
           "name": "handleCreateStepCommand",
           "kind": "function",
-          "line": 1856,
+          "line": 1863,
           "exported": true
         },
         {
           "name": "handleMigrateStepNotesCommand",
           "kind": "function",
-          "line": 1928,
+          "line": 1934,
           "exported": true
         },
         {
           "name": "handleCreatePhaseCommand",
           "kind": "function",
-          "line": 2019,
+          "line": 2030,
           "exported": true
         },
         {
           "name": "handleCreateSessionCommand",
           "kind": "function",
-          "line": 2149,
+          "line": 2160,
           "exported": true
         },
         {
           "name": "handleCreateBugCommand",
           "kind": "function",
-          "line": 2219,
+          "line": 2230,
           "exported": true
         },
         {
           "name": "handleCreateDecisionCommand",
           "kind": "function",
-          "line": 2275,
+          "line": 2286,
           "exported": true
         },
         {
           "name": "handleUpdateFrontmatterCommand",
           "kind": "function",
-          "line": 2346,
+          "line": 2357,
           "exported": true
         },
         {
           "name": "handleAppendSectionCommand",
           "kind": "function",
-          "line": 2446,
+          "line": 2457,
           "exported": true
         },
         {
           "name": "handleRebuildIndexesCommand",
           "kind": "function",
-          "line": 2494,
+          "line": 2505,
           "exported": true
         },
         {
           "name": "handleRebuildBugsIndexCommand",
           "kind": "function",
-          "line": 2543,
+          "line": 2554,
           "exported": true
         },
         {
           "name": "handleRebuildDecisionsIndexCommand",
           "kind": "function",
-          "line": 2570,
+          "line": 2581,
           "exported": true
         },
         {
           "name": "handleRefreshActiveContextCommand",
           "kind": "function",
-          "line": 2597,
+          "line": 2608,
           "exported": true
         },
         {
           "name": "handleRefreshAllHomeNotesCommand",
           "kind": "function",
-          "line": 2653,
+          "line": 2664,
           "exported": true
         }
       ]
@@ -1732,175 +1750,187 @@
         {
           "name": "GENERATED_MARKER_PATTERN",
           "kind": "const",
-          "line": 70,
+          "line": 72,
           "exported": false
         },
         {
           "name": "HEADING_PATTERN",
           "kind": "const",
-          "line": 71,
+          "line": 73,
           "exported": false
         },
         {
           "name": "DEFAULT_NOTE_PATH",
           "kind": "const",
-          "line": 72,
+          "line": 74,
           "exported": false
         },
         {
           "name": "mutationError",
           "kind": "const",
-          "line": 74,
+          "line": 76,
           "exported": false
         },
         {
           "name": "detectLineEnding",
           "kind": "const",
-          "line": 78,
+          "line": 80,
           "exported": false
         },
         {
           "name": "toNoteLineEnding",
           "kind": "const",
-          "line": 80,
+          "line": 82,
           "exported": false
         },
         {
           "name": "trimBoundaryNewlines",
           "kind": "const",
-          "line": 83,
+          "line": 85,
           "exported": false
         },
         {
           "name": "applyMutation",
           "kind": "const",
-          "line": 85,
+          "line": 87,
           "exported": false
         },
         {
           "name": "isPlainObject",
           "kind": "const",
-          "line": 95,
+          "line": 97,
           "exported": false
         },
         {
           "name": "getClosingFrontmatterDelimiter",
           "kind": "const",
-          "line": 98,
+          "line": 100,
           "exported": false
         },
         {
           "name": "parseYamlFrontmatter",
           "kind": "const",
-          "line": 129,
+          "line": 131,
           "exported": true
         },
         {
           "name": "dumpFrontmatter",
           "kind": "const",
-          "line": 176,
+          "line": 178,
           "exported": false
         },
         {
           "name": "lineStartAt",
           "kind": "const",
-          "line": 189,
+          "line": 191,
           "exported": false
         },
         {
           "name": "nextLineBreakLength",
           "kind": "const",
-          "line": 194,
+          "line": 196,
           "exported": false
         },
         {
           "name": "ensureStandaloneLine",
           "kind": "const",
-          "line": 200,
+          "line": 202,
           "exported": false
         },
         {
           "name": "collectStandaloneTokenIndexes",
           "kind": "const",
-          "line": 212,
+          "line": 214,
           "exported": false
         },
         {
           "name": "normalizeInsertedContent",
           "kind": "const",
-          "line": 227,
+          "line": 229,
           "exported": false
         },
         {
           "name": "trailingWhitespace",
           "kind": "const",
-          "line": 230,
+          "line": 232,
           "exported": false
         },
         {
           "name": "leadingBlankLines",
           "kind": "const",
-          "line": 235,
+          "line": 237,
           "exported": false
         },
         {
           "name": "buildSectionReplacement",
           "kind": "const",
-          "line": 240,
+          "line": 242,
           "exported": false
         },
         {
           "name": "buildAppendedSectionReplacement",
           "kind": "const",
-          "line": 261,
+          "line": 263,
           "exported": false
         },
         {
           "name": "scanHeadings",
           "kind": "const",
-          "line": 281,
+          "line": 283,
           "exported": false
         },
         {
           "name": "resolveHeadingRange",
           "kind": "const",
-          "line": 324,
+          "line": 326,
           "exported": false
         },
         {
           "name": "resolveGeneratedBlockRange",
           "kind": "const",
-          "line": 357,
+          "line": 359,
           "exported": false
         },
         {
           "name": "updateFrontmatter",
           "kind": "const",
-          "line": 404,
+          "line": 408,
           "exported": true
         },
         {
           "name": "replaceGeneratedBlock",
           "kind": "const",
-          "line": 445,
+          "line": 449,
           "exported": true
         },
         {
           "name": "readGeneratedBlockContent",
           "kind": "const",
-          "line": 463,
+          "line": 467,
+          "exported": true
+        },
+        {
+          "name": "readGeneratedBlockWithMarkers",
+          "kind": "const",
+          "line": 477,
+          "exported": true
+        },
+        {
+          "name": "readHeadingSectionContent",
+          "kind": "const",
+          "line": 487,
           "exported": true
         },
         {
           "name": "replaceHeadingSection",
           "kind": "const",
-          "line": 473,
+          "line": 497,
           "exported": true
         },
         {
           "name": "appendToAppendOnlySection",
           "kind": "const",
-          "line": 499,
+          "line": 523,
           "exported": true
         }
       ]
@@ -2207,6 +2237,42 @@
           "name": "probeObsidianCli",
           "kind": "const",
           "line": 57,
+          "exported": true
+        }
+      ]
+    },
+    {
+      "path": "src/core/vault-extract.ts",
+      "language": "TypeScript",
+      "symbols": [
+        {
+          "name": "VaultNoteExtractionParams",
+          "kind": "interface",
+          "line": 6,
+          "exported": true
+        },
+        {
+          "name": "VaultNoteExtractionResult",
+          "kind": "interface",
+          "line": 13,
+          "exported": true
+        },
+        {
+          "name": "normalizeNotePath",
+          "kind": "const",
+          "line": 19,
+          "exported": false
+        },
+        {
+          "name": "countSelectors",
+          "kind": "const",
+          "line": 24,
+          "exported": false
+        },
+        {
+          "name": "extractVaultNoteTarget",
+          "kind": "const",
+          "line": 27,
           "exported": true
         }
       ]
@@ -2588,267 +2654,297 @@
           "exported": false
         },
         {
+          "name": "PiPackageEntry",
+          "kind": "type",
+          "line": 13,
+          "exported": false
+        },
+        {
           "name": "DetectedTool",
           "kind": "interface",
-          "line": 14,
+          "line": 15,
           "exported": false
         },
         {
           "name": "InstallAction",
           "kind": "interface",
-          "line": 23,
+          "line": 24,
           "exported": false
         },
         {
           "name": "InstallTarget",
           "kind": "interface",
-          "line": 29,
+          "line": 30,
           "exported": false
         },
         {
           "name": "PACKAGE_NAME",
           "kind": "const",
-          "line": 35,
+          "line": 36,
           "exported": false
         },
         {
           "name": "INSTALL_DIRNAME",
           "kind": "const",
-          "line": 36,
+          "line": 37,
           "exported": false
         },
         {
           "name": "RUNTIME_DIRNAME",
           "kind": "const",
-          "line": 37,
+          "line": 38,
           "exported": false
         },
         {
           "name": "COMMAND_SOURCE_DIR",
           "kind": "const",
-          "line": 39,
+          "line": 40,
           "exported": false
         },
         {
           "name": "CLAUDE_LEGACY_COMMANDS",
           "kind": "const",
-          "line": 40,
+          "line": 41,
           "exported": false
         },
         {
           "name": "CommandTemplate",
           "kind": "interface",
-          "line": 46,
+          "line": 47,
           "exported": false
         },
         {
           "name": "RenderedCommand",
           "kind": "interface",
-          "line": 52,
+          "line": 53,
           "exported": false
         },
         {
           "name": "isBunRuntime",
           "kind": "const",
-          "line": 58,
+          "line": 59,
           "exported": false
         },
         {
           "name": "getPackageManager",
           "kind": "const",
-          "line": 60,
+          "line": 61,
           "exported": false
         },
         {
           "name": "resolveInstallRoot",
           "kind": "const",
-          "line": 62,
+          "line": 63,
           "exported": true
         },
         {
           "name": "buildInstallTarget",
           "kind": "const",
-          "line": 68,
+          "line": 69,
           "exported": true
         },
         {
           "name": "buildMcpServerConfig",
           "kind": "const",
-          "line": 82,
+          "line": 83,
           "exported": true
         },
         {
           "name": "buildOpenCodeMcpServerConfig",
           "kind": "const",
-          "line": 88,
+          "line": 89,
+          "exported": true
+        },
+        {
+          "name": "buildPiPackageSource",
+          "kind": "const",
+          "line": 95,
+          "exported": true
+        },
+        {
+          "name": "upsertPiPackageSourceInConfig",
+          "kind": "const",
+          "line": 99,
+          "exported": true
+        },
+        {
+          "name": "removePiPackageSourcesFromConfig",
+          "kind": "const",
+          "line": 123,
           "exported": true
         },
         {
           "name": "getToolMcpRootKey",
           "kind": "const",
-          "line": 94,
+          "line": 154,
           "exported": false
         },
         {
           "name": "buildToolMcpServerConfig",
           "kind": "const",
-          "line": 96,
+          "line": 156,
+          "exported": false
+        },
+        {
+          "name": "resolvePiSettingsPath",
+          "kind": "const",
+          "line": 162,
           "exported": false
         },
         {
           "name": "parseInstallScope",
           "kind": "const",
-          "line": 102,
+          "line": 168,
           "exported": true
         },
         {
           "name": "parseNumberedSelection",
           "kind": "const",
-          "line": 114,
+          "line": 180,
           "exported": true
         },
         {
           "name": "writeRuntimeManifest",
           "kind": "const",
-          "line": 142,
+          "line": 208,
           "exported": false
         },
         {
           "name": "runPackageInstall",
           "kind": "const",
-          "line": 154,
+          "line": 220,
           "exported": false
         },
         {
           "name": "promptForInstallScope",
           "kind": "const",
-          "line": 180,
+          "line": 246,
           "exported": false
         },
         {
           "name": "resolveInstallScope",
           "kind": "const",
-          "line": 207,
+          "line": 273,
           "exported": false
         },
         {
           "name": "promptForInstallTools",
           "kind": "const",
-          "line": 220,
+          "line": 286,
           "exported": false
         },
         {
           "name": "resolveInstallTools",
           "kind": "const",
-          "line": 248,
+          "line": 314,
           "exported": false
         },
         {
           "name": "ensureRuntimeInstalled",
           "kind": "const",
-          "line": 260,
+          "line": 326,
           "exported": false
         },
         {
           "name": "maybeRemoveEmptyDir",
           "kind": "const",
-          "line": 277,
+          "line": 343,
           "exported": false
         },
         {
           "name": "uninstallInstalledRuntime",
           "kind": "const",
-          "line": 294,
+          "line": 360,
           "exported": false
         },
         {
           "name": "toCodexPromptName",
           "kind": "const",
-          "line": 331,
+          "line": 397,
           "exported": false
         },
         {
           "name": "getFirstNonEmptyLine",
           "kind": "const",
-          "line": 333,
+          "line": 399,
           "exported": false
         },
         {
           "name": "getCommandBody",
           "kind": "const",
-          "line": 343,
+          "line": 409,
           "exported": false
         },
         {
           "name": "withDescriptionFrontmatter",
           "kind": "const",
-          "line": 359,
+          "line": 425,
           "exported": false
         },
         {
           "name": "renderSlashCommandReference",
           "kind": "const",
-          "line": 364,
+          "line": 430,
           "exported": false
         },
         {
           "name": "renderToolCommand",
           "kind": "const",
-          "line": 372,
+          "line": 438,
           "exported": true
         },
         {
           "name": "readCommandTemplates",
           "kind": "const",
-          "line": 399,
+          "line": 465,
           "exported": false
         },
         {
           "name": "detectTools",
           "kind": "const",
-          "line": 415,
-          "exported": false
+          "line": 481,
+          "exported": true
         },
         {
           "name": "readJsonSafe",
           "kind": "const",
-          "line": 445,
+          "line": 519,
           "exported": false
         },
         {
           "name": "writeJsonSafe",
           "kind": "const",
-          "line": 457,
+          "line": 531,
           "exported": false
         },
         {
-          "name": "installMcpServer",
+          "name": "installToolConfiguration",
           "kind": "const",
-          "line": 462,
+          "line": 536,
           "exported": false
         },
         {
           "name": "installToolCommands",
           "kind": "const",
-          "line": 488,
+          "line": 577,
           "exported": false
         },
         {
           "name": "uninstallTool",
           "kind": "const",
-          "line": 516,
+          "line": 605,
           "exported": false
         },
         {
           "name": "runInstall",
           "kind": "function",
-          "line": 568,
+          "line": 677,
           "exported": true
         },
         {
           "name": "runUninstall",
           "kind": "function",
-          "line": 612,
+          "line": 721,
           "exported": true
         }
       ]
@@ -2860,25 +2956,25 @@
         {
           "name": "CommandHandler",
           "kind": "type",
-          "line": 42,
+          "line": 43,
           "exported": false
         },
         {
           "name": "captureOutput",
           "kind": "const",
-          "line": 44,
+          "line": 45,
           "exported": false
         },
         {
           "name": "noArgs",
           "kind": "const",
-          "line": 59,
+          "line": 60,
           "exported": false
         },
         {
           "name": "startServer",
           "kind": "function",
-          "line": 61,
+          "line": 62,
           "exported": true
         }
       ]
@@ -3278,33 +3374,39 @@
       "language": "TypeScript",
       "symbols": [
         {
+          "name": "ARCH_SECTIONS",
+          "kind": "const",
+          "line": 6,
+          "exported": false
+        },
+        {
           "name": "SYSTEM_OVERVIEW_STUB",
           "kind": "const",
-          "line": 7,
+          "line": 43,
           "exported": true
         },
         {
           "name": "CODE_MAP_STUB",
           "kind": "const",
-          "line": 68,
+          "line": 71,
           "exported": true
         },
         {
           "name": "AGENT_WORKFLOW_STUB",
           "kind": "const",
-          "line": 125,
+          "line": 95,
           "exported": true
         },
         {
           "name": "DOMAIN_MODEL_STUB",
           "kind": "const",
-          "line": 181,
+          "line": 118,
           "exported": true
         },
         {
           "name": "INTEGRATION_MAP_STUB",
           "kind": "const",
-          "line": 236,
+          "line": 140,
           "exported": true
         }
       ]
@@ -3322,31 +3424,31 @@
         {
           "name": "BUGS_INDEX_TEMPLATE",
           "kind": "const",
-          "line": 82,
+          "line": 81,
           "exported": true
         },
         {
           "name": "DECISIONS_INDEX_TEMPLATE",
           "kind": "const",
-          "line": 123,
+          "line": 122,
           "exported": true
         },
         {
           "name": "DASHBOARD_TEMPLATE",
           "kind": "const",
-          "line": 168,
+          "line": 167,
           "exported": true
         },
         {
           "name": "INBOX_TEMPLATE",
           "kind": "const",
-          "line": 235,
+          "line": 234,
           "exported": true
         },
         {
           "name": "ROADMAP_TEMPLATE",
           "kind": "const",
-          "line": 269,
+          "line": 268,
           "exported": true
         }
       ]
@@ -3364,37 +3466,37 @@
         {
           "name": "STEP_TEMPLATE",
           "kind": "const",
-          "line": 98,
+          "line": 91,
           "exported": true
         },
         {
           "name": "BUG_TEMPLATE",
           "kind": "const",
-          "line": 158,
+          "line": 154,
           "exported": true
         },
         {
           "name": "DECISION_TEMPLATE",
           "kind": "const",
-          "line": 249,
+          "line": 237,
           "exported": true
         },
         {
           "name": "SESSION_TEMPLATE",
           "kind": "const",
-          "line": 318,
+          "line": 300,
           "exported": true
         },
         {
           "name": "ARCHITECTURE_TEMPLATE",
           "kind": "const",
-          "line": 419,
+          "line": 397,
           "exported": true
         },
         {
           "name": "NOTE_CONTRACTS",
           "kind": "const",
-          "line": 481,
+          "line": 455,
           "exported": true
         }
       ]

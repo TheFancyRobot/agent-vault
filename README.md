@@ -18,56 +18,57 @@ npx @fancyrobot/agent-vault
 bunx @fancyrobot/agent-vault
 
 # 2. Inside your agent tool, initialize a vault in your project:
-#    Claude Code / OpenCode: /vault:init
-#    pi: use the installed Agent Vault pi package tools/skills (for example `vault_init`)
+#    Claude Code / OpenCode / pi: /vault:init
 #    Codex: /prompts:vault-init
 #
 # This creates the .agent-vault/ scaffold, scans your project,
 # and populates architecture stubs with detected metadata.
+# In pi, Agent Vault ships prompt templates for the workflow commands,
+# so the primary UX matches the other harnesses.
 
 # 3. Turn a request into phased vault notes:
-#    Claude Code / OpenCode: /vault:plan "Add organization-wide SSO and SCIM provisioning"
+#    Claude Code / OpenCode / pi: /vault:plan "Add organization-wide SSO and SCIM provisioning"
 #    Codex: /prompts:vault-plan "Add organization-wide SSO and SCIM provisioning"
 
 # 4. Refine a planned phase into junior-friendly steps when needed:
-#    Claude Code / OpenCode: /vault:refine PHASE-01
+#    Claude Code / OpenCode / pi: /vault:refine PHASE-01
 #    Codex: /prompts:vault-refine PHASE-01
 
 # 5. Execute a planned phase or step:
-#    Claude Code / OpenCode: /vault:execute PHASE-01
-#    Claude Code / OpenCode: /vault:execute PHASE-01 STEP-01-02
-#    Claude Code / OpenCode: /vault:execute              # infer what to continue, then ask you to confirm
+#    Claude Code / OpenCode / pi: /vault:execute PHASE-01
+#    Claude Code / OpenCode / pi: /vault:execute PHASE-01 STEP-01-02
+#    Claude Code / OpenCode / pi: /vault:execute              # infer what to continue, then ask you to confirm
 #    Codex: /prompts:vault-execute PHASE-01
 
 # 6. Resume work from a previous session:
-#    Claude Code / OpenCode: /vault:resume               # continue from the most recent session
-#    Claude Code / OpenCode: /vault:resume --session SESSION-2026-03-25-143022
+#    Claude Code / OpenCode / pi: /vault:resume               # continue from the most recent session
+#    Claude Code / OpenCode / pi: /vault:resume --session SESSION-2026-03-25-143022
 #    Codex: /prompts:vault-resume
 
 # 7. Orchestrate a full phase with automatic context clearing:
-#    Claude Code / OpenCode: /vault:orchestrate PHASE-01
+#    Claude Code / OpenCode / pi: /vault:orchestrate PHASE-01
 #    Codex: /prompts:vault-orchestrate PHASE-01
 #
 # Or triage and fix open bugs on dedicated branches:
-#    Claude Code / OpenCode: /vault:orchestrate bugs
-#    Claude Code / OpenCode: /vault:orchestrate bugs --severity sev-2
-#    Claude Code / OpenCode: /vault:orchestrate bugs BUG-0001 BUG-0003
+#    Claude Code / OpenCode / pi: /vault:orchestrate bugs
+#    Claude Code / OpenCode / pi: /vault:orchestrate bugs --severity sev-2
+#    Claude Code / OpenCode / pi: /vault:orchestrate bugs BUG-0001 BUG-0003
 
 # 8. Enrich the wikilink graph with missing connections:
-#    Claude Code / OpenCode: /vault:enrich
-#    Claude Code / OpenCode: /vault:enrich PHASE-01
+#    Claude Code / OpenCode / pi: /vault:enrich
+#    Claude Code / OpenCode / pi: /vault:enrich PHASE-01
 #    Codex: /prompts:vault-enrich
 
 # 9. Record bugs or decisions when execution uncovers them:
-#    Claude Code / OpenCode: /vault:create-bug "Login timeout on slow connections"
+#    Claude Code / OpenCode / pi: /vault:create-bug "Login timeout on slow connections"
 #    Codex: /prompts:vault-create-bug "Login timeout on slow connections"
-#    Claude Code / OpenCode: /vault:create-decision "Choose PostgreSQL over MongoDB"
+#    Claude Code / OpenCode / pi: /vault:create-decision "Choose PostgreSQL over MongoDB"
 #    Codex: /prompts:vault-create-decision "Choose PostgreSQL over MongoDB"
 
 # 10. Validate and refresh:
-#     Claude Code / OpenCode: /vault:validate    — checks vault integrity
+#     Claude Code / OpenCode / pi: /vault:validate    — checks vault integrity
 #     Codex: /prompts:vault-validate
-#     Claude Code / OpenCode: /vault:refresh     — updates home notes from metadata
+#     Claude Code / OpenCode / pi: /vault:refresh     — updates home notes from metadata
 #     Codex: /prompts:vault-refresh
 ```
 
@@ -111,7 +112,7 @@ Detected agent tools can include:
 
 - **Claude Code**: Adds MCP server to `~/.claude.json`, copies 14 slash commands to `~/.claude/commands/`
 - **OpenCode**: Adds MCP server to `~/.config/opencode/config.json` under `mcp`, copies 14 slash commands to `~/.config/opencode/commands/`
-- **pi**: Adds the installed Agent Vault package path to pi settings (`~/.pi/agent/settings.json` for global installs, `.pi/settings.json` for cwd installs) so pi loads the bundled tools and skills
+- **pi**: Adds the installed Agent Vault package path to pi settings (`~/.pi/agent/settings.json` for global installs, `.pi/settings.json` for cwd installs) so pi loads the bundled prompt templates, tools, and helper skills
 - **Codex**: Adds MCP server to `~/.codex/config.json`, copies 14 custom prompt commands to `~/.codex/prompts/` (invoked as `/prompts:vault-init`, `/prompts:vault-create-phase`, etc.)
 
 The MCP server configuration points at the installed runtime instead of using `npx` every time. In practice that means the detected Node or Bun executable runs:
@@ -164,27 +165,17 @@ After installation, these commands are available in each tool:
 | `/vault:validate` | `/prompts:vault-validate` | Run vault integrity checks |
 | `/vault:refresh` | `/prompts:vault-refresh` | Refresh all home notes from metadata |
 
-### pi bundled skills
+In **pi**, the same `/vault:*` names are shipped as bundled prompt templates, so workflow invocation stays aligned across harnesses.
 
-When Agent Vault is installed into **pi**, pi loads the package's bundled skills alongside the MCP tools. The workflow-oriented skills currently shipped are:
+### pi prompt templates and helper skills
 
-- `vault-init`
-- `vault-create-phase`
-- `vault-create-step`
-- `vault-create-session`
-- `vault-migrate-step-notes`
-- `vault-create-bug`
-- `vault-create-decision`
-- `vault-plan`
-- `vault-refine`
-- `vault-execute`
-- `vault-resume`
-- `vault-orchestrate`
-- `vault-enrich`
-- `vault-validate`
-- `vault-refresh`
+When Agent Vault is installed into **pi**, pi loads the package's bundled prompt templates, MCP tools, and helper skills.
 
-If you are looking for the migration workflow specifically in pi, use the bundled `vault-migrate-step-notes` skill.
+- **Primary workflow UX in pi:** use the same `/vault:*` prompt-template entrypoints used conceptually in Claude Code/OpenCode. That keeps planning, refinement, execution, resume, orchestration, enrich, validate, and refresh on an explicit workflow path instead of relying on opportunistic skill matching.
+- **Helper skills:** the bundled skills remain available for explicit `/skill:...` use or as implementation references, but they are not the primary workflow entrypoints.
+- **Manual helpers:** lower-level commands such as `/vault:create-phase`, `/vault:create-step`, and `/vault:create-session` remain available when you want to manage notes directly rather than run `/vault:plan`.
+
+If you are looking for the migration workflow specifically in pi, use `/vault:migrate-step-notes` (or the bundled `vault-migrate-step-notes` skill explicitly).
 
 ### Recommended Workflow
 
@@ -285,7 +276,7 @@ The migration is idempotent: already-split step notes are skipped, and the code-
 
 Step mirrors are optional — they appear only on step notes that have been linked to a session. Steps without linked sessions will not have mirror fields, which is normal and does not indicate a validation error.
 
-## MCP Tools (9 tools)
+## MCP Tools (11 tools)
 
 These tools are exposed via the MCP server and can be called by any MCP-compatible agent:
 
@@ -295,6 +286,7 @@ These tools are exposed via the MCP server and can be called by any MCP-compatib
 | `vault_scan` | Analyze project filesystem — returns languages, frameworks, package manager, monorepo shape, test framework, build system, CI, entry points |
 | `vault_create` | Create notes — `type`: `phase`, `step`, `session`, `bug`, `decision` |
 | `vault_traverse` | Load a connected subgraph for agent context — `root`, `depth`, `direction`, optional filters, `format`: `toon` or `json` |
+| `vault_extract` | Extract a bounded section from one note by exact markdown heading or generated-block name without returning the full note |
 | `vault_mutate` | Edit notes — `action`: `update_frontmatter`, `append_section` |
 | `vault_refresh` | Refresh home notes — `target`: `all`, `indexes`, `active_context` |
 | `vault_validate` | Check integrity — `target`: `all`, `frontmatter`, `structure`, `links`, `orphans`, `doctor` |
@@ -322,6 +314,24 @@ Example:
   "format": "toon",
   "note_type": ["phase", "step", "architecture", "decision"],
   "status": ["active", "planned"]
+}
+```
+
+### `vault_extract`
+
+Extracts a bounded section from a single note without returning the full note.
+
+- Use `heading` for exact markdown heading text, excluding `#` markers; nested subsections under that heading are included.
+- Use `block` for generated blocks such as `phase-steps` or `session-execution-log`.
+- Generated block extraction includes `<!-- AGENT-START:... -->` / `<!-- AGENT-END:... -->` markers by default so the returned excerpt keeps its machine boundary context.
+- Do not use wikilink-like open/close tags for extraction ranges; wikilinks remain graph edges, while headings and generated blocks are selectors.
+
+Example:
+
+```json
+{
+  "note_path": "02_Phases/Phase_02_targeted_context_extraction/Phase",
+  "heading": "Acceptance Criteria"
 }
 ```
 

@@ -33,6 +33,7 @@ import {
   invalidateVaultGraphCache,
   traverseVaultGraph,
 } from "../../src/core/vault-graph";
+import { extractVaultNoteTarget } from "../../src/core/vault-extract";
 import { readVaultConfig, updateVaultConfig } from "../../src/core/vault-config";
 import { isProjectVault, resolveVaultRoot } from "../../src/core/vault-files";
 import { initVault } from "../../src/scaffold/init";
@@ -314,6 +315,58 @@ export default function (pi: ExtensionAPI) {
         content: [{ type: "text", text }],
         details: {},
       };
+    },
+  });
+
+  // ── vault_extract ──────────────────────────────────────────────────
+  pi.registerTool({
+    name: "vault_extract",
+    label: "Vault Extract",
+    description: [
+      "Extract a bounded note section by markdown heading or generated block without returning the full note.",
+      "Use this for targeted context loading when you need a specific section rather than an entire note.",
+      '- heading: extracts the exact markdown heading section, including nested subsections.',
+      '- block: extracts an existing <!-- AGENT-START:name --> / <!-- AGENT-END:name --> generated block.',
+    ].join("\n"),
+    parameters: Type.Object({
+      note_path: Type.String({ description: "Vault-relative note path. .md is optional." }),
+      heading: Type.Optional(Type.String({ description: "Exact markdown heading text to extract, excluding # markers." })),
+      block: Type.Optional(Type.String({ description: "Generated block name to extract, e.g. phase-steps." })),
+      include_markers: Type.Optional(Type.Boolean({ default: true, description: "For block extraction, include AGENT-START/END markers. Default: true." })),
+    }),
+    promptSnippet:
+      "Use vault_extract to pull a bounded section from a vault note by heading or generated block name, without loading the entire note.",
+    async execute(_toolCallId, params, _signal, _onUpdate, _ctx) {
+      try {
+        const vaultRoot = resolveVaultRoot(process.cwd());
+        const result = await extractVaultNoteTarget(vaultRoot, {
+          notePath: params.note_path,
+          heading: params.heading,
+          block: params.block,
+          includeMarkers: params.include_markers !== false,
+        });
+        return {
+          content: [{
+            type: "text",
+            text: [
+              `notePath: ${result.notePath}`,
+              `selector: ${result.selector}`,
+              "content: |",
+              ...result.content.split("\n").map((line) => `  ${line}`),
+            ].join("\n"),
+          }],
+          details: {},
+        };
+      } catch (err) {
+        return {
+          isError: true,
+          content: [{
+            type: "text",
+            text: `Failed to extract vault note target: ${err instanceof Error ? err.message : String(err)}`,
+          }],
+          details: {},
+        };
+      }
     },
   });
 
@@ -612,13 +665,24 @@ export default function (pi: ExtensionAPI) {
     promptSnippet:
       "Use vault_help to list all available vault commands, or pass a command name to get detailed help for that specific command.",
     async execute(_toolCallId, params, _signal, _onUpdate, _ctx) {
-      const text = params.command
-        ? formatCommandHelp(params.command as AgentVaultCommandName)
-        : formatCommandCatalog();
-      return {
-        content: [{ type: "text", text }],
-        details: {},
-      };
+      try {
+        const text = params.command
+          ? formatCommandHelp(params.command as AgentVaultCommandName)
+          : formatCommandCatalog();
+        return {
+          content: [{ type: "text", text }],
+          details: {},
+        };
+      } catch (err) {
+        return {
+          isError: true,
+          content: [{
+            type: "text",
+            text: err instanceof Error ? err.message : String(err),
+          }],
+          details: {},
+        };
+      }
     },
   });
 }
