@@ -18,8 +18,9 @@ Workflow:
 2. Load the smallest useful context.
    - Keep context loading target-rooted: use `vault_traverse` from the target, not the vault root.
    - For a step, read only the thin step note and parent phase first.
-   - For split steps, start with `Execution Brief` and `Validation Plan`.
+   - For split steps, start with `Execution Brief` and `Validation Plan`; use `vault_extract` when only one heading or generated block is needed.
    - Read linked architecture, bug, decision, dependency, or handoff notes only when needed.
+   - When working outside MCP helpers, prefer `rg` for local text discovery, fall back to `grep`, and only then use full-file reads.
    - Treat `Code_Graph.md` as summary-only; use `vault_lookup_code_graph` for symbol/file discovery.
    - Do not load the full vault, full code-graph index, or every old session.
 
@@ -43,4 +44,4 @@ Workflow:
    - Update the final handoff so `/vault:resume` can continue safely.
    - Finish with `vault_refresh` and `vault_validate`.
 
-MCP tools: `vault_traverse`, `vault_lookup_code_graph`, `vault_create`, `vault_mutate`, `vault_refresh`, `vault_validate`.
+MCP tools: `vault_traverse`, `vault_extract`, `vault_lookup_code_graph`, `vault_create`, `vault_mutate`, `vault_refresh`, `vault_validate`.

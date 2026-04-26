@@ -37,7 +37,7 @@ const PACKAGE_NAME = '@fancyrobot/agent-vault';
 const INSTALL_DIRNAME = '.agent-vault';
 const RUNTIME_DIRNAME = '.runtime';
 
-const COMMAND_SOURCE_DIR = join(dirname(new URL(import.meta.url).pathname), '..', 'claude-commands');
+const COMMAND_SOURCE_DIR = join(dirname(new URL(import.meta.url).pathname), '..', 'prompts');
 const CLAUDE_LEGACY_COMMANDS = [
   'vault-init.md', 'vault-create-step.md', 'vault-create-bug.md',
   'vault-create-session.md', 'vault-create-decision.md', 'vault-create-phase.md',
@@ -711,7 +711,7 @@ export async function runInstall(args: string[]): Promise<void> {
     console.log(`\nAgent Vault is ready at ${installTarget.rootPath}.`);
     if (selected.length > 0) {
       console.log(`Configured agent-vault for ${selected.map((t) => t.name).join(', ')}.`);
-      console.log('Use /vault:init in Claude Code/OpenCode, /prompts:vault-init in Codex, or the Agent Vault pi package tools/skills in pi.');
+      console.log('Use /vault:init in Claude Code/OpenCode and pi, or /prompts:vault-init in Codex. In pi, Agent Vault now ships prompt templates for workflows plus MCP tools/helper skills.');
     } else {
       console.log('No supported agent tools were configured in this run.');
     }

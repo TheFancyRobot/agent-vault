@@ -22,7 +22,8 @@ If no args are given, infer the likely target from home notes and recent session
 - Use `vault_traverse` from the target, not the vault root.
 - For a phase, discover linked steps and notes, then read only the current or next ready step, the phase, and directly relevant linked notes.
 - For a step, read the thin step note and parent phase first, then only explicitly needed linked notes.
-- For split step notes, start with `Execution Brief` and `Validation Plan`.
+- For split step notes, start with `Execution Brief` and `Validation Plan`; use `vault_extract` when only one heading or generated block is needed.
+- When working outside MCP helpers, prefer `rg` for local text discovery, fall back to `grep`, and only then use full-file reads.
 - Treat `Code_Graph.md` as summary-only; use `vault_lookup_code_graph` for symbol/file lookup.
 - Prefer compact handoffs and generated summaries when available.
 - Do not read every sibling step, every old session, the full vault, or the full code-graph index by default.

@@ -31,13 +31,14 @@ Use this note as the directory for decision records in \`04_Decisions/\`.
 ## Decision Log
 
 <!-- AGENT-START:decisions-index -->
-_Last rebuilt: 2026-04-20._
+_Last rebuilt: 2026-04-26._
 
-- Notes indexed: 1
-- Status summary: accepted (1)
+- Notes indexed: 2
+- Status summary: accepted (2)
 
 | Id | Title | Status | Decided | Updated | Linear |
 | --- | --- | --- | --- | --- | --- |
+| DEC-0002 | [Use headings and generated blocks as targeted extraction selectors](../04_Decisions/DEC-0002_use-headings-and-generated-blocks-as-targeted-extraction-selectors.md) | accepted | 2026-04-25 | 2026-04-25 | - |
 | DEC-0001 | [Adopt vault-owned context management primitives for execution workflows](../04_Decisions/DEC-0001_adopt-vault-owned-context-management-primitives-for-execution-workflows.md) | accepted | 2026-04-20 | 2026-04-20 | - |
 <!-- AGENT-END:decisions-index -->
 

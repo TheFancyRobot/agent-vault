@@ -36,7 +36,8 @@ Resume from the most recent session, or from `--session <session-id>`.
 - Switch to **target-rooted** loading once the target is known.
 - Use `vault_traverse` at shallow depth from the target step or phase.
 - Read only the target note, its parent phase, and the linked architecture, bug, decision, or dependency notes actually referenced by the handoff.
-- For split step notes, start with `Execution Brief` and `Validation Plan`; open `Implementation Notes` or `Outcome` only when the handoff points there.
+- For split step notes, start with `Execution Brief` and `Validation Plan`; use `vault_extract` when only one heading or generated block is needed, and open `Implementation Notes` or `Outcome` only when the handoff points there.
+- When working outside MCP helpers, prefer `rg` for local text discovery, fall back to `grep`, and only then use full-file reads.
 - Treat `01_Architecture/Code_Graph.md` as a thin summary only. If the handoff or target step needs symbol/file lookup, use `vault_lookup_code_graph` instead of loading the full code-graph index.
 - Prefer summaries, lookup results, and the latest relevant sections; do not pull unrelated historical session content.
 

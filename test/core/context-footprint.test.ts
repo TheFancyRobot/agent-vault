@@ -21,13 +21,13 @@ describe('generateContextFootprintReport', () => {
     const root = await createTempRoot('categories');
     await mkdir(join(root, '.agent-vault', '02_Phases'), { recursive: true });
     await mkdir(join(root, 'pi-package', 'skills', 'vault-execute'), { recursive: true });
-    await mkdir(join(root, 'claude-commands'), { recursive: true });
+    await mkdir(join(root, 'prompts'), { recursive: true });
 
     await writeFile(join(root, 'AGENTS.md'), 'root instructions', 'utf-8');
     await writeFile(join(root, '.agent-vault', 'AGENTS.md'), 'vault operating contract', 'utf-8');
     await writeFile(join(root, '.agent-vault', '02_Phases', 'Phase.md'), 'phase details', 'utf-8');
     await writeFile(join(root, 'pi-package', 'skills', 'vault-execute', 'SKILL.md'), 'skill prompt', 'utf-8');
-    await writeFile(join(root, 'claude-commands', 'vault-execute.md'), 'command prompt', 'utf-8');
+    await writeFile(join(root, 'prompts', 'vault:execute.md'), 'command prompt', 'utf-8');
 
     const report = await generateContextFootprintReport(root);
 
@@ -44,7 +44,7 @@ describe('generateContextFootprintReport', () => {
     const vaultContract = report.entries.find((entry) => entry.path === '.agent-vault/AGENTS.md');
     const phaseNote = report.entries.find((entry) => entry.path === '.agent-vault/02_Phases/Phase.md');
     const skillPrompt = report.entries.find((entry) => entry.path === 'pi-package/skills/vault-execute/SKILL.md');
-    const commandPrompt = report.entries.find((entry) => entry.path === 'claude-commands/vault-execute.md');
+    const commandPrompt = report.entries.find((entry) => entry.path === 'prompts/vault:execute.md');
 
     expect(rootInstructions?.category).toBe('root_instructions');
     expect(vaultContract?.category).toBe('vault_contract');
@@ -56,10 +56,10 @@ describe('generateContextFootprintReport', () => {
   it('formats a readable report with totals, categories, and top files', async () => {
     const root = await createTempRoot('format');
     await mkdir(join(root, '.agent-vault', '02_Phases'), { recursive: true });
-    await mkdir(join(root, 'claude-commands'), { recursive: true });
+    await mkdir(join(root, 'prompts'), { recursive: true });
     await writeFile(join(root, 'AGENTS.md'), 'root instructions', 'utf-8');
     await writeFile(join(root, '.agent-vault', '02_Phases', 'Phase.md'), 'phase details are bigger than root instructions', 'utf-8');
-    await writeFile(join(root, 'claude-commands', 'vault-execute.md'), 'command prompt', 'utf-8');
+    await writeFile(join(root, 'prompts', 'vault:execute.md'), 'command prompt', 'utf-8');
 
     const report = await generateContextFootprintReport(root);
     const output = formatContextFootprintReport(report);

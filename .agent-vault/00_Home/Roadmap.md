@@ -27,11 +27,11 @@ This roadmap tracks the evolution of the vault itself and the operational habits
 | Phase | Status | Goal |
 | --- | --- | --- |
 | Phase 01 Built-in vault context management | completed | Add canonical session context, step mirrors, workflow integration, tests, docs, and migration guidance |
-| Phase 02 | not planned | No next phase has been defined yet |
+| Phase 02 Targeted context extraction | planned | Add bounded note extraction, workflow prompt updates, pi parity, prompt-budget guardrails, and search/traversal dogfooding |
 
 ## Near-Term Outcomes
 
-- Define the next concrete phase before starting new implementation work.
+- Finish PHASE-02 targeted context extraction and close the remaining workflow/tooling gaps.
 - Keep the context-management docs and templates aligned with the code.
 - Continue maintaining the architecture map as the \`agent-vault\` repo evolves.
 

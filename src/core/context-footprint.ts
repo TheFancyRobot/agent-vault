@@ -42,7 +42,7 @@ const classifyPath = (path: string): ContextFootprintCategory | null => {
   if (path === '.agent-vault/AGENTS.md') return 'vault_contract';
   if (path.startsWith('.agent-vault/') && path.endsWith('.md')) return 'vault_notes';
   if (path.startsWith('pi-package/skills/') && WORKFLOW_PROMPT_FILENAMES.has(path.split('/').at(-1) ?? '')) return 'workflow_prompts';
-  if (path.startsWith('claude-commands/') && path.endsWith('.md')) return 'workflow_prompts';
+  if (path.startsWith('prompts/') && path.endsWith('.md')) return 'workflow_prompts';
   return null;
 };
 

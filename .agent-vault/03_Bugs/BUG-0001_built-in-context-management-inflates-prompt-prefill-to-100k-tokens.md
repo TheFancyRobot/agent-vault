@@ -111,18 +111,4 @@ Use one note per bug in \`03_Bugs/\`. This note is the source of truth for one d
 <!-- AGENT-START:bug-timeline -->
 - 2026-04-23 - Reported.
 <!-- AGENT-END:bug-timeline -->
-ew]]
-<!-- AGENT-END:bug-related-notes -->
 
-## Timeline
-
-<!-- AGENT-START:bug-timeline -->
-- 2026-04-23 - Reported.
-<!-- AGENT-END:bug-timeline -->
-elated-notes -->
-
-## Timeline
-
-<!-- AGENT-START:bug-timeline -->
-- 2026-04-23 - Reported.
-<!-- AGENT-END:bug-timeline -->

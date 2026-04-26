@@ -6,9 +6,9 @@ title: Code Graph
 architecture_id: "ARCH-0006"
 status: active
 owner: ""
-reviewed_on: "2026-04-23"
-created: "2026-04-23"
-updated: "2026-04-23"
+reviewed_on: "2026-04-25"
+created: "2026-04-25"
+updated: "2026-04-25"
 related_notes:
   - "[[01_Architecture/Code_Map|Code Map]]"
   - "[[01_Architecture/System_Overview|System Overview]]"
@@ -28,8 +28,8 @@ tags:
 ## Overview
 
 - Repository: agent-vault
-- Files indexed: 33
-- Symbols found: 548
+- Files indexed: 34
+- Symbols found: 564
 - Detailed index path: `.agent-vault/08_Automation/code-graph/index.json`
 
 ## Key Components
@@ -64,10 +64,10 @@ tags:
 
 ## Directory Hotspots
 
-- `src/core`: 12 files, 110 exported symbols, 228 internal symbols
+- `src/core`: 13 files, 116 exported symbols, 232 internal symbols
+- `src`: 3 files, 14 exported symbols, 47 internal symbols
 - `src/scaffold`: 4 files, 18 exported symbols, 41 internal symbols
-- `src`: 3 files, 10 exported symbols, 46 internal symbols
-- `src/templates`: 8 files, 33 exported symbols, 2 internal symbols
+- `src/templates`: 8 files, 33 exported symbols, 3 internal symbols
 - `scripts`: 2 files, 1 exported symbols, 31 internal symbols
 - `pi-package/skills/vault-resume`: 2 files, 0 exported symbols, 21 internal symbols
 - `test`: 1 files, 3 exported symbols, 1 internal symbols

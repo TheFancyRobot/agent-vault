@@ -26,7 +26,8 @@ Workflow:
 3. Load focused continuation context with `vault_traverse`.
    - Switch to **target-rooted** loading once the target is known.
    - Read only the target note, its parent phase, and the linked architecture, bug, decision, dependency, or handoff notes actually referenced by the latest relevant context.
-   - For split step notes, start with `Execution Brief` and `Validation Plan`; open `Implementation Notes` or `Outcome` only when the handoff points there.
+   - For split step notes, start with `Execution Brief` and `Validation Plan`; use `vault_extract` when only one heading or generated block is needed, and open `Implementation Notes` or `Outcome` only when the handoff points there.
+   - When working outside MCP helpers, prefer `rg` for local text discovery, fall back to `grep`, and only then use full-file reads.
    - Treat `Code_Graph.md` as summary-only. If the resumed task needs symbol/file discovery, use `vault_lookup_code_graph` instead of reading the full code-graph index.
 
 4. Create the continuation session.
@@ -39,7 +40,7 @@ Workflow:
    - If the target is ready, continue with `/vault:execute` behavior.
    - If it is not ready, report the missing context and redirect to refinement.
 
-MCP tools to use: `vault_traverse`, `vault_lookup_code_graph`, `vault_create`, `vault_mutate`.
+MCP tools to use: `vault_traverse`, `vault_extract`, `vault_lookup_code_graph`, `vault_create`, `vault_mutate`.
 
 Examples:
 - /vault:resume

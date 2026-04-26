@@ -23,6 +23,7 @@ Use \`.agent-vault/\` as durable project memory. Prefer MCP tools over direct ed
 ### MCP Tools
 
 - \`vault_traverse\` - load narrow linked context
+- \`vault_extract\` - extract one heading or generated block without loading a whole note
 - \`vault_lookup_code_graph\` - symbol/file lookup without loading the full index
 - \`vault_create\` - create phase, step, session, bug, and decision notes
 - \`vault_mutate\` - update frontmatter or append sections
@@ -35,6 +36,7 @@ Use \`.agent-vault/\` as durable project memory. Prefer MCP tools over direct ed
 - Use bounded mutations only.
 - Do not rewrite whole notes or delete human prose.
 - Do not load the whole vault by default.
+- Prefer \`vault_extract\` when a specific heading or generated block is enough.
 - Treat \`01_Architecture/Code_Graph.md\` as summary-only; use \`vault_lookup_code_graph\` for detail.
 - See \`.agent-vault/AGENTS.md\` for the full contract.
 

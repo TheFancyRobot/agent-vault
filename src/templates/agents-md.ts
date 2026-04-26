@@ -92,6 +92,7 @@ Avoid:
 - Home notes are routing aids, not the main payload.
 - Treat \`01_Architecture/Code_Graph.md\` as summary-only.
 - Use \`vault_lookup_code_graph\` for symbol/file lookup instead of loading the full code-graph index.
+- Use \`vault_extract\` when a specific heading or generated block is enough.
 - Prefer narrow \`vault_traverse\` queries over broad reads.
 
 ## Working Loop

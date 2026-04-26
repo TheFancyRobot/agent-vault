@@ -1,8 +1,12 @@
 ---
-description: Create a new phase in the Agent Vault. Use when adding a new project phase, optionally inserting it before an existing phase with automatic renumbering.
+description: Manual helper for creating a new phase in the Agent Vault. Use when you already know the phase shape and want to add or reorder a phase directly, not when you need the agent to create a plan from a broader request.
 ---
 
 # Vault Create Phase
+
+Manual helper: create a new phase in the vault once the plan shape is already decided.
+
+For broad requests that still need research, sequencing, or step creation, use the `vault-plan` workflow (or `/vault:plan` prompt template in supported harnesses) instead of this helper.
 
 Create a new phase in the vault.
 

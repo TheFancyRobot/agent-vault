@@ -4,6 +4,8 @@ import {
   appendToAppendOnlySection,
   parseYamlFrontmatter,
   readGeneratedBlockContent,
+  readGeneratedBlockWithMarkers,
+  readHeadingSectionContent,
   replaceGeneratedBlock,
   replaceHeadingSection,
   updateFrontmatter,
@@ -238,6 +240,67 @@ status: in-progress
 `;
 
     expect(readGeneratedBlockContent(note, 'session-execution-log')).toBe('- 09:00 - Started.\n');
+  });
+
+  it('reads a generated block with markers for targeted context excerpts', () => {
+    const note = `---
+title: Session
+status: in-progress
+---
+
+# Session
+
+Intro prose.
+
+<!-- AGENT-START:session-execution-log -->
+- 09:00 - Started.
+<!-- AGENT-END:session-execution-log -->
+
+## Human Notes
+
+- Preserve this context.
+`;
+
+    expect(readGeneratedBlockWithMarkers(note, 'session-execution-log')).toBe([
+      '<!-- AGENT-START:session-execution-log -->',
+      '- 09:00 - Started.',
+      '<!-- AGENT-END:session-execution-log -->',
+      '',
+    ].join('\n'));
+  });
+
+  it('reads a heading section without loading neighboring sections', () => {
+    const note = `---
+title: Step
+status: planned
+---
+
+# Step
+
+## Execution Brief
+
+- Load this.
+
+### Details
+
+- Nested content is part of the requested section.
+
+## Validation Plan
+
+- Do not load this.
+`;
+
+    expect(readHeadingSectionContent(note, 'Execution Brief')).toBe([
+      '## Execution Brief',
+      '',
+      '- Load this.',
+      '',
+      '### Details',
+      '',
+      '- Nested content is part of the requested section.',
+      '',
+      '',
+    ].join('\n'));
   });
 
   it('fails safely on nested generated markers inside the target block', () => {

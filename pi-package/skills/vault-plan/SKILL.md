@@ -46,10 +46,18 @@ Turn a request into durable phase and step notes.
 - Phase notes: objective, scope, non-goals, dependencies, acceptance criteria, links.
 - Step notes: exact outcome, prerequisites, starting files, required reading, validation, edge cases.
 - Use `depends_on` for sequencing.
+- If assumptions materially shape the plan, record them durably in the relevant notes instead of leaving them only in chat.
 
-### 8. Close cleanly
+### 8. Stay in planning mode
+- Do not implement product or source-code changes outside the vault while running this workflow.
+- Do not edit application files, tests, configs, or docs except when the request is specifically to update the vault planning record itself.
+- If the user pivots from planning to implementation, stop this workflow and route to execution explicitly instead of blending the two.
+
+### 9. Close cleanly
 - Summarize created or updated phases, first executable steps, unresolved questions, and parallelism.
+- Report the exact note paths that were created or updated.
 - Update the active session if one exists.
 - Finish with `vault_refresh` and `vault_validate`.
+- If no durable phase or step notes were written, treat the workflow as incomplete and say why.
 
-Planning is complete only when the request has been turned into durable phase and step notes with explicit blockers and clear sequencing.
+Planning is complete only when the request has been turned into durable phase and step notes with explicit blockers, clear sequencing, reported note paths, and completed refresh/validate steps.
