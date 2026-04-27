@@ -1,6 +1,8 @@
 # Implementation Notes
 
-- Capture durable findings learned during execution. Prefer short bullets with file paths, commands, and observed behavior.
+- `test/skills/vault-resume.test.ts` no longer needs to monkey-patch the ESM `fs` namespace; real temp session fixtures are sufficient to prove newest-session selection.
+- BUG-0002 already contains the confirmed root cause and verification evidence, so the remaining work in this cleanup pass was note-state reconciliation rather than code changes.
+- PHASE-02 progress should treat STEP-02-03 as closed and continue with STEP-02-04 guardrail coverage.
 
 ## Related Notes
 
