@@ -219,6 +219,73 @@ describe('Agent Vault note generators', () => {
     expect(phaseContent).toContain('- [ ] [[02_Phases/Phase_01_Foundation/Steps/Step_02_add-agent-vault-generators|STEP-01-02 Add Agent Vault generators]]');
   });
 
+  it('create-step inserts the Companion Notes section when upgrading from a legacy step template', async () => {
+    const vaultRoot = await createTempVault();
+    const legacyTemplatePath = join(vaultRoot, '07_Templates', 'Step_Template.md');
+    await writeFile(legacyTemplatePath, [
+      '---',
+      'note_type: step',
+      'template_version: 1',
+      'contract_version: 1',
+      'title: "Step Title"',
+      'step_id: "STEP-00-00"',
+      'phase: "[[02_Phases/Phase_00/Phase|Phase 00]]"',
+      'status: planned',
+      'owner: ""',
+      'created: "2026-03-14"',
+      'updated: "2026-03-14"',
+      'depends_on: []',
+      'related_sessions: []',
+      'related_bugs: []',
+      'context_status: planned',
+      'tags:',
+      '  - agent-vault',
+      '  - step',
+      '---',
+      '',
+      '# Step 00 - Step Title',
+      '',
+      '## Purpose',
+      '',
+      '- Outcome: TBD.',
+      '',
+      '## Required Reading',
+      '',
+      '- None yet.',
+      '',
+      '## Agent-Managed Snapshot',
+      '',
+      '<!-- AGENT-START:step-agent-managed-snapshot -->',
+      '- Status: planned',
+      '- Current owner: ',
+      '- Last touched: 2026-03-14',
+      '- Next action: none.',
+      '<!-- AGENT-END:step-agent-managed-snapshot -->',
+      '',
+      '## Human Notes',
+      '',
+      '- None yet.',
+      '',
+      '## Session History',
+      '',
+      '<!-- AGENT-START:step-session-history -->',
+      '- No sessions yet.',
+      '<!-- AGENT-END:step-session-history -->',
+      '',
+    ].join('\n'), 'utf-8');
+
+    const harness = makeIo();
+    const exitCode = await handleCreateStepCommand(
+      ['1', '2', 'Add Agent Vault generators'],
+      { vaultRoot, io: harness.io, now: () => FIXED_NOW },
+    );
+
+    expect(exitCode).toBe(0);
+    const content = await readFile(join(vaultRoot, '02_Phases', 'Phase_01_Foundation', 'Steps', 'Step_02_add-agent-vault-generators.md'), 'utf-8');
+    expect(content).toContain('## Companion Notes');
+    expect(content).toContain('## Agent-Managed Snapshot');
+  });
+
   it('migrate-step-notes also upgrades the code graph to thin markdown plus JSON sidecar', async () => {
     const vaultRoot = await createTempVault();
     await mkdir(join(vaultRoot, 'src'), { recursive: true });
