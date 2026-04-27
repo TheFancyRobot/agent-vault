@@ -323,6 +323,7 @@ Extracts a bounded section from a single note without returning the full note.
 
 - Use `heading` for exact markdown heading text, excluding `#` markers; nested subsections under that heading are included.
 - Use `block` for generated blocks such as `phase-steps` or `session-execution-log`.
+- Companion notes without YAML frontmatter are also supported for read-only extraction, so split step notes can still be loaded as bounded excerpts.
 - Generated block extraction includes `<!-- AGENT-START:... -->` / `<!-- AGENT-END:... -->` markers by default so the returned excerpt keeps its machine boundary context.
 - Do not use wikilink-like open/close tags for extraction ranges; wikilinks remain graph edges, while headings and generated blocks are selectors.
 

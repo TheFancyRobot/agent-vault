@@ -45,5 +45,6 @@ Goal: run each step or bug in a **fresh** subagent so context does not accumulat
 - One unit per fresh subagent.
 - Git stays with the orchestrator, never inside the worker.
 - The worker prompt should be minimal and should delegate implementation detail to `vault-execute` or the bug note.
+- Keep worker execution target-rooted: let `vault-execute`/bug investigation use `vault_extract` for bounded reads and prefer `rg`, then `grep`, before broader file loads.
 - Because worker prompts are thin wrappers around lower-level workflows, keep them free of direct code-graph instructions; let `vault-execute`/bug investigation use `vault_lookup_code_graph` when symbol lookup is needed.
 - Prefer clean retries over letting one long-running context grow.

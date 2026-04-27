@@ -42,6 +42,7 @@ Rules:
 - One unit per fresh subagent.
 - Git stays with the orchestrator, not the worker.
 - Keep worker prompts short and delegate implementation detail to `vault-execute` / `/vault:execute` or the bug note.
+- Keep worker execution target-rooted: let `/vault:execute` or bug investigation use `vault_extract` for bounded reads and prefer `rg`, then `grep`, before broader file loads.
 - Do not shell out to a hidden CLI orchestration path; keep the work visible in-session.
 
 MCP tools to use: `vault_traverse`, `vault_mutate`.

@@ -48,7 +48,7 @@ describe('workflow prompt budgets', () => {
     }
   });
 
-  it('vault-orchestrate still enforces fresh subagents and no git inside them', async () => {
+  it('vault-orchestrate still enforces fresh subagents and thin targeted worker loading', async () => {
     const [skill, command] = await Promise.all([
       read('pi-package/skills/vault-orchestrate/SKILL.md'),
       read('prompts/vault:orchestrate.md'),
@@ -58,6 +58,10 @@ describe('workflow prompt budgets', () => {
       expect(content).toContain('fresh');
       expect(content).toContain('git add');
       expect(content).toContain('vault-execute');
+      expect(content).toContain('vault_extract');
+      expect(content).toContain('rg');
+      expect(content).toContain('grep');
+      expect(content).toContain('target-rooted');
     }
   });
 
