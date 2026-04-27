@@ -6,16 +6,22 @@ title: Fix vault-resume full-suite ESM fs spy blocker
 step_id: STEP-02-03
 phase: '[[02_Phases/Phase_02_targeted_context_extraction/Phase|Phase 02 targeted context extraction]]'
 status: completed
-owner: ''
+owner: 'Pi'
 created: '2026-04-25'
-updated: '2026-04-25'
+updated: '2026-04-26'
 depends_on: []
-related_sessions: []
+related_sessions:
+  - '[[05_Sessions/2026-04-25-053837-implement-bounded-note-extraction-core-pi|SESSION-2026-04-25-053837 pi session for Implement bounded note extraction core]]'
+  - '[[05_Sessions/2026-04-26-201449-resume-step-02-03-cleanup-pi|SESSION-2026-04-26-201449 Pi session for Resume STEP-02-03 cleanup]]'
 related_bugs:
   - '[[03_Bugs/BUG-0002_full-test-suite-fails-on-vault-resume-esm-fs-spy|BUG-0002 Full test suite fails on vault-resume ESM fs spy]]'
 tags:
   - agent-vault
   - step
+context_id: SESSION-2026-04-26-201449
+active_session_id: 05_Sessions/2026-04-26-201449-resume-step-02-03-cleanup-pi
+context_status: active
+context_summary: Reconcile STEP-02-03 with the resolved BUG-0002 handoff, then continue PHASE-02 at STEP-02-04.
 ---
 
 # Step 03 - Fix vault-resume full-suite ESM fs spy blocker
@@ -46,10 +52,10 @@ Use this note as the thin index for one executable step inside a phase. Keep thi
 ## Agent-Managed Snapshot
 
 <!-- AGENT-START:step-agent-managed-snapshot -->
-- Status: planned
-- Current owner: 
-- Last touched: 2026-04-25
-- Next action: Read [[02_Phases/Phase_02_targeted_context_extraction/Steps/Step_03_fix-vault-resume-full-suite-esm-fs-spy-blocker/Execution_Brief|Execution Brief]] and [[02_Phases/Phase_02_targeted_context_extraction/Steps/Step_03_fix-vault-resume-full-suite-esm-fs-spy-blocker/Validation_Plan|Validation Plan]].
+- Status: completed
+- Current owner: Pi
+- Last touched: 2026-04-26
+- Next action: Continue with [[02_Phases/Phase_02_targeted_context_extraction/Steps/Step_04_add-selector-graph-and-prompt-budget-regression-coverage|STEP-02-04 Add selector graph and prompt-budget regression coverage]].
 <!-- AGENT-END:step-agent-managed-snapshot -->
 
 ## Human Notes
@@ -60,5 +66,6 @@ Use this note as the thin index for one executable step inside a phase. Keep thi
 ## Session History
 
 <!-- AGENT-START:step-session-history -->
-- No sessions yet.
+- 2026-04-25 - [[05_Sessions/2026-04-25-053837-implement-bounded-note-extraction-core-pi|SESSION-2026-04-25-053837 pi session for Implement bounded note extraction core]] - Removed the ESM `fs.readdirSync` spy in favor of real temp session fixtures and returned the full test suite to green.
+- 2026-04-26 - [[05_Sessions/2026-04-26-201449-resume-step-02-03-cleanup-pi|SESSION-2026-04-26-201449 Pi session for Resume STEP-02-03 cleanup]] - Reconciled stale step metadata with the resolved BUG-0002 state and handed off to STEP-02-04.
 <!-- AGENT-END:step-session-history -->

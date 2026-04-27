@@ -5,19 +5,24 @@ contract_version: 1
 title: Dogfood extraction search and traversal integration strategy
 step_id: STEP-02-05
 phase: '[[02_Phases/Phase_02_targeted_context_extraction/Phase|Phase 02 targeted context extraction]]'
-status: planned
-owner: ''
+status: completed
+owner: 'Pi'
 created: '2026-04-25'
-updated: '2026-04-25'
+updated: '2026-04-26'
 depends_on:
   - '[[02_Phases/Phase_02_targeted_context_extraction/Steps/Step_02_expose-vault-extract-in-pi-extension-and-workflow-docs|STEP-02-02 Expose vault_extract in pi extension and workflow docs]]'
   - '[[02_Phases/Phase_02_targeted_context_extraction/Steps/Step_04_add-selector-graph-and-prompt-budget-regression-coverage|STEP-02-04 Add selector graph and prompt-budget regression coverage]]'
-related_sessions: []
+related_sessions:
+  - '[[05_Sessions/2026-04-26-211945-resume-step-02-05-dogfood-extraction-search-and-traversal-strategy-pi|SESSION-2026-04-26-211945 Pi session for Resume STEP-02-05 dogfood extraction search and traversal strategy]]'
 related_bugs:
   - '[[03_Bugs/BUG-0001_built-in-context-management-inflates-prompt-prefill-to-100k-tokens|BUG-0001 Built-in context management inflates prompt prefill to 100k+ tokens]]'
 tags:
   - agent-vault
   - step
+context_id: SESSION-2026-04-26-211945
+active_session_id: 05_Sessions/2026-04-26-211945-resume-step-02-05-dogfood-extraction-search-and-traversal-strategy-pi
+context_status: completed
+context_summary: Dogfooded bounded extraction and confirmed PHASE-02 does not need more built-in search or traversal machinery.
 ---
 
 # Step 05 - Dogfood extraction search and traversal integration strategy
@@ -49,10 +54,10 @@ Use this note as the thin index for one executable step inside a phase. Keep thi
 ## Agent-Managed Snapshot
 
 <!-- AGENT-START:step-agent-managed-snapshot -->
-- Status: planned
-- Current owner: 
-- Last touched: 2026-04-25
-- Next action: Read [[02_Phases/Phase_02_targeted_context_extraction/Steps/Step_05_dogfood-extraction-search-and-traversal-integration-strategy/Execution_Brief|Execution Brief]] and [[02_Phases/Phase_02_targeted_context_extraction/Steps/Step_05_dogfood-extraction-search-and-traversal-integration-strategy/Validation_Plan|Validation Plan]].
+- Status: completed
+- Current owner: Pi
+- Last touched: 2026-04-26
+- Next action: Close out PHASE-02, cut the release, then begin [[02_Phases/Phase_03_package_level_vault_migration_system/Phase|PHASE-03 Package-level vault migration system]].
 <!-- AGENT-END:step-agent-managed-snapshot -->
 
 ## Human Notes
@@ -63,5 +68,5 @@ Use this note as the thin index for one executable step inside a phase. Keep thi
 ## Session History
 
 <!-- AGENT-START:step-session-history -->
-- No sessions yet.
+- 2026-04-26 - [[05_Sessions/2026-04-26-211945-resume-step-02-05-dogfood-extraction-search-and-traversal-strategy-pi|SESSION-2026-04-26-211945 Pi session for Resume STEP-02-05 dogfood extraction search and traversal strategy]] - Dogfooded bounded extraction on PHASE-02 notes, fixed frontmatter-less companion-note extraction, and confirmed the v1 search/traversal strategy is sufficient.
 <!-- AGENT-END:step-session-history -->

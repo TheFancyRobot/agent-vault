@@ -4,7 +4,7 @@ template_version: 2
 contract_version: 1
 title: Targeted context extraction
 phase_id: PHASE-02
-status: planned
+status: completed
 owner: Pi
 created: '2026-04-25'
 updated: '2026-04-26'
@@ -65,17 +65,17 @@ Use this note for a bounded phase of work in \`02_Phases/\`. This note is the so
 - [x] Validation and documentation expectations are explicit in each step's `Execution_Brief` and `Validation_Plan` companion notes.
 - [x] A design decision records whether targeted extraction uses headings, generated-block markers, wikilink-like selectors, or a hybrid: [[04_Decisions/DEC-0002_use-headings-and-generated-blocks-as-targeted-extraction-selectors|DEC-0002 Use headings and generated blocks as targeted extraction selectors]].
 - [x] `vault_traverse` or a companion MCP/pi tool can return bounded note excerpts without returning entire large notes. MCP server support and pi extension parity now exist via [[02_Phases/Phase_02_targeted_context_extraction/Steps/Step_02_expose-vault-extract-in-pi-extension-and-workflow-docs|STEP-02-02]].
-- [ ] Search/discovery logic uses `rg` when present, falls back to `grep`, then falls back to current read behavior; dogfood and final strategy remain [[02_Phases/Phase_02_targeted_context_extraction/Steps/Step_05_dogfood-extraction-search-and-traversal-integration-strategy|STEP-02-05]].
-- [ ] Link collection and validation prove section markers/selectors do not create bogus graph nodes or orphan/link warnings; covered by [[02_Phases/Phase_02_targeted_context_extraction/Steps/Step_04_add-selector-graph-and-prompt-budget-regression-coverage|STEP-02-04]].
-- [ ] Prompt-budget tests cover the targeted extraction workflow and BUG-0001's context inflation risk; covered by [[02_Phases/Phase_02_targeted_context_extraction/Steps/Step_04_add-selector-graph-and-prompt-budget-regression-coverage|STEP-02-04]].
-- [ ] Full-suite validation is green; [[03_Bugs/BUG-0002_full-test-suite-fails-on-vault-resume-esm-fs-spy|BUG-0002]] is assigned to [[02_Phases/Phase_02_targeted_context_extraction/Steps/Step_03_fix-vault-resume-full-suite-esm-fs-spy-blocker|STEP-02-03]].
+- [x] Search/discovery logic uses `rg` when present, falls back to `grep`, then falls back to current read behavior; dogfood and final strategy are recorded in [[02_Phases/Phase_02_targeted_context_extraction/Steps/Step_05_dogfood-extraction-search-and-traversal-integration-strategy|STEP-02-05]].
+- [x] Link collection and validation prove section markers/selectors do not create bogus graph nodes or orphan/link warnings; covered by [[02_Phases/Phase_02_targeted_context_extraction/Steps/Step_04_add-selector-graph-and-prompt-budget-regression-coverage|STEP-02-04]].
+- [x] Prompt-budget tests cover the targeted extraction workflow and BUG-0001's context inflation risk; covered by [[02_Phases/Phase_02_targeted_context_extraction/Steps/Step_04_add-selector-graph-and-prompt-budget-regression-coverage|STEP-02-04]].
+- [x] Full-suite validation is green; [[03_Bugs/BUG-0002_full-test-suite-fails-on-vault-resume-esm-fs-spy|BUG-0002]] was resolved via [[02_Phases/Phase_02_targeted_context_extraction/Steps/Step_03_fix-vault-resume-full-suite-esm-fs-spy-blocker|STEP-02-03]].
 
 ## Linear Context
 
 <!-- AGENT-START:phase-linear-context -->
 - Previous phase: [[02_Phases/Phase_01_built_in_vault_context_management/Phase|PHASE-01 Built-in vault context management]]
-- Current phase status: planned
-- Next phase: not planned yet.
+- Current phase status: completed
+- Next phase: [[02_Phases/Phase_03_package_level_vault_migration_system/Phase|PHASE-03 Package-level vault migration system]] (planned after release).
 <!-- AGENT-END:phase-linear-context -->
 
 ## Related Architecture
@@ -106,9 +106,9 @@ Use this note for a bounded phase of work in \`02_Phases/\`. This note is the so
 <!-- AGENT-START:phase-steps -->
 - [x] [[02_Phases/Phase_02_targeted_context_extraction/Steps/Step_01_implement-bounded-note-extraction-core|STEP-02-01 Implement bounded note extraction core]]
 - [x] [[02_Phases/Phase_02_targeted_context_extraction/Steps/Step_02_expose-vault-extract-in-pi-extension-and-workflow-docs|STEP-02-02 Expose vault_extract in pi extension and workflow docs]]
-- [ ] [[02_Phases/Phase_02_targeted_context_extraction/Steps/Step_03_fix-vault-resume-full-suite-esm-fs-spy-blocker|STEP-02-03 Fix vault-resume full-suite ESM fs spy blocker]]
-- [ ] [[02_Phases/Phase_02_targeted_context_extraction/Steps/Step_04_add-selector-graph-and-prompt-budget-regression-coverage|STEP-02-04 Add selector graph and prompt-budget regression coverage]]
-- [ ] [[02_Phases/Phase_02_targeted_context_extraction/Steps/Step_05_dogfood-extraction-search-and-traversal-integration-strategy|STEP-02-05 Dogfood extraction search and traversal integration strategy]]
+- [x] [[02_Phases/Phase_02_targeted_context_extraction/Steps/Step_03_fix-vault-resume-full-suite-esm-fs-spy-blocker|STEP-02-03 Fix vault-resume full-suite ESM fs spy blocker]]
+- [x] [[02_Phases/Phase_02_targeted_context_extraction/Steps/Step_04_add-selector-graph-and-prompt-budget-regression-coverage|STEP-02-04 Add selector graph and prompt-budget regression coverage]]
+- [x] [[02_Phases/Phase_02_targeted_context_extraction/Steps/Step_05_dogfood-extraction-search-and-traversal-integration-strategy|STEP-02-05 Dogfood extraction search and traversal integration strategy]]
 <!-- AGENT-END:phase-steps -->
 
 ## Notes
@@ -117,4 +117,6 @@ Use this note for a bounded phase of work in \`02_Phases/\`. This note is the so
 - Recommended direction: prefer heading-based extraction for normal markdown sections and existing generated-block markers for machine-managed ranges. If arbitrary human-authored ranges are needed, use a non-wikilink marker syntax so the vault graph remains clean.
 - Design decision: [[04_Decisions/DEC-0002_use-headings-and-generated-blocks-as-targeted-extraction-selectors|DEC-0002]] chooses exact markdown headings and existing generated-block markers as v1 selectors. Wikilink fragments like `[[Note#Heading]]` remain normal note links plus display/navigation hints, not independent selector nodes.
 - Grill-me answer from 2026-04-25: PHASE-02 should use the recommended phase-complete scope, not the minimal scope. Completion requires pi extension parity, BUG-0002 full-suite fix, selector graph/prompt-budget regression coverage, and dogfooding the search/traverse integration strategy.
+- Dogfood conclusion from STEP-02-05: keep v1 simple. `vault_extract` plus target-rooted `vault_traverse` and documented `rg` -> `grep` -> full-read fallback are sufficient for PHASE-02. No internal search-provider helper or selector-aware `vault_traverse` expansion is needed in this phase.
+- Dogfood exposed one concrete friction point: companion notes without YAML frontmatter could not be extracted by heading. This was fixed so split step notes can still use bounded extraction without adding broader traversal/search machinery.
 - Use the `Steps/` directory for executable units instead of expanding this note too far.

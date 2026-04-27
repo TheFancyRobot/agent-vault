@@ -5,19 +5,24 @@ contract_version: 1
 title: Add selector graph and prompt-budget regression coverage
 step_id: STEP-02-04
 phase: '[[02_Phases/Phase_02_targeted_context_extraction/Phase|Phase 02 targeted context extraction]]'
-status: planned
-owner: ''
+status: completed
+owner: 'Pi'
 created: '2026-04-25'
-updated: '2026-04-25'
+updated: '2026-04-26'
 depends_on:
   - '[[02_Phases/Phase_02_targeted_context_extraction/Steps/Step_01_implement-bounded-note-extraction-core|STEP-02-01 Implement bounded note extraction core]]'
   - '[[02_Phases/Phase_02_targeted_context_extraction/Steps/Step_02_expose-vault-extract-in-pi-extension-and-workflow-docs|STEP-02-02 Expose vault_extract in pi extension and workflow docs]]'
-related_sessions: []
+related_sessions:
+  - '[[05_Sessions/2026-04-26-204901-resume-step-02-04-selector-graph-and-prompt-budget-coverage-pi|SESSION-2026-04-26-204901 Pi session for Resume STEP-02-04 selector graph and prompt-budget coverage]]'
 related_bugs:
   - '[[03_Bugs/BUG-0001_built-in-context-management-inflates-prompt-prefill-to-100k-tokens|BUG-0001 Built-in context management inflates prompt prefill to 100k+ tokens]]'
 tags:
   - agent-vault
   - step
+context_id: SESSION-2026-04-26-204901
+active_session_id: 05_Sessions/2026-04-26-204901-resume-step-02-04-selector-graph-and-prompt-budget-coverage-pi
+context_status: completed
+context_summary: Added selector graph and prompt-budget regression coverage for targeted extraction workflows.
 ---
 
 # Step 04 - Add selector graph and prompt-budget regression coverage
@@ -49,10 +54,10 @@ Use this note as the thin index for one executable step inside a phase. Keep thi
 ## Agent-Managed Snapshot
 
 <!-- AGENT-START:step-agent-managed-snapshot -->
-- Status: planned
-- Current owner: 
-- Last touched: 2026-04-25
-- Next action: Read [[02_Phases/Phase_02_targeted_context_extraction/Steps/Step_04_add-selector-graph-and-prompt-budget-regression-coverage/Execution_Brief|Execution Brief]] and [[02_Phases/Phase_02_targeted_context_extraction/Steps/Step_04_add-selector-graph-and-prompt-budget-regression-coverage/Validation_Plan|Validation Plan]].
+- Status: completed
+- Current owner: Pi
+- Last touched: 2026-04-26
+- Next action: Continue with [[02_Phases/Phase_02_targeted_context_extraction/Steps/Step_05_dogfood-extraction-search-and-traversal-integration-strategy|STEP-02-05 Dogfood extraction search and traversal integration strategy]].
 <!-- AGENT-END:step-agent-managed-snapshot -->
 
 ## Human Notes
@@ -63,5 +68,5 @@ Use this note as the thin index for one executable step inside a phase. Keep thi
 ## Session History
 
 <!-- AGENT-START:step-session-history -->
-- No sessions yet.
+- 2026-04-26 - [[05_Sessions/2026-04-26-204901-resume-step-02-04-selector-graph-and-prompt-budget-coverage-pi|SESSION-2026-04-26-204901 Pi session for Resume STEP-02-04 selector graph and prompt-budget coverage]] - Resumed from the STEP-02-03 cleanup handoff, added selector graph regressions, tightened orchestrate prompt guidance, and validated the full suite.
 <!-- AGENT-END:step-session-history -->

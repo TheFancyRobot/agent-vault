@@ -20,10 +20,10 @@ Keep this note short, current, and safe to overwrite as the repo focus changes.
 
 <!-- AGENT-START:current-focus -->
 _Last refreshed: 2026-04-26._
-- Session in progress: [[05_Sessions/2026-04-26-201711-expose-vault-extract-in-pi-extension-and-workflow-docs-pi|SESSION-2026-04-26-201711 Pi session for Expose vault_extract in pi extension and workflow docs]] - owner: Pi - phase: [[02_Phases/Phase_02_targeted_context_extraction/Phase|Phase 02 targeted context extraction]] - updated: 2026-04-26
-- Current step: [[02_Phases/Phase_02_targeted_context_extraction/Steps/Step_03_fix-vault-resume-full-suite-esm-fs-spy-blocker|STEP-02-03 Fix vault-resume full-suite ESM fs spy blocker]] - status: planned - phase: [[02_Phases/Phase_02_targeted_context_extraction/Phase|Phase 02 targeted context extraction]]
-- Active phase: [[02_Phases/Phase_02_targeted_context_extraction/Phase|PHASE-02 Targeted context extraction]] - status: planned - owner: Pi - updated: 2026-04-26
-- Also active: 2 more additional steps.
+- Latest completed session: [[05_Sessions/2026-04-26-211945-resume-step-02-05-dogfood-extraction-search-and-traversal-strategy-pi|SESSION-2026-04-26-211945 Pi session for Resume STEP-02-05 dogfood extraction search and traversal strategy]] - owner: Pi - phase: [[02_Phases/Phase_02_targeted_context_extraction/Phase|Phase 02 targeted context extraction]] - updated: 2026-04-26
+- Current milestone: release the completed [[02_Phases/Phase_02_targeted_context_extraction/Phase|PHASE-02 Targeted context extraction]] work.
+- Active phase: [[02_Phases/Phase_02_targeted_context_extraction/Phase|PHASE-02 Targeted context extraction]] - status: completed - owner: Pi - updated: 2026-04-26
+- Next planned phase after release: [[02_Phases/Phase_03_package_level_vault_migration_system/Phase|PHASE-03 Package-level vault migration system]].
 <!-- AGENT-END:current-focus -->
 
 ## Repo Snapshot
@@ -70,6 +70,6 @@ _Last refreshed: 2026-04-26._
 
 ## Next Actions
 
-- Finish the remaining PHASE-02 targeted context extraction work, starting with STEP-02-03, and refresh the home notes as steps close.
+- Cut the release for the completed PHASE-02 targeted context extraction work.
+- After the release, begin PHASE-03 package-level vault migration RFC/checklist planning.
 - Keep the architecture notes aligned with the code as packages evolve.
-- Add new decision records whenever a non-trivial design tradeoff is made.
