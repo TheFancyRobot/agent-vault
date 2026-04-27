@@ -720,8 +720,12 @@ export async function runInstall(args: string[]): Promise<void> {
 
 export async function runUninstall(args: string[]): Promise<void> {
   const dryRun = args.includes('--dry-run');
-  const tools = detectTools('global');
-  const detected = tools.filter((t) => t.detected);
+  const tools = [...detectTools('global'), ...detectTools('cwd')];
+  const detected = tools.filter((tool, index, allTools) => (
+    tool.detected && allTools.findIndex((candidate) => (
+      candidate.kind === tool.kind && candidate.configPath === tool.configPath
+    )) === index
+  ));
 
   if (dryRun) console.log('(dry run - no changes will be made)\n');
 

@@ -14,6 +14,7 @@ import {
   removePiPackageSourcesFromConfig,
   renderToolCommand,
   resolveInstallRoot,
+  runUninstall,
   upsertPiPackageSourceInConfig,
 } from '../src/install';
 
@@ -328,5 +329,34 @@ describe('pi package config helpers', () => {
       'pi-skills',
       { source: 'npm:@acme/other-package', prompts: [] },
     ]);
+  });
+
+  it('runUninstall removes cwd-scoped pi package entries from project settings', async () => {
+    const homeDir = await createTempDir('home');
+    const projectDir = await createTempDir('project');
+    const previousCwd = process.cwd();
+    const previousHome = process.env.HOME;
+    const projectPiDir = join(projectDir, '.pi');
+    const runtimeRoot = join(projectDir, '.agent-vault', '.runtime');
+    const packageSource = join(runtimeRoot, 'node_modules', '@fancyrobot', 'agent-vault');
+
+    await mkdir(projectPiDir, { recursive: true });
+    await mkdir(runtimeRoot, { recursive: true });
+    await writeFile(join(projectPiDir, 'settings.json'), JSON.stringify({
+      packages: [packageSource, 'pi-skills'],
+    }, null, 2), 'utf-8');
+
+    process.env.HOME = homeDir;
+    process.chdir(projectDir);
+
+    try {
+      await runUninstall([]);
+    } finally {
+      process.chdir(previousCwd);
+      process.env.HOME = previousHome;
+    }
+
+    const config = JSON.parse(await readFile(join(projectPiDir, 'settings.json'), 'utf-8')) as { packages: unknown[] };
+    expect(config.packages).toEqual(['pi-skills']);
   });
 });

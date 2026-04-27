@@ -1242,17 +1242,17 @@ const createStepContent = (
     updated: date,
   }).content;
   content = replaceHeadingSection(content, 'Purpose', `- Outcome: ${title}.\n- Parent phase: ${phaseLink}.`).content;
-  content = replaceHeadingSection(content, 'Required Reading', [
+  content = ensureHeadingSection(content, 'Required Reading', [
     `- ${phaseLink}`,
     `- ${companionLinks.executionBrief}`,
     `- ${companionLinks.validationPlan}`,
-  ].join('\n')).content;
-  content = replaceHeadingSection(content, 'Companion Notes', [
+  ].join('\n'), 'Agent-Managed Snapshot');
+  content = ensureHeadingSection(content, 'Companion Notes', [
     `- ${companionLinks.executionBrief} - Why the step exists, prerequisites, likely code paths, and the smallest execution checklist.`,
     `- ${companionLinks.validationPlan} - Acceptance checks, commands, edge cases, and regression expectations.`,
     `- ${companionLinks.implementationNotes} - Durable findings discovered while the step is being executed.`,
     `- ${companionLinks.outcome} - Final result, validation evidence, and explicit follow-up.`,
-  ].join('\n')).content;
+  ].join('\n'), 'Agent-Managed Snapshot');
   content = replaceGeneratedBlock(content, 'step-agent-managed-snapshot', [
     '- Status: planned',
     '- Current owner: ',
