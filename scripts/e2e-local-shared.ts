@@ -230,6 +230,8 @@ const stagePackageForPublish = async (tempRoot: string): Promise<{ publishDir: s
   await writeFile(join(publishDir, 'package.json'), JSON.stringify(packageJson, null, 2) + '\n', 'utf-8');
   await cp(join(repoRoot, 'dist'), join(publishDir, 'dist'), { recursive: true });
   await cp(join(repoRoot, 'prompts'), join(publishDir, 'prompts'), { recursive: true });
+  await cp(join(repoRoot, 'pi-package'), join(publishDir, 'pi-package'), { recursive: true });
+  await cp(join(repoRoot, 'src'), join(publishDir, 'src'), { recursive: true });
   await cp(join(repoRoot, 'README.md'), join(publishDir, 'README.md'));
   await cp(join(repoRoot, 'LICENSE'), join(publishDir, 'LICENSE'));
 
@@ -375,6 +377,8 @@ const verifyInstalledState = async (
   const runtimePackage = await readJson(runtimePackagePath);
 
   assert.equal(runtimePackage.version, expectedVersion, 'installed runtime version should match the locally published package');
+  assert.ok(existsSync(join(runtimePackageRoot, 'pi-package', 'extensions', 'index.ts')), 'installed runtime should include pi package extensions for pi integration');
+  assert.ok(existsSync(join(runtimePackageRoot, 'src', 'core', 'vault-extract.ts')), 'installed runtime should include source files referenced by pi extensions');
 
   for (const tool of tools) {
     const config = await readJson(tool.configPath);

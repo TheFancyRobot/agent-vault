@@ -99,6 +99,23 @@ describe('vault graph', () => {
     ]);
   });
 
+  it('normalizes heading fragments and ignores generated block comments', () => {
+    const links = collectLinks(
+      '02_Phases/Phase_01_Foundation/Steps/Step_01_graph.md',
+      [
+        '[[../Phase#Scope|Phase scope]]',
+        '[Overview](../../../01_Architecture/System_Overview.md#Overview)',
+        '<!-- AGENT-START:step-agent-managed-snapshot -->',
+        '<!-- AGENT-END:step-agent-managed-snapshot -->',
+      ].join('\n')
+    );
+
+    expect([...links].sort()).toEqual([
+      '01_Architecture/System_Overview',
+      '02_Phases/Phase_01_Foundation/Phase',
+    ]);
+  });
+
   it('traverses the graph by depth and direction', async () => {
     const vaultRoot = await createTempVault();
     const { graph, warnings } = await ensureVaultGraph(vaultRoot);

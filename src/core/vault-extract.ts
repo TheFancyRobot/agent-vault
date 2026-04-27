@@ -21,6 +21,11 @@ const normalizeNotePath = (notePath: string): string => {
   return normalized.toLowerCase().endsWith('.md') ? normalized : `${normalized}.md`;
 };
 
+const ensureExtractableNoteContent = (content: string): string =>
+  content.startsWith('---\n') || content.startsWith('---\r\n')
+    ? content
+    : `---\nsynthetic: true\n---\n\n${content}`;
+
 const countSelectors = (params: VaultNoteExtractionParams): number =>
   [params.heading, params.block].filter((value) => typeof value === 'string' && value.trim().length > 0).length;
 
@@ -40,6 +45,7 @@ export const extractVaultNoteTarget = async (
   }
 
   const content = await readFile(absolutePath, 'utf-8');
+  const extractableContent = ensureExtractableNoteContent(content);
   const noteContext = notePath;
 
   if (params.heading && params.heading.trim().length > 0) {
@@ -47,7 +53,7 @@ export const extractVaultNoteTarget = async (
     return {
       notePath,
       selector: `heading:${heading}`,
-      content: readHeadingSectionContent(content, heading, noteContext),
+      content: readHeadingSectionContent(extractableContent, heading, noteContext),
     };
   }
 
@@ -60,7 +66,7 @@ export const extractVaultNoteTarget = async (
     notePath,
     selector: `block:${block}`,
     content: params.includeMarkers === false
-      ? readGeneratedBlockContent(content, block, noteContext)
-      : readGeneratedBlockWithMarkers(content, block, noteContext),
+      ? readGeneratedBlockContent(extractableContent, block, noteContext)
+      : readGeneratedBlockWithMarkers(extractableContent, block, noteContext),
   };
 };

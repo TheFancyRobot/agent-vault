@@ -76,6 +76,40 @@ status: active
     ].join('\n'));
   });
 
+  it('extracts headings from frontmatter-less companion notes', async () => {
+    const vaultRoot = await mkdtemp(join(tmpdir(), 'agent-vault-extract-plain-'));
+    await mkdir(join(vaultRoot, 'Notes'), { recursive: true });
+    await writeFile(join(vaultRoot, 'Notes', 'Companion.md'), [
+      '# Execution Brief',
+      '',
+      '## Outcome and Success Condition',
+      '',
+      '- Enough context without YAML frontmatter.',
+      '',
+      '## Validation Plan',
+      '',
+      '- Different section.',
+      '',
+    ].join('\n'), 'utf-8');
+
+    const result = await extractVaultNoteTarget(vaultRoot, {
+      notePath: 'Notes/Companion.md',
+      heading: 'Outcome and Success Condition',
+    });
+
+    expect(result).toEqual({
+      notePath: 'Notes/Companion.md',
+      selector: 'heading:Outcome and Success Condition',
+      content: [
+        '## Outcome and Success Condition',
+        '',
+        '- Enough context without YAML frontmatter.',
+        '',
+        '',
+      ].join('\n'),
+    });
+  });
+
   it('requires exactly one selector', async () => {
     const vaultRoot = await makeVault();
 
