@@ -21,9 +21,9 @@ Keep this note short, current, and safe to overwrite as the repo focus changes.
 <!-- AGENT-START:current-focus -->
 _Last refreshed: 2026-07-05._
 - Session in progress: none.
-- Current step: [[02_Phases/Phase_04_context_compiler_and_token_efficiency/Steps/Step_01_document-generated-automation-area-and-code-graph-refresh|STEP-04-01 Document generated automation area and code graph refresh]] - status: planned - phase: [[02_Phases/Phase_04_context_compiler_and_token_efficiency/Phase|Phase 04 context compiler and token efficiency]]
+- Current step: [[02_Phases/Phase_04_context_compiler_and_token_efficiency/Steps/Step_02_implement-deterministic-context-ranking-with-explainable-score-reasons|STEP-04-02 Implement deterministic context ranking with explainable score reasons]] - status: planned - phase: [[02_Phases/Phase_04_context_compiler_and_token_efficiency/Phase|Phase 04 context compiler and token efficiency]]
 - Active phase: [[02_Phases/Phase_04_context_compiler_and_token_efficiency/Phase|PHASE-04 Context compiler and token efficiency]] - status: planned - updated: 2026-07-05
-- Also active: 14 more additional steps.
+- Also active: 13 more additional steps.
 <!-- AGENT-END:current-focus -->
 
 ## Repo Snapshot
