@@ -4,7 +4,7 @@ template_version: 2
 contract_version: 1
 title: Package-level vault migration system
 phase_id: PHASE-03
-status: planned
+status: done
 owner: Pi
 created: '2026-04-26'
 updated: '2026-07-05'
@@ -62,15 +62,15 @@ Use this note for a bounded phase of work in `02_Phases/`. This note is the sour
 - [x] Scope is concrete and clearly framed as package-level work for all Agent Vault projects, not repo-specific cleanup.
 - [x] Step notes exist for drafting the RFC first and the implementation checklist second.
 - [x] A durable RFC note or equivalent planning artifact defines the migration model, versioning rules, command contract, safety guarantees, validator relationship, and maintainer policy.
-- [ ] A durable implementation checklist translates the RFC into reviewable PR-sized tasks with files/modules to add or change, tests to write, and rollout order.
-- [ ] The RFC and checklist explicitly define how future schema or contract changes must carry migration/validation work.
-- [ ] The planned work stays in planning mode and does not silently expand into implementation.
+- [x] A durable implementation checklist translates the RFC into reviewable PR-sized tasks with files/modules to add or change, tests to write, and rollout order.
+- [x] The RFC and checklist explicitly define how future schema or contract changes must carry migration/validation work.
+- [x] The planned work stays in planning mode and does not silently expand into implementation.
 
 ## Linear Context
 
 <!-- AGENT-START:phase-linear-context -->
 - Previous phase: [[02_Phases/Phase_02_targeted_context_extraction/Phase|PHASE-02 Targeted context extraction]]
-- Current phase status: planned
+- Current phase status: done
 - Next phase: [[02_Phases/Phase_04_context_compiler_and_token_efficiency/Phase|PHASE-04 Context compiler and token efficiency]]
 <!-- AGENT-END:phase-linear-context -->
 
@@ -82,6 +82,7 @@ Use this note for a bounded phase of work in `02_Phases/`. This note is the sour
 - [[01_Architecture/Code_Map|Code Map]]
 <!-- AGENT-END:phase-related-architecture -->
 - [[01_Architecture/Package_Migration_System|Package-level migration system (RFC)]]
+- [[01_Architecture/Package_Migration_Implementation_Checklist|Package-level migration system implementation checklist]]
 
 ## Related Decisions
 
@@ -99,7 +100,7 @@ Use this note for a bounded phase of work in `02_Phases/`. This note is the sour
 
 <!-- AGENT-START:phase-steps -->
 - [x] [[02_Phases/Phase_03_package_level_vault_migration_system/Steps/Step_01_draft-package-level-migration-rfc|STEP-03-01 Draft package-level migration RFC]]
-- [ ] [[02_Phases/Phase_03_package_level_vault_migration_system/Steps/Step_02_translate-rfc-into-pr-sized-implementation-checklist|STEP-03-02 Translate RFC into PR-sized implementation checklist]]
+- [x] [[02_Phases/Phase_03_package_level_vault_migration_system/Steps/Step_02_translate-rfc-into-pr-sized-implementation-checklist|STEP-03-02 Translate RFC into PR-sized implementation checklist]]
 <!-- AGENT-END:phase-steps -->
 
 ## Notes

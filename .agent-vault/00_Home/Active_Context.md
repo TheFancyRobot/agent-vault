@@ -23,7 +23,7 @@ _Last refreshed: 2026-07-05._
 - Session in progress: none.
 - Current step: [[02_Phases/Phase_04_context_compiler_and_token_efficiency/Steps/Step_01_document-generated-automation-area-and-code-graph-refresh|STEP-04-01 Document generated automation area and code graph refresh]] - status: planned - phase: [[02_Phases/Phase_04_context_compiler_and_token_efficiency/Phase|Phase 04 context compiler and token efficiency]]
 - Active phase: [[02_Phases/Phase_04_context_compiler_and_token_efficiency/Phase|PHASE-04 Context compiler and token efficiency]] - status: planned - updated: 2026-07-05
-- Also active: 9 more additional steps.
+- Also active: 8 more additional steps.
 <!-- AGENT-END:current-focus -->
 
 ## Repo Snapshot

@@ -15,6 +15,7 @@ related_notes:
   - '[[01_Architecture/Code_Map|Code Map]]'
   - '[[07_Templates/Note_Contracts|Note Contracts]]'
   - '[[02_Phases/Phase_03_package_level_vault_migration_system/Phase|PHASE-03 Package-level vault migration system]]'
+  - '[[01_Architecture/Package_Migration_Implementation_Checklist|Package-level migration system implementation checklist]]'
 tags:
   - agent-vault
   - architecture
@@ -154,9 +155,11 @@ A registry step's category is fixed at authoring time and reviewed as part of th
 
 ## Open Questions Left for Implementation
 
-- Exact on-disk location/shape for the registry module (single file vs. one file per step) — left to [[02_Phases/Phase_03_package_level_vault_migration_system/Steps/Step_02_translate-rfc-into-pr-sized-implementation-checklist|STEP-03-02]] to size as PR-sized units.
-- Whether `vault migrate` needs a `--dry-run-verbose` per-note diff view beyond the summary counts described here, or whether that's deferred past first release.
+- Exact on-disk location/shape for the registry module (single file vs. one file per step) — resolved by [[01_Architecture/Package_Migration_Implementation_Checklist|the implementation checklist]] as one file per migration step under `src/core/migrations/steps/`.
+- Whether `vault migrate` needs a `--dry-run-verbose` per-note diff view beyond the summary counts described here, or whether that's deferred past first release — deferred; tracked as a follow-up in the implementation checklist.
 - Whether the schema-version warning in `validate-all` should be promotable to an error via a config flag for teams that want to enforce staying current — left as a future decision, not required for first ship.
+
+See [[01_Architecture/Package_Migration_Implementation_Checklist|Package-level migration system implementation checklist]] for the PR-sized breakdown produced by STEP-03-02.
 
 ## Related Notes
 
