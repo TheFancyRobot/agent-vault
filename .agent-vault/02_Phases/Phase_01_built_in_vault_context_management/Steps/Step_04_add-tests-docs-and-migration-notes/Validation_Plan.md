@@ -15,3 +15,8 @@
 - Integration touchpoints and downstream effects: this step touches all user-facing surfaces and the final regression bar for the phase.
 - Blockers, unresolved decisions, and handoff expectations: no blocker is currently recorded; if migration semantics are unclear after implementation, record a follow-up decision or bug instead of shipping vague instructions.
 - Junior-developer readiness verdict: PASS once a new engineer can verify the feature with tests and follow the migration/docs trail without needing prior conversation history.
+
+## Related Notes
+
+- Step: [[02_Phases/Phase_01_built_in_vault_context_management/Steps/Step_04_add-tests-docs-and-migration-notes|STEP-01-04 Add tests, docs, and migration notes]]
+- Phase: [[02_Phases/Phase_01_built_in_vault_context_management/Phase|PHASE-01 Built-in vault context management]]

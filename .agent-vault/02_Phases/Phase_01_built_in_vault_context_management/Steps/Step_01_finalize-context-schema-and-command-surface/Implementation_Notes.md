@@ -12,3 +12,8 @@
 - Updated `src/core/command-catalog.ts` and `README.md` to surface the canonical manual names while keeping `/vault:*` workflows primary.
 - Updated `src/templates/note-templates.ts` and `.agent-vault/07_Templates/Session_Template.md` to reserve `## Context Handoff` before persistence work begins.
 - Resolved the DEC-0001 ambiguity by locking the resume alias to `resume-prepare` and aligning the decision note before changing source files.
+
+## Related Notes
+
+- Step: [[02_Phases/Phase_01_built_in_vault_context_management/Steps/Step_01_finalize-context-schema-and-command-surface|STEP-01-01 Finalize context schema and command surface]]
+- Phase: [[02_Phases/Phase_01_built_in_vault_context_management/Phase|PHASE-01 Built-in vault context management]]

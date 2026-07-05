@@ -6,3 +6,8 @@
 - `src/core/note-validators.ts` now requires the session `context` frontmatter key, validates the nested object and enum subfields, and enforces the `Context Handoff` heading as part of the stable session-note structure.
 - `test/helpers.ts` now copies templates from this repo's `.agent-vault/` instead of an external sibling repo so temp-vault generator and validator tests exercise the checked-in contract actually being changed here.
 - `test/core/context-contract.test.ts`, `test/core/note-generators.test.ts`, `test/core/note-validators.test.ts`, and `test/core/note-mutations.test.ts` now cover default context creation, generated-session persistence, missing-context validation failures, missing-handoff-heading failures, and nested frontmatter mutation safety.
+
+## Related Notes
+
+- Step: [[02_Phases/Phase_01_built_in_vault_context_management/Steps/Step_02_implement-canonical-session-context-persistence|STEP-01-02 Implement canonical session context persistence]]
+- Phase: [[02_Phases/Phase_01_built_in_vault_context_management/Phase|PHASE-01 Built-in vault context management]]

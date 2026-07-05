@@ -4,3 +4,8 @@
 - Aligned durable docs and surfaced help across `src/core/context-contract.ts`, `src/core/command-catalog.ts`, `src/templates/note-templates.ts`, `.agent-vault/07_Templates/Session_Template.md`, `README.md`, and DEC-0001.
 - Validation performed: `bun test test/core/context-contract.test.ts test/core/command-catalog.test.ts test/install.test.ts test/slash-commands.test.ts`; `bun run typecheck`.
 - Follow-up: STEP-01-02 can now implement canonical session persistence against the locked contract instead of rediscovering field names or aliases.
+
+## Related Notes
+
+- Step: [[02_Phases/Phase_01_built_in_vault_context_management/Steps/Step_01_finalize-context-schema-and-command-surface|STEP-01-01 Finalize context schema and command surface]]
+- Phase: [[02_Phases/Phase_01_built_in_vault_context_management/Phase|PHASE-01 Built-in vault context management]]

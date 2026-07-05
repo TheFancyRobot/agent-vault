@@ -84,7 +84,7 @@ Use this note for a bounded phase of work in \`02_Phases/\`. This note is the so
 <!-- AGENT-START:phase-linear-context -->
 - Previous phase: [[02_Phases/Phase_03_package_level_vault_migration_system/Phase|PHASE-03 Package-level vault migration system]]
 - Current phase status: planned
-- Next phase: not planned yet.
+- Next phase: [[02_Phases/Phase_05_implement_package_level_vault_migration/Phase|PHASE-05 Implement package-level vault migration]]
 <!-- AGENT-END:phase-linear-context -->
 
 ## Related Architecture

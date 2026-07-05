@@ -12,7 +12,10 @@ fixed_on: '2026-04-26'
 owner: ''
 created: '2026-04-26'
 updated: '2026-04-26'
-related_notes: []
+related_notes:
+  - '[[02_Phases/Phase_02_targeted_context_extraction/Phase|PHASE-02 Targeted context extraction]]'
+  - '[[02_Phases/Phase_02_targeted_context_extraction/Steps/Step_02_expose-vault-extract-in-pi-extension-and-workflow-docs|STEP-02-02 Expose vault_extract in pi extension and workflow docs]]'
+  - '[[05_Sessions/2026-04-26-201711-expose-vault-extract-in-pi-extension-and-workflow-docs-pi|SESSION-2026-04-26-201711 Pi session for Expose vault_extract in pi extension and workflow docs]]'
 tags:
   - agent-vault
   - bug
@@ -25,7 +28,7 @@ Use one note per bug in \`03_Bugs/\`. This note is the source of truth for one d
 ## Summary
 
 - vault_help casts arbitrary command string and can throw unhandled MCP/extension error.
-- Related notes: none linked yet.
+- Related notes: [[02_Phases/Phase_02_targeted_context_extraction/Phase|PHASE-02 Targeted context extraction]], [[02_Phases/Phase_02_targeted_context_extraction/Steps/Step_02_expose-vault-extract-in-pi-extension-and-workflow-docs|STEP-02-02 Expose vault_extract in pi extension and workflow docs]], [[05_Sessions/2026-04-26-201711-expose-vault-extract-in-pi-extension-and-workflow-docs-pi|SESSION-2026-04-26-201711 Pi session for Expose vault_extract in pi extension and workflow docs]].
 
 ## Observed Behavior
 
@@ -76,7 +79,9 @@ Use one note per bug in \`03_Bugs/\`. This note is the source of truth for one d
 ## Related Notes
 
 <!-- AGENT-START:bug-related-notes -->
-- None yet.
+- Phase: [[02_Phases/Phase_02_targeted_context_extraction/Phase|PHASE-02 Targeted context extraction]]
+- Step: [[02_Phases/Phase_02_targeted_context_extraction/Steps/Step_02_expose-vault-extract-in-pi-extension-and-workflow-docs|STEP-02-02 Expose vault_extract in pi extension and workflow docs]]
+- Session: [[05_Sessions/2026-04-26-201711-expose-vault-extract-in-pi-extension-and-workflow-docs-pi|SESSION-2026-04-26-201711 Pi session for Expose vault_extract in pi extension and workflow docs]]
 <!-- AGENT-END:bug-related-notes -->
 
 ## Timeline

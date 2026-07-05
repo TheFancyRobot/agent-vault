@@ -28,8 +28,9 @@ This roadmap tracks the evolution of the vault itself and the operational habits
 | --- | --- | --- |
 | Phase 01 Built-in vault context management | completed | Add canonical session context, step mirrors, workflow integration, tests, docs, and migration guidance |
 | Phase 02 Targeted context extraction | completed | Add bounded note extraction, workflow prompt updates, pi parity, prompt-budget guardrails, and search/traversal dogfooding |
-| Phase 03 Package-level vault migration system | planned | Draft the package-level migration RFC and derive a PR-sized implementation checklist |
+| Phase 03 Package-level vault migration system | completed | Draft the package-level migration RFC and derive a PR-sized implementation checklist |
 | Phase 04 Context compiler and token efficiency | planned | Deterministic relevance ranking, `vault_prepare_context` token-budgeted context compiler, code graph v3, cached interface stubs, AST-backed extraction, MCP resources, safety hardening, optional local reranker |
+| Phase 05 Implement package-level vault migration | planned | Execute PR-1 through PR-6 from the migration implementation checklist: schema version plumbing, migration registry and runner, `migrate-step-notes` as registry step 0→1, `vault migrate` plan and apply modes, and validator schema-drift warning |
 
 ## Near-Term Outcomes
 

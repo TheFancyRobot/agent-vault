@@ -21,6 +21,8 @@ related_bugs:
   - '[[03_Bugs/BUG-0001_built-in-context-management-inflates-prompt-prefill-to-100k-tokens|BUG-0001 Built-in context management inflates prompt prefill to 100k+ tokens]]'
   - '[[03_Bugs/BUG-0002_full-test-suite-fails-on-vault-resume-esm-fs-spy|BUG-0002 Full test suite fails on vault-resume ESM fs spy]]'
   - '[[03_Bugs/BUG-0003_pi-create-phase-workflow-implements-work-instead-of-creating-a-plan-and-fails-to-persist-corrected-plan|BUG-0003 Pi create-phase workflow implements work instead of creating a plan and fails to persist corrected plan]]'
+  - '[[03_Bugs/BUG-0004_docs-prompt-templates-call-non-existent-vault-validate-all-vault-refresh-all-mcp-tools|BUG-0004 docs Prompt templates call non-existent vault_validate_all / vault_refresh_all MCP tools]]'
+  - '[[03_Bugs/BUG-0005_vault-help-casts-arbitrary-command-string-and-can-throw-unhandled-mcp-extension-error|BUG-0005 vault_help casts arbitrary command string and can throw unhandled MCP/extension error]]'
 tags:
   - agent-vault
   - phase
@@ -99,6 +101,8 @@ Use this note for a bounded phase of work in \`02_Phases/\`. This note is the so
 - [[03_Bugs/BUG-0001_built-in-context-management-inflates-prompt-prefill-to-100k-tokens|BUG-0001 Built-in context management inflates prompt prefill to 100k+ tokens]]
 - [[03_Bugs/BUG-0002_full-test-suite-fails-on-vault-resume-esm-fs-spy|BUG-0002 Full test suite fails on vault-resume ESM fs spy]]
 - [[03_Bugs/BUG-0003_pi-create-phase-workflow-implements-work-instead-of-creating-a-plan-and-fails-to-persist-corrected-plan|BUG-0003 Pi create-phase workflow implements work instead of creating a plan and fails to persist corrected plan]]
+- [[03_Bugs/BUG-0004_docs-prompt-templates-call-non-existent-vault-validate-all-vault-refresh-all-mcp-tools|BUG-0004 docs Prompt templates call non-existent vault_validate_all / vault_refresh_all MCP tools]]
+- [[03_Bugs/BUG-0005_vault-help-casts-arbitrary-command-string-and-can-throw-unhandled-mcp-extension-error|BUG-0005 vault_help casts arbitrary command string and can throw unhandled MCP/extension error]]
 <!-- AGENT-END:phase-related-bugs -->
 
 ## Steps

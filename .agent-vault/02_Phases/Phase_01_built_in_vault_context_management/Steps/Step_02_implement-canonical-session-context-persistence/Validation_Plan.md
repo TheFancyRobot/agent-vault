@@ -15,3 +15,8 @@
 - Integration touchpoints and downstream effects: STEP-01-03 will read this session shape for mirror updates and workflow behavior; STEP-01-04 will document and migrate it.
 - Blockers, unresolved decisions, and handoff expectations: no current blocker; if the persistence shape proves too large for safe frontmatter updates, capture that as a decision before widening scope.
 - Junior-developer readiness verdict: PASS once the implementer can name the template, generator, validator, and tests that together enforce canonical session context persistence.
+
+## Related Notes
+
+- Step: [[02_Phases/Phase_01_built_in_vault_context_management/Steps/Step_02_implement-canonical-session-context-persistence|STEP-01-02 Implement canonical session context persistence]]
+- Phase: [[02_Phases/Phase_01_built_in_vault_context_management/Phase|PHASE-01 Built-in vault context management]]
