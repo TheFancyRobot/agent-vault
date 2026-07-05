@@ -31,6 +31,8 @@ Use this note as the thin index for one executable step inside a phase. Keep thi
 
 - [[02_Phases/Phase_03_package_level_vault_migration_system/Phase|Phase 03 package-level vault migration system]]
 - [[02_Phases/Phase_03_package_level_vault_migration_system/Steps/Step_01_draft-package-level-migration-rfc|STEP-03-01 Draft package-level migration RFC]]
+- [[01_Architecture/Package_Migration_System|Package-level migration system (RFC)]]
+- [[01_Architecture/Agent_Workflow|Agent Workflow]]
 - [[02_Phases/Phase_03_package_level_vault_migration_system/Steps/Step_02_translate-rfc-into-pr-sized-implementation-checklist/Execution_Brief|Execution Brief]]
 - [[02_Phases/Phase_03_package_level_vault_migration_system/Steps/Step_02_translate-rfc-into-pr-sized-implementation-checklist/Validation_Plan|Validation Plan]]
 
@@ -47,7 +49,7 @@ Use this note as the thin index for one executable step inside a phase. Keep thi
 - Status: planned
 - Current owner: 
 - Last touched: 2026-04-26
-- Next action: Wait for STEP-03-01 to produce the package-level RFC, then convert that contract into a PR-sized checklist.
+- Next action: STEP-03-01 is complete ([[01_Architecture/Package_Migration_System|Package-level migration system (RFC)]]). Convert that RFC into a PR-sized implementation checklist.
 <!-- AGENT-END:step-agent-managed-snapshot -->
 
 ## Human Notes
