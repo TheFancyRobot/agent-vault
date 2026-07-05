@@ -15,6 +15,7 @@ related_architecture:
   - '[[01_Architecture/System_Overview|System Overview]]'
   - '[[01_Architecture/Code_Map|Code Map]]'
   - '[[01_Architecture/Package_Migration_System|Package-level migration system (RFC)]]'
+  - '[[01_Architecture/Package_Migration_Implementation_Checklist|Package-level migration system implementation checklist]]'
 related_decisions: []
 related_bugs: []
 tags:
@@ -80,9 +81,9 @@ Use this note for a bounded phase of work in `02_Phases/`. This note is the sour
 - [[01_Architecture/Agent_Workflow|Agent Workflow]]
 - [[01_Architecture/System_Overview|System Overview]]
 - [[01_Architecture/Code_Map|Code Map]]
-<!-- AGENT-END:phase-related-architecture -->
 - [[01_Architecture/Package_Migration_System|Package-level migration system (RFC)]]
 - [[01_Architecture/Package_Migration_Implementation_Checklist|Package-level migration system implementation checklist]]
+<!-- AGENT-END:phase-related-architecture -->
 
 ## Related Decisions
 
