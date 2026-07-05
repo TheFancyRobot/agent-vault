@@ -4,12 +4,12 @@ import { encode } from '@toon-format/toon';
 import type { AgentVaultCommandEnvironment } from './note-generators';
 import { formatCommandHelp } from './command-catalog';
 import { resolveVaultRoot } from './vault-files';
-import type { CodeGraphIndexPayload, CodeSymbol } from '../scaffold/code-graph';
+import type { CodeGraphIndexPayload, CodeGraphIndexV3, CodeSymbolV3 } from '../scaffold/code-graph';
 
 export interface CodeGraphLookupMatch {
   readonly file: string;
   readonly language: string;
-  readonly symbol: CodeSymbol;
+  readonly symbol: CodeSymbolV3;
 }
 
 export interface QueryCodeGraphIndexInput {
@@ -38,13 +38,17 @@ const parsePositiveIntOption = (flag: string, value: string | undefined): number
   return parsed;
 };
 
-export async function loadCodeGraphIndex(vaultRoot: string): Promise<CodeGraphIndexPayload> {
+export type CodeGraphIndex = CodeGraphIndexPayload | CodeGraphIndexV3;
+
+export async function loadCodeGraphIndex(vaultRoot: string): Promise<CodeGraphIndex> {
   const raw = await readFile(join(vaultRoot, CODE_GRAPH_INDEX_PATH), 'utf-8');
-  return JSON.parse(raw) as CodeGraphIndexPayload;
+  const parsed = JSON.parse(raw) as { version: number };
+  // Both v2 and v3 are compatible for lookup purposes; return as-is
+  return parsed as CodeGraphIndex;
 }
 
 export function queryCodeGraphIndex(
-  index: CodeGraphIndexPayload,
+  index: CodeGraphIndex,
   { query, limit, pathSubstring, exportedOnly }: QueryCodeGraphIndexInput,
 ): CodeGraphLookupMatch[] {
   const normalizedQuery = normalize(query);
@@ -139,7 +143,7 @@ export function formatCodeGraphLookupResults(matches: CodeGraphLookupMatch[], qu
 }
 
 export function formatCodeGraphLookupResultsAsToon(
-  index: CodeGraphIndexPayload,
+  index: CodeGraphIndex,
   matches: CodeGraphLookupMatch[],
   query: string,
   options: FormatCodeGraphLookupToonOptions = {},
@@ -147,7 +151,7 @@ export function formatCodeGraphLookupResultsAsToon(
   const compact = options.compact ?? false;
 
   if (compact) {
-    const groupedMatches = Object.entries(matches.reduce<Record<string, { language: string; symbols: Array<{ name: string; kind: CodeSymbol['kind']; line: number; exported: boolean }> }>>((acc, match) => {
+    const groupedMatches = Object.entries(matches.reduce<Record<string, { language: string; symbols: Array<{ name: string; kind: string; line: number; exported: boolean }> }>>((acc, match) => {
       const existing = acc[match.file] ?? { language: match.language, symbols: [] };
       existing.symbols.push({
         name: match.symbol.name,
@@ -166,9 +170,13 @@ export function formatCodeGraphLookupResultsAsToon(
     }, { delimiter: '\t', keyFolding: 'safe' });
   }
 
+  // v2 has repoName, v3 has root; use whichever is available
+  const index2 = index as CodeGraphIndexPayload;
+  const index3 = index as CodeGraphIndexV3;
   return encode({
-    repoName: index.repoName,
-    generatedAt: index.generatedAt,
+    repoName: index2.repoName,
+    root: index3.root,
+    generatedAt: index2.generatedAt,
     query,
     matchCount: matches.length,
     matches,

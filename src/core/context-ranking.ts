@@ -1,5 +1,3 @@
-import { join } from 'path';
-
 /**
  * A vault-note candidate for deterministic context ranking.
  *
