@@ -9,3 +9,8 @@
 - Backfilled the legacy session note `2026-04-20-013545` (from STEP-01-01) with a canonical `context` field using the dot-path migration pattern. This fixes the pre-existing `vault_validate doctor` error and serves as live proof that the migration docs work.
 - After backfill, `vault_validate doctor` reports clean (0 errors, 0 warnings).
 - All 101 tests pass, typecheck clean.
+
+## Related Notes
+
+- Step: [[02_Phases/Phase_01_built_in_vault_context_management/Steps/Step_04_add-tests-docs-and-migration-notes|STEP-01-04 Add tests, docs, and migration notes]]
+- Phase: [[02_Phases/Phase_01_built_in_vault_context_management/Phase|PHASE-01 Built-in vault context management]]

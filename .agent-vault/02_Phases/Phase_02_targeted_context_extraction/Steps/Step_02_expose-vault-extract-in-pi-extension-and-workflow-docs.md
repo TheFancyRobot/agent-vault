@@ -15,6 +15,8 @@ related_sessions:
   - '[[05_Sessions/2026-04-26-201711-expose-vault-extract-in-pi-extension-and-workflow-docs-pi|SESSION-2026-04-26-201711 Pi session for Expose vault_extract in pi extension and workflow docs]]'
 related_bugs:
   - '[[03_Bugs/BUG-0003_pi-create-phase-workflow-implements-work-instead-of-creating-a-plan-and-fails-to-persist-corrected-plan|BUG-0003 Pi create-phase workflow implements work instead of creating a plan and fails to persist corrected plan]]'
+  - '[[03_Bugs/BUG-0004_docs-prompt-templates-call-non-existent-vault-validate-all-vault-refresh-all-mcp-tools|BUG-0004 docs Prompt templates call non-existent vault_validate_all / vault_refresh_all MCP tools]]'
+  - '[[03_Bugs/BUG-0005_vault-help-casts-arbitrary-command-string-and-can-throw-unhandled-mcp-extension-error|BUG-0005 vault_help casts arbitrary command string and can throw unhandled MCP/extension error]]'
 tags:
   - agent-vault
   - step

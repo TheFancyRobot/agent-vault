@@ -15,3 +15,8 @@
 - Integration touchpoints and downstream effects: STEP-01-02 consumes the schema, STEP-01-03 consumes command names and lifecycle semantics, and STEP-01-04 consumes the final wording for docs/migration notes.
 - Blockers, unresolved decisions, and handoff expectations: no blocker is currently recorded; if a new contract choice is needed, capture it in DEC-0001 before implementation continues.
 - Junior-developer readiness verdict: PASS once the implementer can point to the exact contract files, values, and validation commands without relying on chat history.
+
+## Related Notes
+
+- Step: [[02_Phases/Phase_01_built_in_vault_context_management/Steps/Step_01_finalize-context-schema-and-command-surface|STEP-01-01 Finalize context schema and command surface]]
+- Phase: [[02_Phases/Phase_01_built_in_vault_context_management/Phase|PHASE-01 Built-in vault context management]]

@@ -7,3 +7,8 @@
 - All 6 workflow docs (vault:execute, vault:resume, vault:orchestrate — both claude-commands and pi skills) updated to reference step mirrors.
 - Validation performed: `bun test` (63 pass, 0 fail across 6 files), `bun run typecheck` (clean).
 - Follow-up: STEP-01-04 can document and test the full context lifecycle including step mirrors.
+
+## Related Notes
+
+- Step: [[02_Phases/Phase_01_built_in_vault_context_management/Steps/Step_03_implement-step-mirrors-and-workflow-integration|STEP-01-03 Implement step mirrors and workflow integration]]
+- Phase: [[02_Phases/Phase_01_built_in_vault_context_management/Phase|PHASE-01 Built-in vault context management]]

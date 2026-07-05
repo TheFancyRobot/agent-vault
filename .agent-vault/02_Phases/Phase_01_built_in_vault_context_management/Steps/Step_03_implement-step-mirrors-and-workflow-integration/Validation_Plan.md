@@ -15,3 +15,8 @@
 - Integration touchpoints and downstream effects: touches note generation, note mutation, workflow prompts, pi skills, install/rendering tests, and the user-visible execution model described in README.
 - Blockers, unresolved decisions, and handoff expectations: no blocker is currently recorded; if workflow prompts cannot express the new lifecycle cleanly, capture a follow-up decision instead of silently diverging from DEC-0001.
 - Junior-developer readiness verdict: PASS once the implementer can trace one end-to-end path from active session context -> mirrored step fields -> `/vault:resume` continuation behavior.
+
+## Related Notes
+
+- Step: [[02_Phases/Phase_01_built_in_vault_context_management/Steps/Step_03_implement-step-mirrors-and-workflow-integration|STEP-01-03 Implement step mirrors and workflow integration]]
+- Phase: [[02_Phases/Phase_01_built_in_vault_context_management/Phase|PHASE-01 Built-in vault context management]]

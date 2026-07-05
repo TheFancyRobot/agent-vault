@@ -14,3 +14,8 @@
   1. Added `updateStepMirrors()` export to `note-generators.ts` — re-reads canonical session context from session note and re-mirrors onto linked step. Resolves runtime/doc mismatch: mirrors can now update on lifecycle transitions, not just creation.
   2. Added dot-path deep-merge support to `updateFrontmatter` in `note-mutations.ts` — `vault_mutate --set context.status=completed` now merges into nested objects instead of creating a flat key.
   3. Fixed live vault note: `related_sessions` corrected from scalar to list, step-mirror fields added to frontmatter, duplicated Session History line removed, Agent-Managed Snapshot updated to reflect completed status.
+
+## Related Notes
+
+- Step: [[02_Phases/Phase_01_built_in_vault_context_management/Steps/Step_03_implement-step-mirrors-and-workflow-integration|STEP-01-03 Implement step mirrors and workflow integration]]
+- Phase: [[02_Phases/Phase_01_built_in_vault_context_management/Phase|PHASE-01 Built-in vault context management]]
