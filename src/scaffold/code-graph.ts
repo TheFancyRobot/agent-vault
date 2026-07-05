@@ -1,5 +1,8 @@
-import { mkdir, readFile, readdir, writeFile } from 'fs/promises';
+import { createHash } from 'crypto';
+import { mkdir, readFile, readdir, stat, writeFile } from 'fs/promises';
 import { extname, join, relative } from 'path';
+
+// ─── v2 types (kept for backward-compat lookup) ───
 
 export interface CodeSymbol {
   readonly name: string;
@@ -36,6 +39,50 @@ export interface CodeGraphIndexPayload {
   readonly totalSymbols: number;
   readonly directories: CodeGraphDirectorySummary[];
   readonly files: FileSymbols[];
+}
+
+// ─── v3 types ───
+
+export interface CodeSymbolV3 extends CodeSymbol {
+  readonly endLine?: number;
+  readonly signature?: string;
+  readonly doc?: string;
+  readonly parentName?: string;
+}
+
+export interface ImportEdge {
+  readonly source: string;
+  readonly specifier: string;
+  readonly imported?: string[];
+  readonly resolvedPath?: string;
+  readonly kind?: 'static' | 'dynamic' | 'type';
+}
+
+export interface ExportEdge {
+  readonly name?: string;
+  readonly source?: string;
+  readonly resolvedPath?: string;
+  readonly kind?: 'named' | 'default' | 'namespace' | 'reexport';
+}
+
+export interface FileSymbolsV3 {
+  readonly path: string;
+  readonly language: string;
+  readonly symbols: CodeSymbolV3[];
+  readonly imports?: ImportEdge[];
+  readonly exports?: ExportEdge[];
+  readonly hash?: string;
+  readonly mtimeMs?: number;
+  readonly size?: number;
+  readonly generated?: boolean;
+  readonly vendor?: boolean;
+}
+
+export interface CodeGraphIndexV3 {
+  readonly version: 3;
+  readonly generatedAt: string;
+  readonly root: string;
+  readonly files: FileSymbolsV3[];
 }
 
 const SKIP_DIRS = new Set([
@@ -78,32 +125,242 @@ const parseNamesFromBraces = (braceContent: string): string[] => {
     .filter((name) => name.length > 0 && /^[\w$]+$/.test(name));
 };
 
-type SymbolExtractor = (content: string) => CodeSymbol[];
+type SymbolExtractorV3 = (content: string) => CodeSymbolV3[];
 
-const extractTypeScript: SymbolExtractor = (content) => {
-  const symbols: CodeSymbol[] = [];
+/**
+ * Extract JSDoc comment from preceding lines.
+ * Returns the comment text or undefined.
+ */
+const extractJSDoc = (lines: string[], fromLine: number): string | undefined => {
+  // Walk backward from the symbol's line looking for a JSDoc block
+  let i = fromLine - 1;
+  while (i >= 0) {
+    const trimmed = lines[i].trim();
+    if (trimmed === '*/' || trimmed.startsWith('* ')) {
+      i--;
+      continue;
+    }
+    if (trimmed === '/**' || trimmed.startsWith('/**')) {
+      // Found start of JSDoc; collect lines between /** and */
+      const start = i;
+      let end = fromLine;
+      const docLines: string[] = [];
+      for (let j = start + 1; j < end; j++) {
+        const t = lines[j].trim();
+        if (t.startsWith('* ')) {
+          docLines.push(t.slice(2));
+        } else if (t.startsWith('*') || t === '*/') {
+          docLines.push(t.replace(/^\*[\s/]*$/g, '').trim());
+        }
+      }
+      return docLines.join('\n').trim();
+    }
+    break;
+  }
+  return undefined;
+};
+
+/**
+ * Try to extract a function signature from a single declaration line.
+ * Returns undefined for multiline or complex declarations.
+ */
+const extractFunctionSignature = (line: string): string | undefined => {
+  // Match: function name(params): returnType or arrow function
+  const match = /(?:^|\s)(?:async\s+)?(function|const|let|var)\s+(\w+)\s*\(([^)]*)\)(\s*:\s*(\S+))?(\s*(?:=\s*)?)$/.exec(line);
+  if (match) {
+    const returnType = match[5] || '';
+    return `(${match[3] || ''})${returnType ? `: ${returnType}` : ''}`;
+  }
+  // Simpler pattern for just the parameter list
+  const simpleFn = /(?:^|\s)(?:async\s+)?(function|const|let|var)\s+(\w+)\s*\(([^)]*)\)/.exec(line);
+  if (simpleFn) {
+    return `(${simpleFn[3] || ''})`;
+  }
+  return undefined;
+};
+
+const extractImportEdges = (content: string): ImportEdge[] => {
+  const lines = content.split('\n');
+  const edges: ImportEdge[] = [];
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+
+    // import { a, b } from 'specifier'
+    const namedImport = /^import\s+\{([^}]+)\}\s+from\s+['"]([^'"]+)['"]/.exec(line);
+    if (namedImport) {
+      const names = namedImport[1].split(',')
+        .map(n => n.trim())
+        .filter(n => n.length > 0 && !n.startsWith('...') && !n.startsWith('{') && !n.startsWith('['))
+        .map(n => {
+          const asMatch = /(\w+)\s+as\s+(\w+)/.exec(n);
+          return asMatch ? asMatch[2] : n.replace(/[^a-zA-Z0-9_$]/g, '');
+        })
+        .filter(n => n.length > 0 && /^[\w$]+$/.test(n));
+      edges.push({
+        source: namedImport[1].trim(),
+        specifier: namedImport[2],
+        imported: names,
+        kind: 'static',
+      });
+      continue;
+    }
+
+    // import type { a, b } from 'specifier'
+    const typeImport = /^import\s+type\s+\{([^}]+)\}\s+from\s+['"]([^'"]+)['"]/.exec(line);
+    if (typeImport) {
+      const names = typeImport[1].split(',')
+        .map(n => n.trim())
+        .filter(n => n.length > 0)
+        .map(n => n.replace(/[^a-zA-Z0-9_$]/g, ''))
+        .filter(n => n.length > 0 && /^[\w$]+$/.test(n));
+      edges.push({
+        source: typeImport[1].trim(),
+        specifier: typeImport[2],
+        imported: names,
+        kind: 'type',
+      });
+      continue;
+    }
+
+    // import defaultName from 'specifier'
+    const defaultImport = /^import\s+(\w+)\s+from\s+['"]([^'"]+)['"]/.exec(line);
+    if (defaultImport) {
+      edges.push({
+        source: defaultImport[1],
+        specifier: defaultImport[2],
+        imported: [defaultImport[1]],
+        kind: 'static',
+      });
+      continue;
+    }
+
+    // import * as name from 'specifier'
+    const namespaceImport = /^import\s+\*\s+as\s+(\w+)\s+from\s+['"]([^'"]+)['"]/.exec(line);
+    if (namespaceImport) {
+      edges.push({
+        source: namespaceImport[1],
+        specifier: namespaceImport[2],
+        kind: 'static',
+      });
+      continue;
+    }
+
+    // import 'specifier' (side-effect)
+    const sideEffectImport = /^import\s+['"]([^'"]+)['"]/.exec(line);
+    if (sideEffectImport) {
+      edges.push({
+        source: '',
+        specifier: sideEffectImport[1],
+        kind: 'static',
+      });
+      continue;
+    }
+
+    // Dynamic import: import('specifier')
+    const dynamicImport = /import\s*\(\s*['"]([^'"]+)['"]\s*\)/.exec(line);
+    if (dynamicImport) {
+      edges.push({
+        source: '',
+        specifier: dynamicImport[1],
+        kind: 'dynamic',
+      });
+      continue;
+    }
+  }
+
+  return edges;
+};
+
+const extractExportEdges = (content: string): ExportEdge[] => {
+  const lines = content.split('\n');
+  const edges: ExportEdge[] = [];
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+
+    // export { foo, bar } from 'specifier' (re-export)
+    const reExport = /^export\s+\{([^}]+)\}\s+from\s+['"]([^'"]+)['"]/.exec(line);
+    if (reExport) {
+      edges.push({
+        name: reExport[1].trim(),
+        source: reExport[2],
+        kind: 'reexport',
+      });
+      continue;
+    }
+
+    // export * from 'specifier' (namespace re-export)
+    const namespaceExport = /^export\s+\*\s+from\s+['"]([^'"]+)['"]/.exec(line);
+    if (namespaceExport) {
+      edges.push({
+        name: '*',
+        source: namespaceExport[1],
+        kind: 'namespace',
+      });
+      continue;
+    }
+
+    // export default (function/class/const/etc.)
+    const defaultExport = /^export\s+default\s+(?:async\s+)?(?:function|class|const|let|var|type|interface|enum)\s+(\w+)?/.exec(line);
+    if (defaultExport) {
+      edges.push({
+        name: defaultExport[1],
+        kind: 'default',
+      });
+      continue;
+    }
+
+    // export default (expression)
+    const defaultExpr = /^export\s+default\s+[^{\s]/.exec(line);
+    if (defaultExpr) {
+      edges.push({
+        kind: 'default',
+      });
+      continue;
+    }
+  }
+
+  return edges;
+};
+
+const extractTypeScript: SymbolExtractorV3 = (content) => {
+  const symbols: CodeSymbolV3[] = [];
   const lines = content.split('\n');
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
     const lineNum = i + 1;
+    const doc = extractJSDoc(lines, i);
 
-    const exportFn = /^export\s+(?:async\s+)?function\s+(\w+)/m.exec(line);
-    if (exportFn) { symbols.push({ name: exportFn[1], kind: 'function', line: lineNum, exported: true }); continue; }
+    const exportFn = /^export\s+(?:async\s+)?function\s+(\w+)/.exec(line);
+    if (exportFn) {
+      symbols.push({ name: exportFn[1], kind: 'function', line: lineNum, exported: true, endLine: lineNum, signature: extractFunctionSignature(line), doc });
+      continue;
+    }
 
     const exportClass = /^export\s+(?:abstract\s+)?class\s+(\w+)/.exec(line);
-    if (exportClass) { symbols.push({ name: exportClass[1], kind: 'class', line: lineNum, exported: true }); continue; }
+    if (exportClass) {
+      symbols.push({ name: exportClass[1], kind: 'class', line: lineNum, exported: true, endLine: lineNum, doc });
+      continue;
+    }
 
     const exportInterface = /^export\s+interface\s+(\w+)/.exec(line);
-    if (exportInterface) { symbols.push({ name: exportInterface[1], kind: 'interface', line: lineNum, exported: true }); continue; }
+    if (exportInterface) {
+      symbols.push({ name: exportInterface[1], kind: 'interface', line: lineNum, exported: true, endLine: lineNum, doc });
+      continue;
+    }
 
     const exportType = /^export\s+type\s+(\w+)/.exec(line);
-    if (exportType) { symbols.push({ name: exportType[1], kind: 'type', line: lineNum, exported: true }); continue; }
+    if (exportType) {
+      symbols.push({ name: exportType[1], kind: 'type', line: lineNum, exported: true, endLine: lineNum, doc });
+      continue;
+    }
 
     const destructuredExport = /^export\s+(?:const|let|var)\s+\{([^}]+)\}/.exec(line);
     if (destructuredExport) {
       for (const name of parseNamesFromBraces(destructuredExport[1])) {
-        symbols.push({ name, kind: 'const', line: lineNum, exported: true });
+        symbols.push({ name, kind: 'const', line: lineNum, exported: true, endLine: lineNum });
       }
       continue;
     }
@@ -111,52 +368,79 @@ const extractTypeScript: SymbolExtractor = (content) => {
     const arrayDestructuredExport = /^export\s+(?:const|let|var)\s+\[([^\]]+)\]/.exec(line);
     if (arrayDestructuredExport) {
       for (const name of parseNamesFromBraces(arrayDestructuredExport[1])) {
-        symbols.push({ name, kind: 'const', line: lineNum, exported: true });
+        symbols.push({ name, kind: 'const', line: lineNum, exported: true, endLine: lineNum });
       }
       continue;
     }
 
     const exportConst = /^export\s+(?:const|let|var)\s+(\w+)/.exec(line);
-    if (exportConst) { symbols.push({ name: exportConst[1], kind: 'const', line: lineNum, exported: true }); continue; }
+    if (exportConst) {
+      symbols.push({ name: exportConst[1], kind: 'const', line: lineNum, exported: true, endLine: lineNum });
+      continue;
+    }
 
     const exportEnum = /^export\s+enum\s+(\w+)/.exec(line);
-    if (exportEnum) { symbols.push({ name: exportEnum[1], kind: 'enum', line: lineNum, exported: true }); continue; }
+    if (exportEnum) {
+      symbols.push({ name: exportEnum[1], kind: 'enum', line: lineNum, exported: true, endLine: lineNum });
+      continue;
+    }
 
     const exportDefaultFn = /^export\s+default\s+(?:async\s+)?function\s+(\w+)/.exec(line);
-    if (exportDefaultFn) { symbols.push({ name: exportDefaultFn[1], kind: 'function', line: lineNum, exported: true }); continue; }
+    if (exportDefaultFn) {
+      symbols.push({ name: exportDefaultFn[1], kind: 'function', line: lineNum, exported: true, endLine: lineNum, signature: extractFunctionSignature(line), doc });
+      continue;
+    }
 
     const exportDefaultClass = /^export\s+default\s+class\s+(\w+)/.exec(line);
-    if (exportDefaultClass) { symbols.push({ name: exportDefaultClass[1], kind: 'class', line: lineNum, exported: true }); continue; }
+    if (exportDefaultClass) {
+      symbols.push({ name: exportDefaultClass[1], kind: 'class', line: lineNum, exported: true, endLine: lineNum, doc });
+      continue;
+    }
 
     const reExport = /^export\s+\{([^}]+)\}/.exec(line);
     if (reExport) {
       for (const name of parseNamesFromBraces(reExport[1])) {
-        symbols.push({ name, kind: 'const', line: lineNum, exported: true });
+        symbols.push({ name, kind: 'const', line: lineNum, exported: true, endLine: lineNum });
       }
       continue;
     }
 
     const topFn = /^(?:async\s+)?function\s+(\w+)/.exec(line);
-    if (topFn) { symbols.push({ name: topFn[1], kind: 'function', line: lineNum, exported: false }); continue; }
+    if (topFn) {
+      symbols.push({ name: topFn[1], kind: 'function', line: lineNum, exported: false, endLine: lineNum, signature: extractFunctionSignature(line), doc });
+      continue;
+    }
 
     const topConst = /^const\s+(\w+)\s*(?::\s*\S+)?\s*=/.exec(line);
-    if (topConst) { symbols.push({ name: topConst[1], kind: 'const', line: lineNum, exported: false }); continue; }
+    if (topConst) {
+      symbols.push({ name: topConst[1], kind: 'const', line: lineNum, exported: false, endLine: lineNum });
+      continue;
+    }
 
     const topClass = /^(?:abstract\s+)?class\s+(\w+)/.exec(line);
-    if (topClass) { symbols.push({ name: topClass[1], kind: 'class', line: lineNum, exported: false }); continue; }
+    if (topClass) {
+      symbols.push({ name: topClass[1], kind: 'class', line: lineNum, exported: false, endLine: lineNum, doc });
+      continue;
+    }
 
     const topInterface = /^interface\s+(\w+)/.exec(line);
-    if (topInterface) { symbols.push({ name: topInterface[1], kind: 'interface', line: lineNum, exported: false }); continue; }
+    if (topInterface) {
+      symbols.push({ name: topInterface[1], kind: 'interface', line: lineNum, exported: false, endLine: lineNum, doc });
+      continue;
+    }
 
     const topType = /^type\s+(\w+)/.exec(line);
-    if (topType) { symbols.push({ name: topType[1], kind: 'type', line: lineNum, exported: false }); continue; }
+    if (topType) {
+      symbols.push({ name: topType[1], kind: 'type', line: lineNum, exported: false, endLine: lineNum, doc });
+      continue;
+    }
   }
 
   return symbols;
 };
 
-const extractPython: SymbolExtractor = (content) => {
-  const symbols: CodeSymbol[] = [];
+const extractPython: SymbolExtractorV3 = (content) => {
+  const symbols: CodeSymbolV3[] = [];
   const lines = content.split('\n');
 
   for (let i = 0; i < lines.length; i++) {
@@ -193,8 +477,8 @@ const extractPython: SymbolExtractor = (content) => {
   return symbols;
 };
 
-const extractGo: SymbolExtractor = (content) => {
-  const symbols: CodeSymbol[] = [];
+const extractGo: SymbolExtractorV3 = (content) => {
+  const symbols: CodeSymbolV3[] = [];
   const lines = content.split('\n');
 
   for (let i = 0; i < lines.length; i++) {
@@ -226,8 +510,8 @@ const extractGo: SymbolExtractor = (content) => {
   return symbols;
 };
 
-const extractRust: SymbolExtractor = (content) => {
-  const symbols: CodeSymbol[] = [];
+const extractRust: SymbolExtractorV3 = (content) => {
+  const symbols: CodeSymbolV3[] = [];
   const lines = content.split('\n');
 
   for (let i = 0; i < lines.length; i++) {
@@ -268,8 +552,8 @@ const extractRust: SymbolExtractor = (content) => {
   return symbols;
 };
 
-const extractJava: SymbolExtractor = (content) => {
-  const symbols: CodeSymbol[] = [];
+const extractJava: SymbolExtractorV3 = (content) => {
+  const symbols: CodeSymbolV3[] = [];
   const lines = content.split('\n');
 
   for (let i = 0; i < lines.length; i++) {
@@ -306,8 +590,8 @@ const extractJava: SymbolExtractor = (content) => {
   return symbols;
 };
 
-const extractKotlin: SymbolExtractor = (content) => {
-  const symbols: CodeSymbol[] = [];
+const extractKotlin: SymbolExtractorV3 = (content) => {
+  const symbols: CodeSymbolV3[] = [];
   const lines = content.split('\n');
 
   for (let i = 0; i < lines.length; i++) {
@@ -336,8 +620,8 @@ const extractKotlin: SymbolExtractor = (content) => {
   return symbols;
 };
 
-const extractRuby: SymbolExtractor = (content) => {
-  const symbols: CodeSymbol[] = [];
+const extractRuby: SymbolExtractorV3 = (content) => {
+  const symbols: CodeSymbolV3[] = [];
   const lines = content.split('\n');
 
   for (let i = 0; i < lines.length; i++) {
@@ -361,8 +645,8 @@ const extractRuby: SymbolExtractor = (content) => {
   return symbols;
 };
 
-const extractCSharp: SymbolExtractor = (content) => {
-  const symbols: CodeSymbol[] = [];
+const extractCSharp: SymbolExtractorV3 = (content) => {
+  const symbols: CodeSymbolV3[] = [];
   const lines = content.split('\n');
 
   for (let i = 0; i < lines.length; i++) {
@@ -399,8 +683,8 @@ const extractCSharp: SymbolExtractor = (content) => {
   return symbols;
 };
 
-const extractSwift: SymbolExtractor = (content) => {
-  const symbols: CodeSymbol[] = [];
+const extractSwift: SymbolExtractorV3 = (content) => {
+  const symbols: CodeSymbolV3[] = [];
   const lines = content.split('\n');
 
   for (let i = 0; i < lines.length; i++) {
@@ -435,8 +719,8 @@ const extractSwift: SymbolExtractor = (content) => {
   return symbols;
 };
 
-const extractPHP: SymbolExtractor = (content) => {
-  const symbols: CodeSymbol[] = [];
+const extractPHP: SymbolExtractorV3 = (content) => {
+  const symbols: CodeSymbolV3[] = [];
   const lines = content.split('\n');
 
   for (let i = 0; i < lines.length; i++) {
@@ -465,8 +749,8 @@ const extractPHP: SymbolExtractor = (content) => {
   return symbols;
 };
 
-const extractScala: SymbolExtractor = (content) => {
-  const symbols: CodeSymbol[] = [];
+const extractScala: SymbolExtractorV3 = (content) => {
+  const symbols: CodeSymbolV3[] = [];
   const lines = content.split('\n');
 
   for (let i = 0; i < lines.length; i++) {
@@ -492,8 +776,8 @@ const extractScala: SymbolExtractor = (content) => {
   return symbols;
 };
 
-const extractElixir: SymbolExtractor = (content) => {
-  const symbols: CodeSymbol[] = [];
+const extractElixir: SymbolExtractorV3 = (content) => {
+  const symbols: CodeSymbolV3[] = [];
   const lines = content.split('\n');
 
   for (let i = 0; i < lines.length; i++) {
@@ -513,7 +797,7 @@ const extractElixir: SymbolExtractor = (content) => {
   return symbols;
 };
 
-const EXTRACTORS: Record<string, SymbolExtractor> = {
+const EXTRACTORS: Record<string, SymbolExtractorV3> = {
   TypeScript: extractTypeScript,
   JavaScript: extractTypeScript,
   Python: extractPython,
@@ -529,10 +813,13 @@ const EXTRACTORS: Record<string, SymbolExtractor> = {
   Elixir: extractElixir,
 };
 
+const GENERATED_DIRS = new Set(['.next', '.nuxt', '.svelte-kit', 'dist', 'build', 'out', '__pycache__', '.gradle']);
+const VENDOR_DIRS = new Set(['node_modules', '.git', '.agent-vault', 'vendor', '.venv', 'venv', '.idea', '.vscode', 'coverage', '.planning', '.obsidian']);
+
 async function walkSourceFiles(
   projectRoot: string,
   dir: string,
-  results: FileSymbols[],
+  results: FileSymbolsV3[],
   depth = 0,
 ): Promise<void> {
   if (depth > 8) return;
@@ -567,7 +854,37 @@ async function walkSourceFiles(
       const symbols = extractor(content);
       if (symbols.length > 0) {
         const relativePath = relative(projectRoot, fullPath).replace(/\\/g, '/');
-        results.push({ path: relativePath, language, symbols });
+        const fileStats = await stat(fullPath);
+        const hash = createHash('sha256').update(content).digest('hex');
+
+        // Determine flags
+        const rel = relative(projectRoot, dir).replace(/\\/g, '/');
+        const genArray = [...GENERATED_DIRS];
+        const vendArray = [...VENDOR_DIRS];
+        const generated = GENERATED_DIRS.has(rel) || genArray.some((d: string) => relativePath.includes('/' + d + '/'));
+        const vendor = VENDOR_DIRS.has(rel) || vendArray.some((d: string) => relativePath.includes('/' + d + '/'));
+
+        let fileResult: FileSymbolsV3 = {
+          path: relativePath,
+          language,
+          symbols,
+          hash,
+          mtimeMs: fileStats.mtimeMs,
+          size: fileStats.size,
+          generated,
+          vendor,
+        };
+
+        // Only extract import/export edges for TS/JS
+        if (language === 'TypeScript' || language === 'JavaScript') {
+          fileResult = {
+            ...fileResult,
+            imports: extractImportEdges(content),
+            exports: extractExportEdges(content),
+          };
+        }
+
+        results.push(fileResult);
       }
     } catch {
       // Skip unreadable files
@@ -576,7 +893,7 @@ async function walkSourceFiles(
 }
 
 export async function buildCodeGraph(projectRoot: string): Promise<CodeGraphResult> {
-  const files: FileSymbols[] = [];
+  const files: FileSymbolsV3[] = [];
   await walkSourceFiles(projectRoot, projectRoot, files);
 
   files.sort((a, b) => a.path.localeCompare(b.path));
@@ -615,6 +932,16 @@ export function summarizeCodeGraph(graph: CodeGraphResult): CodeGraphDirectorySu
   });
 }
 
+export function buildCodeGraphIndexPayloadV3(graph: CodeGraphResult, root: string, generatedAt = new Date().toISOString()): CodeGraphIndexV3 {
+  return {
+    version: 3,
+    generatedAt,
+    root,
+    files: graph.files,
+  };
+}
+
+// Keep v2 for backward compatibility (used by older lookups)
 export function buildCodeGraphIndexPayload(graph: CodeGraphResult, repoName: string, generatedAt = new Date().toISOString()): CodeGraphIndexPayload {
   return {
     version: 2,
@@ -623,7 +950,7 @@ export function buildCodeGraphIndexPayload(graph: CodeGraphResult, repoName: str
     totalFiles: graph.totalFiles,
     totalSymbols: graph.totalSymbols,
     directories: summarizeCodeGraph(graph),
-    files: graph.files,
+    files: graph.files.map(f => ({ path: f.path, language: f.language, symbols: f.symbols })),
   };
 }
 
@@ -730,7 +1057,7 @@ export async function writeCodeGraph(
 ): Promise<CodeGraphResult> {
   const graph = await buildCodeGraph(projectRoot);
   const markdown = renderCodeGraphMarkdown(graph, repoName);
-  const indexPayload = buildCodeGraphIndexPayload(graph, repoName);
+  const indexPayload = buildCodeGraphIndexPayloadV3(graph, projectRoot);
 
   const outputPath = join(vaultRoot, '01_Architecture', 'Code_Graph.md');
   const indexDir = join(vaultRoot, '08_Automation', 'code-graph');
@@ -746,8 +1073,8 @@ export async function writeCodeGraph(
 export function findSymbols(
   graph: CodeGraphResult,
   query: string,
-): Array<{ file: string; symbol: CodeSymbol }> {
-  const results: Array<{ file: string; symbol: CodeSymbol }> = [];
+): Array<{ file: string; symbol: CodeSymbolV3 }> {
+  const results: Array<{ file: string; symbol: CodeSymbolV3 }> = [];
   const lowerQuery = query.toLowerCase();
 
   for (const file of graph.files) {
@@ -764,8 +1091,8 @@ export function findSymbols(
 export function getSymbolsForFiles(
   graph: CodeGraphResult,
   filePaths: string[],
-): Map<string, CodeSymbol[]> {
-  const result = new Map<string, CodeSymbol[]>();
+): Map<string, CodeSymbolV3[]> {
+  const result = new Map<string, CodeSymbolV3[]>();
 
   for (const queryPath of filePaths) {
     for (const file of graph.files) {
