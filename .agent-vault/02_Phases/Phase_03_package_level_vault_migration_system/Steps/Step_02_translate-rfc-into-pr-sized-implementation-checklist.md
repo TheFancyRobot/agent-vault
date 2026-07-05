@@ -5,17 +5,22 @@ contract_version: 1
 title: Translate RFC into PR-sized implementation checklist
 step_id: STEP-03-02
 phase: '[[02_Phases/Phase_03_package_level_vault_migration_system/Phase|Phase 03 package-level vault migration system]]'
-status: planned
+status: done
 owner: ''
 created: '2026-04-26'
-updated: '2026-04-26'
+updated: '2026-07-05'
 depends_on:
   - '[[02_Phases/Phase_03_package_level_vault_migration_system/Steps/Step_01_draft-package-level-migration-rfc|STEP-03-01 Draft package-level migration RFC]]'
-related_sessions: []
+related_sessions:
+  - '[[05_Sessions/2026-07-05-202739-translate-rfc-into-pr-sized-implementation-checklist-claude|SESSION-2026-07-05-202739 claude session for Translate RFC into PR-sized implementation checklist]]'
 related_bugs: []
 tags:
   - agent-vault
   - step
+context_id: SESSION-2026-07-05-202739
+active_session_id: 05_Sessions/2026-07-05-202739-translate-rfc-into-pr-sized-implementation-checklist-claude
+context_status: active
+context_summary: Advance [[02_Phases/Phase_03_package_level_vault_migration_system/Steps/Step_02_translate-rfc-into-pr-sized-implementation-checklist|STEP-03-02 Translate RFC into PR-sized implementation checklist]].
 ---
 
 # Step 02 - Translate RFC into PR-sized implementation checklist
@@ -33,6 +38,7 @@ Use this note as the thin index for one executable step inside a phase. Keep thi
 - [[02_Phases/Phase_03_package_level_vault_migration_system/Steps/Step_01_draft-package-level-migration-rfc|STEP-03-01 Draft package-level migration RFC]]
 - [[01_Architecture/Package_Migration_System|Package-level migration system (RFC)]]
 - [[01_Architecture/Agent_Workflow|Agent Workflow]]
+- [[01_Architecture/Package_Migration_Implementation_Checklist|Package-level migration system implementation checklist]]
 - [[02_Phases/Phase_03_package_level_vault_migration_system/Steps/Step_02_translate-rfc-into-pr-sized-implementation-checklist/Execution_Brief|Execution Brief]]
 - [[02_Phases/Phase_03_package_level_vault_migration_system/Steps/Step_02_translate-rfc-into-pr-sized-implementation-checklist/Validation_Plan|Validation Plan]]
 
@@ -46,10 +52,10 @@ Use this note as the thin index for one executable step inside a phase. Keep thi
 ## Agent-Managed Snapshot
 
 <!-- AGENT-START:step-agent-managed-snapshot -->
-- Status: planned
+- Status: done
 - Current owner: 
-- Last touched: 2026-04-26
-- Next action: STEP-03-01 is complete ([[01_Architecture/Package_Migration_System|Package-level migration system (RFC)]]). Convert that RFC into a PR-sized implementation checklist.
+- Last touched: 2026-07-05
+- Next action: None. Implementation checklist drafted at [[01_Architecture/Package_Migration_Implementation_Checklist|Package-level migration system implementation checklist]] (ARCH-0008); PHASE-03 can now move to closing out or handing off to an implementation phase.
 <!-- AGENT-END:step-agent-managed-snapshot -->
 
 ## Human Notes
@@ -60,5 +66,5 @@ Use this note as the thin index for one executable step inside a phase. Keep thi
 ## Session History
 
 <!-- AGENT-START:step-session-history -->
-- No sessions yet.
+- 2026-07-05 - [[05_Sessions/2026-07-05-202739-translate-rfc-into-pr-sized-implementation-checklist-claude|SESSION-2026-07-05-202739 claude session for Translate RFC into PR-sized implementation checklist]] - Session created.
 <!-- AGENT-END:step-session-history -->
