@@ -88,10 +88,27 @@ Agent Vault stores durable planning, architecture, bug, decision, and session co
 ├── 05_Sessions/          # Timestamped work session logs
 ├── 06_Shared_Knowledge/  # Standards, playbooks, taxonomy
 ├── 07_Templates/         # Note contracts and templates
+├── 08_Automation/        # Generated machine state (code-graph, code-stubs)
 └── .obsidian/            # Graph and plugin config for Obsidian
 ```
 
 Each note type has a canonical template with structured YAML frontmatter (note type, status, IDs, timestamps, relationships) and required headings. Notes are cross-linked with wikilinks, forming a traversable graph that agents can query for focused context.
+
+## Generated Automation Area
+
+Agent Vault writes machine-readable project state to `.agent-vault/08_Automation/`. This area is **auto-generated** by vault tools — it is not the same as human-authored phase, session, or step notes. Do not hand-edit files here; re-run the relevant vault command to regenerate them.
+
+```
+08_Automation/
+├── code-graph/
+│   └── index.json      # Regex-based symbol-to-file index (v2 schema)
+└── code-stubs/
+    ├── manifest.json    # Future: cached interface-stub manifest
+    └── ...              # Future: generated source interface stubs
+```
+
+- **`code-graph/index.json`** — Compact machine-readable index of exported and internal symbols, grouped by directory. Consumed by `vault_lookup_code_graph` for low-cost symbol/file discovery. Built from regex-based extraction; not a full AST or compiler-backed analysis. Refreshed by `vault_refresh` with `"target": "code_graph"`.
+- **`code-stubs/`** — Reserved for a future interface-stub cache that serves compact source skeletons as substitutes for full source files in indirect dependency contexts. Not yet implemented.
 
 ## Install
 
@@ -288,7 +305,7 @@ These tools are exposed via the MCP server and can be called by any MCP-compatib
 | `vault_traverse` | Load a connected subgraph for agent context — `root`, `depth`, `direction`, optional filters, `format`: `toon` or `json` |
 | `vault_extract` | Extract a bounded section from one note by exact markdown heading or generated-block name without returning the full note |
 | `vault_mutate` | Edit notes — `action`: `update_frontmatter`, `append_section` |
-| `vault_refresh` | Refresh home notes — `target`: `all`, `indexes`, `active_context` |
+| `vault_refresh` | Refresh home notes or the code graph — `target`: `all`, `indexes`, `active_context`, `code_graph` |
 | `vault_validate` | Check integrity — `target`: `all`, `frontmatter`, `structure`, `links`, `orphans`, `doctor` |
 | `vault_config` | View or update vault configuration (e.g., link resolver preference) |
 | `vault_help` | List commands or show detailed help for one |
