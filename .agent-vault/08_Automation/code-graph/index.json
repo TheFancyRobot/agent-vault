@@ -1,16 +1,23 @@
 {
   "version": 2,
-  "generatedAt": "2026-04-25T05:42:32.714Z",
+  "generatedAt": "2026-07-05T23:38:26.844Z",
   "repoName": "agent-vault",
-  "totalFiles": 34,
-  "totalSymbols": 564,
+  "totalFiles": 36,
+  "totalSymbols": 617,
   "directories": [
     {
       "directory": "src/core",
-      "files": 13,
-      "exportedSymbols": 116,
-      "internalSymbols": 232,
-      "totalSymbols": 348
+      "files": 14,
+      "exportedSymbols": 124,
+      "internalSymbols": 263,
+      "totalSymbols": 387
+    },
+    {
+      "directory": "src/scaffold",
+      "files": 4,
+      "exportedSymbols": 24,
+      "internalSymbols": 47,
+      "totalSymbols": 71
     },
     {
       "directory": "src",
@@ -18,13 +25,6 @@
       "exportedSymbols": 14,
       "internalSymbols": 47,
       "totalSymbols": 61
-    },
-    {
-      "directory": "src/scaffold",
-      "files": 4,
-      "exportedSymbols": 18,
-      "internalSymbols": 41,
-      "totalSymbols": 59
     },
     {
       "directory": "src/templates",
@@ -60,6 +60,13 @@
       "exportedSymbols": 0,
       "internalSymbols": 3,
       "totalSymbols": 3
+    },
+    {
+      "directory": ".",
+      "files": 1,
+      "exportedSymbols": 0,
+      "internalSymbols": 2,
+      "totalSymbols": 2
     }
   ],
   "files": [
@@ -70,19 +77,19 @@
         {
           "name": "CommandHandler",
           "kind": "type",
-          "line": 42,
+          "line": 43,
           "exported": false
         },
         {
           "name": "captureOutput",
           "kind": "const",
-          "line": 44,
+          "line": 45,
           "exported": false
         },
         {
           "name": "noArgs",
           "kind": "const",
-          "line": 60,
+          "line": 61,
           "exported": false
         }
       ]
@@ -358,73 +365,73 @@
         {
           "name": "createFakeToolHomes",
           "kind": "const",
-          "line": 239,
+          "line": 241,
           "exported": false
         },
         {
           "name": "detectTools",
           "kind": "const",
-          "line": 272,
+          "line": 274,
           "exported": false
         },
         {
           "name": "getToolMcpRootKey",
           "kind": "const",
-          "line": 293,
+          "line": 295,
           "exported": false
         },
         {
           "name": "assertValidToolMcpConfig",
           "kind": "const",
-          "line": 297,
+          "line": 299,
           "exported": false
         },
         {
           "name": "readJson",
           "kind": "const",
-          "line": 321,
+          "line": 323,
           "exported": false
         },
         {
           "name": "getCommandFileCount",
           "kind": "const",
-          "line": 326,
+          "line": 328,
           "exported": false
         },
         {
           "name": "resolveExpectedInstallScope",
           "kind": "const",
-          "line": 338,
+          "line": 340,
           "exported": false
         },
         {
           "name": "resolveExpectedInstallRoot",
           "kind": "const",
-          "line": 350,
+          "line": 352,
           "exported": false
         },
         {
           "name": "getManagedCommandFilenames",
           "kind": "const",
-          "line": 354,
+          "line": 356,
           "exported": false
         },
         {
           "name": "verifyInstalledState",
           "kind": "const",
-          "line": 366,
+          "line": 368,
           "exported": false
         },
         {
           "name": "verifyCleanState",
           "kind": "const",
-          "line": 408,
+          "line": 412,
           "exported": false
         },
         {
           "name": "runLocalE2E",
           "kind": "function",
-          "line": 453,
+          "line": 457,
           "exported": true
         }
       ]
@@ -494,39 +501,45 @@
           "exported": false
         },
         {
+          "name": "CodeGraphIndex",
+          "kind": "type",
+          "line": 41,
+          "exported": true
+        },
+        {
           "name": "loadCodeGraphIndex",
           "kind": "function",
-          "line": 41,
+          "line": 43,
           "exported": true
         },
         {
           "name": "queryCodeGraphIndex",
           "kind": "function",
-          "line": 46,
+          "line": 50,
           "exported": true
         },
         {
           "name": "parseLookupArgs",
           "kind": "const",
-          "line": 77,
+          "line": 81,
           "exported": false
         },
         {
           "name": "formatCodeGraphLookupResults",
           "kind": "function",
-          "line": 125,
+          "line": 129,
           "exported": true
         },
         {
           "name": "formatCodeGraphLookupResultsAsToon",
           "kind": "function",
-          "line": 141,
+          "line": 145,
           "exported": true
         },
         {
           "name": "handleLookupCodeGraphCommand",
           "kind": "function",
-          "line": 178,
+          "line": 186,
           "exported": true
         }
       ]
@@ -815,6 +828,234 @@
           "name": "formatContextFootprintReport",
           "kind": "const",
           "line": 114,
+          "exported": true
+        }
+      ]
+    },
+    {
+      "path": "src/core/context-ranking.ts",
+      "language": "TypeScript",
+      "symbols": [
+        {
+          "name": "VaultNoteCandidate",
+          "kind": "interface",
+          "line": 8,
+          "exported": true
+        },
+        {
+          "name": "SourceFileCandidate",
+          "kind": "interface",
+          "line": 32,
+          "exported": true
+        },
+        {
+          "name": "ContextRankingOptions",
+          "kind": "interface",
+          "line": 47,
+          "exported": true
+        },
+        {
+          "name": "ContextRankingInput",
+          "kind": "interface",
+          "line": 58,
+          "exported": true
+        },
+        {
+          "name": "RankedItem",
+          "kind": "interface",
+          "line": 123,
+          "exported": true
+        },
+        {
+          "name": "ContextRankingResult",
+          "kind": "interface",
+          "line": 158,
+          "exported": true
+        },
+        {
+          "name": "SCORE_DIRECT_TARGET",
+          "kind": "const",
+          "line": 173,
+          "exported": false
+        },
+        {
+          "name": "SCORE_EXPLICITLY_LINKED_FROM_ROOT",
+          "kind": "const",
+          "line": 174,
+          "exported": false
+        },
+        {
+          "name": "SCORE_ACTIVE_SESSION_OR_STEP",
+          "kind": "const",
+          "line": 175,
+          "exported": false
+        },
+        {
+          "name": "SCORE_SAME_PHASE",
+          "kind": "const",
+          "line": 176,
+          "exported": false
+        },
+        {
+          "name": "SCORE_CODE_SYMBOL_MATCH",
+          "kind": "const",
+          "line": 177,
+          "exported": false
+        },
+        {
+          "name": "SCORE_DEPENDENCY_EDGE",
+          "kind": "const",
+          "line": 178,
+          "exported": false
+        },
+        {
+          "name": "SCORE_CHANGED_IN_GIT_DIFF",
+          "kind": "const",
+          "line": 179,
+          "exported": false
+        },
+        {
+          "name": "SCORE_RECIPROCAL_GRAPH_DISTANCE_MAX",
+          "kind": "const",
+          "line": 180,
+          "exported": false
+        },
+        {
+          "name": "SCORE_RECENCY_BOOST",
+          "kind": "const",
+          "line": 181,
+          "exported": false
+        },
+        {
+          "name": "SCORE_STATUS_PRIORITY",
+          "kind": "const",
+          "line": 182,
+          "exported": false
+        },
+        {
+          "name": "SCORE_STALE_INDEX_PENALTY",
+          "kind": "const",
+          "line": 183,
+          "exported": false
+        },
+        {
+          "name": "SCORE_GENERATED_OR_VENDOR_PENALTY",
+          "kind": "const",
+          "line": 184,
+          "exported": false
+        },
+        {
+          "name": "RECENCY_ONE_HOUR_MS",
+          "kind": "const",
+          "line": 186,
+          "exported": false
+        },
+        {
+          "name": "RECENCY_ONE_DAY_MS",
+          "kind": "const",
+          "line": 187,
+          "exported": false
+        },
+        {
+          "name": "estimateTokens",
+          "kind": "const",
+          "line": 200,
+          "exported": false
+        },
+        {
+          "name": "isDirectTarget",
+          "kind": "const",
+          "line": 206,
+          "exported": false
+        },
+        {
+          "name": "isExplicitlyLinkedFromRoot",
+          "kind": "const",
+          "line": 221,
+          "exported": false
+        },
+        {
+          "name": "isActiveSessionOrStep",
+          "kind": "const",
+          "line": 231,
+          "exported": false
+        },
+        {
+          "name": "isSamePhase",
+          "kind": "const",
+          "line": 241,
+          "exported": false
+        },
+        {
+          "name": "hasCodeSymbolMatch",
+          "kind": "const",
+          "line": 257,
+          "exported": false
+        },
+        {
+          "name": "hasDependencyEdge",
+          "kind": "const",
+          "line": 270,
+          "exported": false
+        },
+        {
+          "name": "isChangedInGitDiff",
+          "kind": "const",
+          "line": 280,
+          "exported": false
+        },
+        {
+          "name": "reciprocalGraphDistanceScore",
+          "kind": "const",
+          "line": 289,
+          "exported": false
+        },
+        {
+          "name": "recencyBoost",
+          "kind": "const",
+          "line": 299,
+          "exported": false
+        },
+        {
+          "name": "statusPriorityScore",
+          "kind": "const",
+          "line": 306,
+          "exported": false
+        },
+        {
+          "name": "hasStaleIndexPenalty",
+          "kind": "const",
+          "line": 310,
+          "exported": false
+        },
+        {
+          "name": "hasGeneratedOrVendorPenalty",
+          "kind": "const",
+          "line": 314,
+          "exported": false
+        },
+        {
+          "name": "determineRenderMode",
+          "kind": "const",
+          "line": 322,
+          "exported": false
+        },
+        {
+          "name": "scoreVaultCandidate",
+          "kind": "const",
+          "line": 338,
+          "exported": false
+        },
+        {
+          "name": "scoreSourceCandidate",
+          "kind": "const",
+          "line": 411,
+          "exported": false
+        },
+        {
+          "name": "rankContextCandidates",
+          "kind": "const",
+          "line": 476,
           "exported": true
         }
       ]
@@ -2264,15 +2505,21 @@
           "exported": false
         },
         {
-          "name": "countSelectors",
+          "name": "ensureExtractableNoteContent",
           "kind": "const",
           "line": 24,
           "exported": false
         },
         {
+          "name": "countSelectors",
+          "kind": "const",
+          "line": 29,
+          "exported": false
+        },
+        {
           "name": "extractVaultNoteTarget",
           "kind": "const",
-          "line": 27,
+          "line": 32,
           "exported": true
         }
       ]
@@ -3082,169 +3329,241 @@
         {
           "name": "CodeSymbol",
           "kind": "interface",
-          "line": 4,
+          "line": 7,
           "exported": true
         },
         {
           "name": "FileSymbols",
           "kind": "interface",
-          "line": 11,
+          "line": 14,
           "exported": true
         },
         {
           "name": "CodeGraphResult",
           "kind": "interface",
-          "line": 17,
+          "line": 20,
           "exported": true
         },
         {
           "name": "CodeGraphDirectorySummary",
           "kind": "interface",
-          "line": 23,
+          "line": 26,
           "exported": true
         },
         {
           "name": "CodeGraphIndexPayload",
           "kind": "interface",
-          "line": 31,
+          "line": 34,
+          "exported": true
+        },
+        {
+          "name": "CodeSymbolV3",
+          "kind": "interface",
+          "line": 46,
+          "exported": true
+        },
+        {
+          "name": "ImportEdge",
+          "kind": "interface",
+          "line": 53,
+          "exported": true
+        },
+        {
+          "name": "ExportEdge",
+          "kind": "interface",
+          "line": 61,
+          "exported": true
+        },
+        {
+          "name": "FileSymbolsV3",
+          "kind": "interface",
+          "line": 68,
+          "exported": true
+        },
+        {
+          "name": "CodeGraphIndexV3",
+          "kind": "interface",
+          "line": 81,
           "exported": true
         },
         {
           "name": "SKIP_DIRS",
           "kind": "const",
-          "line": 41,
+          "line": 88,
           "exported": false
         },
         {
           "name": "parseNamesFromBraces",
           "kind": "const",
-          "line": 69,
+          "line": 116,
           "exported": false
         },
         {
-          "name": "SymbolExtractor",
+          "name": "SymbolExtractorV3",
           "kind": "type",
-          "line": 81,
+          "line": 128,
+          "exported": false
+        },
+        {
+          "name": "extractJSDoc",
+          "kind": "const",
+          "line": 134,
+          "exported": false
+        },
+        {
+          "name": "extractFunctionSignature",
+          "kind": "const",
+          "line": 167,
+          "exported": false
+        },
+        {
+          "name": "extractImportEdges",
+          "kind": "const",
+          "line": 182,
+          "exported": false
+        },
+        {
+          "name": "extractExportEdges",
+          "kind": "const",
+          "line": 275,
           "exported": false
         },
         {
           "name": "extractTypeScript",
           "kind": "const",
-          "line": 83,
+          "line": 327,
           "exported": false
         },
         {
           "name": "extractPython",
           "kind": "const",
-          "line": 158,
+          "line": 442,
           "exported": false
         },
         {
           "name": "extractGo",
           "kind": "const",
-          "line": 196,
+          "line": 480,
           "exported": false
         },
         {
           "name": "extractRust",
           "kind": "const",
-          "line": 229,
+          "line": 513,
           "exported": false
         },
         {
           "name": "extractJava",
           "kind": "const",
-          "line": 271,
+          "line": 555,
           "exported": false
         },
         {
           "name": "extractKotlin",
           "kind": "const",
-          "line": 309,
+          "line": 593,
           "exported": false
         },
         {
           "name": "extractRuby",
           "kind": "const",
-          "line": 339,
+          "line": 623,
           "exported": false
         },
         {
           "name": "extractCSharp",
           "kind": "const",
-          "line": 364,
+          "line": 648,
           "exported": false
         },
         {
           "name": "extractSwift",
           "kind": "const",
-          "line": 402,
+          "line": 686,
           "exported": false
         },
         {
           "name": "extractPHP",
           "kind": "const",
-          "line": 438,
+          "line": 722,
           "exported": false
         },
         {
           "name": "extractScala",
           "kind": "const",
-          "line": 468,
+          "line": 752,
           "exported": false
         },
         {
           "name": "extractElixir",
           "kind": "const",
-          "line": 495,
+          "line": 779,
+          "exported": false
+        },
+        {
+          "name": "GENERATED_DIRS",
+          "kind": "const",
+          "line": 816,
+          "exported": false
+        },
+        {
+          "name": "VENDOR_DIRS",
+          "kind": "const",
+          "line": 817,
           "exported": false
         },
         {
           "name": "walkSourceFiles",
           "kind": "function",
-          "line": 532,
+          "line": 819,
           "exported": false
         },
         {
           "name": "buildCodeGraph",
           "kind": "function",
-          "line": 578,
+          "line": 895,
           "exported": true
         },
         {
           "name": "summarizeCodeGraph",
           "kind": "function",
-          "line": 588,
+          "line": 905,
+          "exported": true
+        },
+        {
+          "name": "buildCodeGraphIndexPayloadV3",
+          "kind": "function",
+          "line": 935,
           "exported": true
         },
         {
           "name": "buildCodeGraphIndexPayload",
           "kind": "function",
-          "line": 618,
+          "line": 945,
           "exported": true
         },
         {
           "name": "renderCodeGraphMarkdown",
           "kind": "function",
-          "line": 630,
+          "line": 957,
           "exported": true
         },
         {
           "name": "writeCodeGraph",
           "kind": "function",
-          "line": 726,
+          "line": 1053,
           "exported": true
         },
         {
           "name": "findSymbols",
           "kind": "function",
-          "line": 746,
+          "line": 1073,
           "exported": true
         },
         {
           "name": "getSymbolsForFiles",
           "kind": "function",
-          "line": 764,
+          "line": 1091,
           "exported": true
         }
       ]
@@ -3648,6 +3967,24 @@
           "kind": "const",
           "line": 27,
           "exported": true
+        }
+      ]
+    },
+    {
+      "path": "vitest.config.ts",
+      "language": "TypeScript",
+      "symbols": [
+        {
+          "name": "NVM_GLOBAL_ROOT",
+          "kind": "const",
+          "line": 4,
+          "exported": false
+        },
+        {
+          "name": "PI_CODING_AGENT_ROOT",
+          "kind": "const",
+          "line": 5,
+          "exported": false
         }
       ]
     }

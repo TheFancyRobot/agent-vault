@@ -5,7 +5,7 @@ contract_version: 1
 title: Expand code graph to v3 dependency-aware schema
 step_id: STEP-04-03
 phase: '[[02_Phases/Phase_04_context_compiler_and_token_efficiency/Phase|Phase 04 context compiler and token efficiency]]'
-status: planned
+status: done
 owner: ''
 created: '2026-07-05'
 updated: '2026-07-05'
