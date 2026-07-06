@@ -45,6 +45,7 @@ const COMMANDS: readonly AgentVaultCommandDefinition[] = [
     summary: 'Dispatch Agent Vault commands from a single entrypoint.',
     examples: [
       'agent-vault serve  # start MCP server',
+      'agent-vault vault migrate  # run automation from the npm binary',
       'vault help create-step',
       'vault validate-all',
     ],
@@ -172,6 +173,7 @@ const COMMANDS: readonly AgentVaultCommandDefinition[] = [
     summary: 'Plan and apply pending package-level vault schema migrations.',
     examples: [
       'vault migrate',
+      'agent-vault vault migrate',
       'vault migrate --dry-run',
       'vault migrate --apply',
       'vault migrate --apply --to 1',

@@ -42,6 +42,12 @@ describe('vault scan', () => {
     expect(result.entryPoints).toContain('src/index.ts');
   });
 
+  it('uses a stable repo name when scanning a relative project root', async () => {
+    const result = await scanProject('.');
+
+    expect(result.repoName).toBe('agent-vault');
+  });
+
   it('detects a Python project', async () => {
     const root = await createTempProject('python');
     await mkdir(join(root, 'src'), { recursive: true });
@@ -695,14 +701,16 @@ describe('code graph', () => {
     expect(file.symbols.every((s) => s.exported)).toBe(true);
   });
 
-  it('skips test files and node_modules', async () => {
+  it('skips test files, node_modules, and hidden tool worktrees', async () => {
     const root = await createTempProject('skip-graph');
     await mkdir(join(root, 'src'), { recursive: true });
     await mkdir(join(root, 'node_modules', 'dep'), { recursive: true });
+    await mkdir(join(root, '.claude', 'worktrees', 'copy', 'src'), { recursive: true });
     await writeFile(join(root, 'src', 'main.ts'), 'export function app() {}', 'utf-8');
     await writeFile(join(root, 'src', 'main.test.ts'), 'export function testApp() {}', 'utf-8');
     await writeFile(join(root, 'src', 'main.spec.ts'), 'export function specApp() {}', 'utf-8');
     await writeFile(join(root, 'node_modules', 'dep', 'index.js'), 'export function dep() {}', 'utf-8');
+    await writeFile(join(root, '.claude', 'worktrees', 'copy', 'src', 'main.ts'), 'export function copiedApp() {}', 'utf-8');
 
     const graph = await buildCodeGraph(root);
 

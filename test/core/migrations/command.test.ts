@@ -507,6 +507,7 @@ describe('handleMigrateCommand apply mode', () => {
     expect(exitCode).toBe(0);
     const output = harness.stdout.join('\n');
     expect(output).toContain('[post-step validation after 0001-fixture] WARN ORPHAN_NOTE');
+    expect(output).not.toContain('SCHEMA_VERSION_BEHIND');
     expect(output).toContain('Vault schema version is now 1.');
     expect(await readVaultSchemaVersion(root)).toBe(1);
   });

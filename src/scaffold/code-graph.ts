@@ -1,6 +1,6 @@
 import { createHash } from 'crypto';
 import { mkdir, readFile, readdir, stat, writeFile } from 'fs/promises';
-import { extname, join, relative } from 'path';
+import { basename, extname, join, relative, resolve } from 'path';
 import type { AnalysisTier } from './source-analyzer';
 
 // ─── v2 types (kept for backward-compat lookup) ───
@@ -88,7 +88,7 @@ export interface CodeGraphIndexV3 {
 }
 
 const SKIP_DIRS = new Set([
-  'node_modules', '.git', '.agent-vault', 'dist', 'build', 'out',
+  'node_modules', '.git', '.agent-vault', '.claude', 'dist', 'build', 'out',
   '.next', '.nuxt', '.svelte-kit', 'target', '__pycache__', '.venv',
   'venv', 'vendor', '.gradle', '.idea', '.vscode', 'coverage',
   '.planning', '.obsidian',
@@ -818,7 +818,10 @@ const EXTRACTORS: Record<string, SymbolExtractorV3> = {
 import { createTieredAnalyzer, type TieredSourceAnalyzer } from './source-analyzer';
 
 const GENERATED_DIRS = new Set(['.next', '.nuxt', '.svelte-kit', 'dist', 'build', 'out', '__pycache__', '.gradle']);
-const VENDOR_DIRS = new Set(['node_modules', '.git', '.agent-vault', 'vendor', '.venv', 'venv', '.idea', '.vscode', 'coverage', '.planning', '.obsidian']);
+const VENDOR_DIRS = new Set(['node_modules', '.git', '.agent-vault', '.claude', 'vendor', '.venv', 'venv', '.idea', '.vscode', 'coverage', '.planning', '.obsidian']);
+
+const shouldSkipDirectory = (directoryName: string): boolean =>
+  SKIP_DIRS.has(directoryName) || directoryName.startsWith('.');
 
 async function walkSourceFiles(
   projectRoot: string,
@@ -835,7 +838,7 @@ async function walkSourceFiles(
     const fullPath = join(dir, entry.name);
 
     if (entry.isDirectory()) {
-      if (!SKIP_DIRS.has(entry.name)) {
+      if (!shouldSkipDirectory(entry.name)) {
         await walkSourceFiles(projectRoot, fullPath, results, tieredAnalyzer, depth + 1);
       }
       continue;
@@ -928,6 +931,7 @@ async function walkSourceFiles(
 }
 
 export async function buildCodeGraph(projectRoot: string): Promise<CodeGraphResult> {
+  const root = resolve(projectRoot);
   const files: FileSymbolsV3[] = [];
 
   // Create tiered analyzer for TS/JS files
@@ -950,7 +954,7 @@ export async function buildCodeGraph(projectRoot: string): Promise<CodeGraphResu
     exports: extractExportEdges,
   });
 
-  await walkSourceFiles(projectRoot, projectRoot, files, tieredAnalyzer);
+  await walkSourceFiles(root, root, files, tieredAnalyzer);
 
   files.sort((a, b) => a.path.localeCompare(b.path));
   const totalSymbols = files.reduce((sum, f) => sum + f.symbols.length, 0);
@@ -1111,9 +1115,11 @@ export async function writeCodeGraph(
   vaultRoot: string,
   repoName: string,
 ): Promise<CodeGraphResult> {
-  const graph = await buildCodeGraph(projectRoot);
-  const markdown = renderCodeGraphMarkdown(graph, repoName);
-  const indexPayload = buildCodeGraphIndexPayloadV3(graph, projectRoot);
+  const root = resolve(projectRoot);
+  const stableRepoName = repoName === '.' ? basename(root) : repoName;
+  const graph = await buildCodeGraph(root);
+  const markdown = renderCodeGraphMarkdown(graph, stableRepoName);
+  const indexPayload = buildCodeGraphIndexPayloadV3(graph, root);
 
   const outputPath = join(vaultRoot, '01_Architecture', 'Code_Graph.md');
   const indexDir = join(vaultRoot, '08_Automation', 'code-graph');
