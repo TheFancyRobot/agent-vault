@@ -156,6 +156,8 @@ npx @fancyrobot/agent-vault                                     # Install/update
 bunx @fancyrobot/agent-vault                                    # Same install/update flow via Bun
 npx @fancyrobot/agent-vault uninstall                           # Remove MCP server configuration
 npx @fancyrobot/agent-vault serve                               # Start MCP stdio server (used by agent tools)
+npx @fancyrobot/agent-vault vault migrate                       # Plan pending vault schema migrations
+npx @fancyrobot/agent-vault migrate --apply                     # Apply pending vault schema migrations
 npx @fancyrobot/agent-vault --help                              # Show usage
 ```
 
@@ -193,7 +195,7 @@ When Agent Vault is installed into **pi**, pi loads the package's bundled prompt
 - **Helper skills:** the bundled skills remain available for explicit `/skill:...` use or as implementation references, but they are not the primary workflow entrypoints.
 - **Manual helpers:** lower-level commands such as `/vault:create-phase`, `/vault:create-step`, and `/vault:create-session` remain available when you want to manage notes directly rather than run `/vault:plan`.
 
-If you are looking for the migration workflow specifically in pi, use `/vault:migrate-step-notes` (or the bundled `vault-migrate-step-notes` skill explicitly).
+If you are looking for the package-level migration workflow specifically in pi, use the `vault_migrate` tool. For only the scoped step-note split migration, use `/vault:migrate-step-notes` (or the bundled `vault-migrate-step-notes` skill explicitly).
 
 ### Recommended Workflow
 
@@ -281,7 +283,7 @@ If you created a vault before the context subsystem was added (sessions without 
 
 ### `vault migrate` — the general migration entry point
 
-`vault migrate` is the general entry point for upgrading a vault to the schema version shipped by the installed package:
+`vault migrate` is the general entry point for upgrading a vault to the schema version shipped by the installed package. From the published npm binary, invoke it as `npx @fancyrobot/agent-vault vault migrate` (or the direct shorthand `npx @fancyrobot/agent-vault migrate`):
 
 1. Run `vault migrate` (or the explicit alias `vault migrate --dry-run`) to see a zero-write plan: the vault's recorded schema version (`.config.json` `vault_schema_version`, missing config = version 0), the package's schema version, and the ordered pending migration steps with affected-path counts
 2. Run `vault migrate --apply` to run the pending steps strictly in order — the vault is validated after each step before the schema version advances, so interrupted runs are safe to re-run and resume from the incomplete step

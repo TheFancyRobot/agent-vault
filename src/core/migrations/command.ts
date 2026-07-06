@@ -183,7 +183,7 @@ const createPostStepValidator = (
   };
   const exitCode = await handleValidateAllCommand([], { vaultRoot, io: capture });
 
-  for (const warning of lines.filter((line) => line.startsWith('WARN '))) {
+  for (const warning of lines.filter((line) => line.startsWith('WARN ') && !line.includes('SCHEMA_VERSION_BEHIND'))) {
     io.stdout(`[post-step validation after ${step.id}] ${warning}`);
   }
 

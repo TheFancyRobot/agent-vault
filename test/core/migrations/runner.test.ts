@@ -280,16 +280,44 @@ describe('applyMigrations', () => {
     expect(await readVaultSchemaVersion(root)).toBe(3);
   });
 
-  it('skips apply() but still advances when detect() reports nothing to migrate', async () => {
+  it('skips apply() but still validates and advances when detect() reports nothing to migrate', async () => {
     const root = await createTempVault('apply-inapplicable');
     let applyCalls = 0;
+    const validatedSteps: string[] = [];
     const registry = [fixtureStep(0, { applicable: false, onApply: async () => void applyCalls++ })];
 
-    const result = await applyMigrations(root, { registry });
+    const result = await applyMigrations(root, {
+      registry,
+      validateAfterStep: async (step) => void validatedSteps.push(step.id),
+    });
 
     expect(result.status).toBe('completed');
     expect(applyCalls).toBe(0);
+    expect(validatedSteps).toEqual(['0001-fixture']);
     expect(await readVaultSchemaVersion(root)).toBe(1);
+  });
+
+  it('does not advance a migrated-but-unrecorded step when retry validation still fails', async () => {
+    const root = await createTempVault('apply-inapplicable-validation-failure');
+    let applyCalls = 0;
+    const registry = [fixtureStep(0, { applicable: false, onApply: async () => void applyCalls++ })];
+
+    const result = await applyMigrations(root, {
+      registry,
+      validateAfterStep: async () => {
+        throw new Error('post-migration validation still fails');
+      },
+    });
+
+    expect(result.status).toBe('failed');
+    expect(result.failure).toEqual({
+      stepId: '0001-fixture',
+      reason: 'validation-failed',
+      message: 'post-migration validation still fails',
+    });
+    expect(applyCalls).toBe(0);
+    expect(result.finalVersion).toBe(0);
+    expect(await readVaultSchemaVersion(root)).toBe(0);
   });
 
   it('does not advance the schema version when a step is interrupted mid-apply', async () => {

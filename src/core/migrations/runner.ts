@@ -272,24 +272,24 @@ export const applyMigrations = async (
           },
         };
       }
+    }
 
-      if (options.validateAfterStep) {
-        try {
-          await options.validateAfterStep(step);
-        } catch (error) {
-          return {
-            status: 'failed',
-            startVersion,
-            finalVersion: currentVersion,
-            latestVersion,
-            applied,
-            failure: {
-              stepId: step.id,
-              reason: 'validation-failed',
-              message: error instanceof Error ? error.message : String(error),
-            },
-          };
-        }
+    if (options.validateAfterStep) {
+      try {
+        await options.validateAfterStep(step);
+      } catch (error) {
+        return {
+          status: 'failed',
+          startVersion,
+          finalVersion: currentVersion,
+          latestVersion,
+          applied,
+          failure: {
+            stepId: step.id,
+            reason: 'validation-failed',
+            message: error instanceof Error ? error.message : String(error),
+          },
+        };
       }
     }
 

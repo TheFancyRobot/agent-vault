@@ -1,6 +1,6 @@
 import { existsSync } from 'fs';
 import { readFile, readdir, stat } from 'fs/promises';
-import { basename, extname, join } from 'path';
+import { basename, extname, join, resolve } from 'path';
 
 export interface ScanResult {
   readonly projectRoot: string;
@@ -286,7 +286,7 @@ const detectEntryPoints = async (projectRoot: string): Promise<string[]> => {
 };
 
 export async function scanProject(projectRoot: string): Promise<ScanResult> {
-  const repoName = basename(projectRoot);
+  const repoName = basename(resolve(projectRoot));
 
   // Count files by language
   const languageCounts: Record<string, number> = {};

@@ -25,6 +25,7 @@ import {
 } from './core/note-validators';
 import { formatCommandCatalog, formatCommandHelp } from './core/command-catalog';
 import { formatCodeGraphLookupResultsAsToon, loadCodeGraphIndex, queryCodeGraphIndex } from './core/code-graph-lookup';
+import { handleMigrateCommand } from './core/migrations/command';
 import { formatInitResultAsToon, formatScanResultAsToon, formatVaultConfigAsToon } from './core/mcp-response-format';
 import {
   ensureVaultGraph,
@@ -546,6 +547,25 @@ export async function startServer(): Promise<void> {
           }],
         };
       }
+    },
+  );
+
+  // ── vault_migrate ───────────────────────────────────────────────────
+  server.tool(
+    'vault_migrate',
+    'Plan or apply pending package-level vault schema migrations.',
+    {
+      apply: z.boolean().default(false).describe('Apply pending migrations. When false, runs read-only plan mode.'),
+      dry_run: z.boolean().default(false).describe('Explicit read-only plan mode alias. Cannot be combined with apply.'),
+      to: z.number().int().min(0).optional().describe('Optional target schema version for apply mode.'),
+    },
+    async ({ apply, dry_run, to }) => {
+      const argv = [
+        ...(dry_run ? ['--dry-run'] : []),
+        ...(apply ? ['--apply'] : []),
+        ...(to !== undefined ? ['--to', String(to)] : []),
+      ];
+      return captureOutput(handleMigrateCommand, argv, resolveVaultRoot(process.cwd()));
     },
   );
 

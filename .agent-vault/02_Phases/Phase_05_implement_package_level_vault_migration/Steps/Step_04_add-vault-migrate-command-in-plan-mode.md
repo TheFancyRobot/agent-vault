@@ -50,7 +50,7 @@ Use this note as the thin index for one executable step inside a phase. Keep thi
 ## Agent-Managed Snapshot
 
 <!-- AGENT-START:step-agent-managed-snapshot -->
-- Status: complete
+- Status: completed
 - Current owner: Claude Code
 - Last touched: 2026-07-06
 - Next action: None - step complete. See [[02_Phases/Phase_05_implement_package_level_vault_migration/Steps/Step_04_add-vault-migrate-command-in-plan-mode/Outcome|Outcome]]; STEP-05-05 implements `--apply`/`--to`.

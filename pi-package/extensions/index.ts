@@ -24,6 +24,7 @@ import {
   handleVaultDoctorCommand,
 } from "../../src/core/note-validators";
 import { formatCommandCatalog, formatCommandHelp } from "../../src/core/command-catalog";
+import { handleMigrateCommand } from "../../src/core/migrations/command";
 import type { AgentVaultCommandName } from "../../src/core/command-catalog";
 import { loadCodeGraphIndex, queryCodeGraphIndex } from "../../src/core/code-graph-lookup";
 import {
@@ -570,6 +571,32 @@ export default function (pi: ExtensionAPI) {
             isError: true,
           };
       }
+    },
+  });
+
+  // ── vault_migrate ───────────────────────────────────────────────────
+  pi.registerTool({
+    name: "vault_migrate",
+    label: "Vault Migrate",
+    description: [
+      "Plan or apply pending package-level vault schema migrations.",
+      "Plan mode is the default and performs zero writes.",
+      "Set apply=true to run pending migrations; optionally provide to=<version> to stop at a registered schema boundary.",
+    ].join("\n"),
+    parameters: Type.Object({
+      apply: Type.Optional(Type.Boolean({ default: false, description: "Apply pending migrations. When false, runs read-only plan mode." })),
+      dry_run: Type.Optional(Type.Boolean({ default: false, description: "Explicit read-only plan mode alias. Cannot be combined with apply." })),
+      to: Type.Optional(Type.Integer({ minimum: 0, description: "Optional target schema version for apply mode." })),
+    }),
+    promptSnippet:
+      "Use vault_migrate to plan or apply package-level vault schema migrations. Default is read-only plan mode; set apply=true to migrate.",
+    async execute(_toolCallId, params, _signal, _onUpdate, _ctx) {
+      const argv = [
+        ...(params.dry_run ? ["--dry-run"] : []),
+        ...(params.apply ? ["--apply"] : []),
+        ...(params.to !== undefined ? ["--to", String(params.to)] : []),
+      ];
+      return captureOutput(handleMigrateCommand, argv, resolveVaultRoot(process.cwd()));
     },
   });
 

@@ -21,6 +21,7 @@
   - `vault migrate` (default plan mode / `--dry-run`) reports the vault and package schema versions and the ordered pending steps with zero writes
   - `vault migrate --apply` runs pending steps strictly in order, validating the vault after each step before advancing the schema version, and supports `--to <version>` for stopping at an intermediate boundary; interrupted applies resume safely
   - `vault validate-all` (and the `vault_validate` MCP tool) now warns — never errors — when the vault's schema version is behind the package's, pointing at `vault migrate`; existing validation pass/fail semantics are unchanged
+  - Published entry points now expose the migration handler via `npx @fancyrobot/agent-vault vault migrate` / `npx @fancyrobot/agent-vault migrate` and the `vault_migrate` MCP/pi tool
   - `vault migrate-step-notes` remains available as the scoped alias for the step-note migration
 
 ### Patch Changes
