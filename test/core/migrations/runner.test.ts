@@ -10,7 +10,7 @@ import {
   latestSchemaVersion,
   validateMigrationRegistry,
 } from '../../../src/core/migrations/registry';
-import { applyMigrations, planMigrations } from '../../../src/core/migrations/runner';
+import { MigrationTargetError, applyMigrations, planMigrations } from '../../../src/core/migrations/runner';
 import type { MigrationStep, MigrationStepContext } from '../../../src/core/migrations/types';
 
 const tempRoots: string[] = [];
@@ -381,5 +381,85 @@ describe('applyMigrations', () => {
     const raw = JSON.parse(await readFile(join(root, '.config.json'), 'utf-8')) as Record<string, unknown>;
     expect(raw.resolver).toBe('obsidian');
     expect(raw.vault_schema_version).toBe(1);
+  });
+});
+
+describe('applyMigrations with a target version (--to)', () => {
+  it('stops at the requested intermediate version and leaves later steps untouched', async () => {
+    const root = await createTempVault('to-intermediate');
+    const order: string[] = [];
+    const registry = [
+      fixtureStep(0, { onApply: async () => void order.push('0001-fixture') }),
+      fixtureStep(1, { onApply: async () => void order.push('0002-fixture') }),
+      fixtureStep(2, { onApply: async () => void order.push('0003-fixture') }),
+    ];
+
+    const result = await applyMigrations(root, { registry, targetVersion: 2 });
+
+    expect(result.status).toBe('completed');
+    expect(order).toEqual(['0001-fixture', '0002-fixture']);
+    expect(result.finalVersion).toBe(2);
+    expect(result.latestVersion).toBe(3);
+    expect(await readVaultSchemaVersion(root)).toBe(2);
+  });
+
+  it('is an idempotent no-op when the vault is already at the target version', async () => {
+    const root = await createTempVault('to-already-there');
+    await writeVaultConfig(root, { resolver: 'filesystem', vault_schema_version: 1 });
+    let applyCalls = 0;
+    const registry = [
+      fixtureStep(0, { onApply: async () => void applyCalls++ }),
+      fixtureStep(1, { onApply: async () => void applyCalls++ }),
+    ];
+
+    const result = await applyMigrations(root, { registry, targetVersion: 1 });
+
+    expect(result.status).toBe('up-to-date');
+    expect(result.applied).toEqual([]);
+    expect(applyCalls).toBe(0);
+    expect(await readVaultSchemaVersion(root)).toBe(1);
+  });
+
+  it('refuses a downgrade target below the current version before any write', async () => {
+    const root = await createTempVault('to-downgrade');
+    await writeVaultConfig(root, { resolver: 'filesystem', vault_schema_version: 2 });
+    let applyCalls = 0;
+    const registry = [
+      fixtureStep(0, { onApply: async () => void applyCalls++ }),
+      fixtureStep(1, { onApply: async () => void applyCalls++ }),
+      fixtureStep(2, { onApply: async () => void applyCalls++ }),
+    ];
+
+    await expect(applyMigrations(root, { registry, targetVersion: 1 })).rejects.toThrow(MigrationTargetError);
+    await expect(applyMigrations(root, { registry, targetVersion: 1 })).rejects.toThrow(
+      /below the vault's current schema version \(2\); downgrades are not supported/,
+    );
+    expect(applyCalls).toBe(0);
+    expect(await readVaultSchemaVersion(root)).toBe(2);
+  });
+
+  it('refuses a target beyond the latest registered version', async () => {
+    const root = await createTempVault('to-beyond-latest');
+    let applyCalls = 0;
+    const registry = [fixtureStep(0, { onApply: async () => void applyCalls++ })];
+
+    await expect(applyMigrations(root, { registry, targetVersion: 9 })).rejects.toThrow(
+      /--to 9 is beyond this package's latest schema version \(1\)/,
+    );
+    expect(applyCalls).toBe(0);
+    expect(existsSync(join(root, '.config.json'))).toBe(false);
+  });
+
+  it('refuses a target that is not a registered step boundary', async () => {
+    const root = await createTempVault('to-non-boundary');
+    let applyCalls = 0;
+    // Single step jumps 0 -> 2, so version 1 is not a reachable stopping point.
+    const jumpStep: MigrationStep = { ...fixtureStep(0, { onApply: async () => void applyCalls++ }), to_version: 2 };
+
+    await expect(applyMigrations(root, { registry: [jumpStep], targetVersion: 1 })).rejects.toThrow(
+      /No registered migration step ends at version 1; valid stopping points are: 2/,
+    );
+    expect(applyCalls).toBe(0);
+    expect(existsSync(join(root, '.config.json'))).toBe(false);
   });
 });

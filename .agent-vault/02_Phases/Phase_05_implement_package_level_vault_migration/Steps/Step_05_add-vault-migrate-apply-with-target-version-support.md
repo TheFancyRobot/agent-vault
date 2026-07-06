@@ -5,17 +5,22 @@ contract_version: 1
 title: Add vault migrate apply with target version support
 step_id: STEP-05-05
 phase: '[[02_Phases/Phase_05_implement_package_level_vault_migration/Phase|Phase 05 implement package level vault migration]]'
-status: planned
-owner: ''
+status: completed
+owner: Claude Code
 created: '2026-07-05'
-updated: '2026-07-05'
+updated: '2026-07-06'
 depends_on:
   - '[[02_Phases/Phase_05_implement_package_level_vault_migration/Steps/Step_04_add-vault-migrate-command-in-plan-mode|STEP-05-04 Add vault migrate command in plan mode]]'
-related_sessions: []
+related_sessions:
+  - '[[05_Sessions/2026-07-06-142735-add-vault-migrate-apply-with-target-version-support-claude-code|SESSION-2026-07-06-142735 Claude Code session for Add vault migrate apply with target version support]]'
 related_bugs: []
 tags:
   - agent-vault
   - step
+context_id: SESSION-2026-07-06-142735
+active_session_id: 05_Sessions/2026-07-06-142735-add-vault-migrate-apply-with-target-version-support-claude-code
+context_status: completed
+context_summary: Advance [[02_Phases/Phase_05_implement_package_level_vault_migration/Steps/Step_05_add-vault-migrate-apply-with-target-version-support|STEP-05-05 Add vault migrate apply with target version support]].
 ---
 
 # Step 05 - Add vault migrate apply with target version support
@@ -45,10 +50,10 @@ Use this note as the thin index for one executable step inside a phase. Keep thi
 ## Agent-Managed Snapshot
 
 <!-- AGENT-START:step-agent-managed-snapshot -->
-- Status: planned
-- Current owner: 
-- Last touched: 2026-07-05
-- Next action: Read [[02_Phases/Phase_05_implement_package_level_vault_migration/Steps/Step_05_add-vault-migrate-apply-with-target-version-support/Execution_Brief|Execution Brief]] and [[02_Phases/Phase_05_implement_package_level_vault_migration/Steps/Step_05_add-vault-migrate-apply-with-target-version-support/Validation_Plan|Validation Plan]].
+- Status: completed
+- Current owner: Claude Code
+- Last touched: 2026-07-06
+- Next action: None. `vault migrate --apply` and `--apply --to <version>` shipped with tests; see [[02_Phases/Phase_05_implement_package_level_vault_migration/Steps/Step_05_add-vault-migrate-apply-with-target-version-support/Outcome|Outcome]].
 <!-- AGENT-END:step-agent-managed-snapshot -->
 
 ## Human Notes
@@ -58,5 +63,5 @@ Use this note as the thin index for one executable step inside a phase. Keep thi
 ## Session History
 
 <!-- AGENT-START:step-session-history -->
-- No sessions yet.
+- 2026-07-06 - [[05_Sessions/2026-07-06-142735-add-vault-migrate-apply-with-target-version-support-claude-code|SESSION-2026-07-06-142735 Claude Code session for Add vault migrate apply with target version support]] - Session created.
 <!-- AGENT-END:step-session-history -->

@@ -1,12 +1,13 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { mkdtemp, readdir, rm, stat, writeFile } from 'fs/promises';
+import { mkdir, mkdtemp, readdir, readFile, rm, stat, writeFile } from 'fs/promises';
 import { existsSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
 import { handleMigrateCommand } from '../../../src/core/migrations/command';
 import { handleVaultCommand } from '../../../src/core/dispatcher';
-import { writeVaultConfig } from '../../../src/core/vault-config';
+import { readVaultSchemaVersion, writeVaultConfig } from '../../../src/core/vault-config';
 import type { MigrationStep, MigrationStepContext } from '../../../src/core/migrations/types';
+import { copyTemplate } from '../../helpers';
 
 const tempRoots: string[] = [];
 
@@ -39,6 +40,7 @@ interface FixtureStepOptions {
   readonly affectedPaths?: readonly string[];
   readonly onDetect?: (context: MigrationStepContext) => Promise<boolean>;
   readonly onPlan?: (context: MigrationStepContext) => Promise<{ summary: string; affectedPaths: readonly string[] }>;
+  readonly onApply?: (context: MigrationStepContext) => Promise<void>;
 }
 
 const fixtureStep = (fromVersion: number, options: FixtureStepOptions = {}): MigrationStep => {
@@ -55,9 +57,12 @@ const fixtureStep = (fromVersion: number, options: FixtureStepOptions = {}): Mig
       summary: `Would migrate ${fromVersion} -> ${fromVersion + 1}`,
       affectedPaths,
     })),
-    ...(category === 'unsafe-manual' ? {} : { apply: async () => undefined }),
+    ...(category === 'unsafe-manual' ? {} : { apply: options.onApply ?? (async () => undefined) }),
   };
 };
+
+/** No-op post-step validator for apply fixtures that do not exercise validation. */
+const noopValidator = async (): Promise<void> => undefined;
 
 /** Recursive path -> mtimeMs snapshot used to prove plan mode performs zero writes. */
 const snapshotVault = async (root: string): Promise<Map<string, number>> => {
@@ -177,22 +182,8 @@ describe('handleMigrateCommand plan mode', () => {
     expect(output).toContain('3. 0003-fixture (2 -> 3, safe-automatic): Fixture step 2 -> 3. [1 affected path] [blocked by manual step]');
   });
 
-  it('rejects --apply with a clear not-yet-implemented message and zero writes', async () => {
-    const root = await createTempVault('apply-flag');
-    const harness = makeIo();
-
-    const exitCode = await handleMigrateCommand(['--apply'], { io: harness.io, vaultRoot: root }, {
-      registry: [fixtureStep(0)],
-    });
-
-    expect(exitCode).toBe(1);
-    expect(harness.stderr.join('\n')).toContain('--apply is not implemented yet');
-    expect(harness.stderr.join('\n')).toContain('No changes were written.');
-    expect(existsSync(join(root, '.config.json'))).toBe(false);
-  });
-
-  it('rejects --to with a clear not-yet-implemented message and zero writes', async () => {
-    const root = await createTempVault('to-flag');
+  it('rejects --to without --apply and performs zero writes', async () => {
+    const root = await createTempVault('to-without-apply');
     const harness = makeIo();
 
     const exitCode = await handleMigrateCommand(['--to', '2'], { io: harness.io, vaultRoot: root }, {
@@ -200,7 +191,33 @@ describe('handleMigrateCommand plan mode', () => {
     });
 
     expect(exitCode).toBe(1);
-    expect(harness.stderr.join('\n')).toContain('--to is not implemented yet');
+    expect(harness.stderr.join('\n')).toContain('--to requires --apply');
+    expect(existsSync(join(root, '.config.json'))).toBe(false);
+  });
+
+  it('rejects combining --dry-run with --apply', async () => {
+    const root = await createTempVault('dry-run-apply');
+    const harness = makeIo();
+
+    const exitCode = await handleMigrateCommand(['--dry-run', '--apply'], { io: harness.io, vaultRoot: root }, {
+      registry: [fixtureStep(0)],
+    });
+
+    expect(exitCode).toBe(1);
+    expect(harness.stderr.join('\n')).toContain('--dry-run and --apply cannot be combined');
+    expect(existsSync(join(root, '.config.json'))).toBe(false);
+  });
+
+  it('rejects a non-integer --to value', async () => {
+    const root = await createTempVault('to-non-integer');
+    const harness = makeIo();
+
+    const exitCode = await handleMigrateCommand(['--apply', '--to', 'abc'], { io: harness.io, vaultRoot: root }, {
+      registry: [fixtureStep(0)],
+    });
+
+    expect(exitCode).toBe(1);
+    expect(harness.stderr.join('\n')).toContain('--to requires a non-negative integer schema version, got "abc"');
     expect(existsSync(join(root, '.config.json'))).toBe(false);
   });
 
@@ -267,6 +284,234 @@ describe('handleMigrateCommand plan mode', () => {
   });
 });
 
+describe('handleMigrateCommand apply mode', () => {
+  it('applies pending steps in order, preserves the resolver, and refreshes the code graph', async () => {
+    const root = await createTempVault('apply-e2e');
+    await writeVaultConfig(root, { resolver: 'obsidian' });
+    const order: string[] = [];
+    const registry = [
+      fixtureStep(0, {
+        onApply: async ({ vaultRoot }) => {
+          order.push('0001-fixture');
+          await writeFile(join(vaultRoot, 'fixture-0.txt'), 'migrated\n', 'utf-8');
+        },
+      }),
+      fixtureStep(1, { onApply: async () => void order.push('0002-fixture') }),
+    ];
+    const harness = makeIo();
+
+    // Default post-step validator: a vault without markdown notes passes validate-all.
+    const exitCode = await handleMigrateCommand(['--apply'], { io: harness.io, vaultRoot: root }, { registry });
+
+    expect(exitCode).toBe(0);
+    const output = harness.stdout.join('\n');
+    expect(order).toEqual(['0001-fixture', '0002-fixture']);
+    expect(output).toContain('Applied 0001-fixture (0 -> 1, safe-automatic): Fixture step 0 -> 1.');
+    expect(output).toContain('Applied 0002-fixture (1 -> 2, safe-automatic): Fixture step 1 -> 2.');
+    expect(output).toContain('Code graph refreshed:');
+    expect(output).toContain('Vault schema version is now 2.');
+    expect(await readFile(join(root, 'fixture-0.txt'), 'utf-8')).toBe('migrated\n');
+    const raw = JSON.parse(await readFile(join(root, '.config.json'), 'utf-8')) as Record<string, unknown>;
+    expect(raw.resolver).toBe('obsidian');
+    expect(raw.vault_schema_version).toBe(2);
+    expect(harness.stderr).toEqual([]);
+  });
+
+  it('re-running --apply on an already-current vault is an idempotent no-op', async () => {
+    const root = await createTempVault('apply-idempotent');
+    let applyCalls = 0;
+    const registry = [fixtureStep(0, { onApply: async () => void applyCalls++ })];
+
+    const first = await handleMigrateCommand(['--apply'], { io: makeIo().io, vaultRoot: root }, {
+      registry,
+      postStepValidate: noopValidator,
+    });
+    expect(first).toBe(0);
+    expect(applyCalls).toBe(1);
+
+    const harness = makeIo();
+    const second = await handleMigrateCommand(['--apply'], { io: harness.io, vaultRoot: root }, {
+      registry,
+      postStepValidate: noopValidator,
+    });
+
+    expect(second).toBe(0);
+    expect(applyCalls).toBe(1);
+    expect(harness.stdout.join('\n')).toContain('Vault is already at the latest schema version. Nothing to migrate.');
+    expect(await readVaultSchemaVersion(root)).toBe(1);
+  });
+
+  it('--apply --to stops at the requested intermediate version', async () => {
+    const root = await createTempVault('apply-to');
+    const order: string[] = [];
+    const registry = [
+      fixtureStep(0, { onApply: async () => void order.push('0001-fixture') }),
+      fixtureStep(1, { onApply: async () => void order.push('0002-fixture') }),
+      fixtureStep(2, { onApply: async () => void order.push('0003-fixture') }),
+    ];
+    const harness = makeIo();
+
+    const exitCode = await handleMigrateCommand(['--apply', '--to', '2'], { io: harness.io, vaultRoot: root }, {
+      registry,
+      postStepValidate: noopValidator,
+    });
+
+    expect(exitCode).toBe(0);
+    expect(order).toEqual(['0001-fixture', '0002-fixture']);
+    expect(await readVaultSchemaVersion(root)).toBe(2);
+    const output = harness.stdout.join('\n');
+    expect(output).toContain('Vault schema version is now 2.');
+    expect(output).toContain('Stopped at requested version 2.');
+  });
+
+  it('refuses a downgrade --to target without applying anything', async () => {
+    const root = await createTempVault('apply-to-downgrade');
+    await writeVaultConfig(root, { resolver: 'filesystem', vault_schema_version: 2 });
+    let applyCalls = 0;
+    const registry = [
+      fixtureStep(0, { onApply: async () => void applyCalls++ }),
+      fixtureStep(1, { onApply: async () => void applyCalls++ }),
+      fixtureStep(2, { onApply: async () => void applyCalls++ }),
+    ];
+    const harness = makeIo();
+
+    const exitCode = await handleMigrateCommand(['--apply', '--to', '1'], { io: harness.io, vaultRoot: root }, {
+      registry,
+      postStepValidate: noopValidator,
+    });
+
+    expect(exitCode).toBe(1);
+    expect(harness.stderr.join('\n')).toContain('downgrades are not supported');
+    expect(applyCalls).toBe(0);
+    expect(await readVaultSchemaVersion(root)).toBe(2);
+  });
+
+  it('refuses a --to target beyond the package latest without applying anything', async () => {
+    const root = await createTempVault('apply-to-beyond');
+    let applyCalls = 0;
+    const registry = [fixtureStep(0, { onApply: async () => void applyCalls++ })];
+    const harness = makeIo();
+
+    const exitCode = await handleMigrateCommand(['--apply', '--to', '9'], { io: harness.io, vaultRoot: root }, {
+      registry,
+      postStepValidate: noopValidator,
+    });
+
+    expect(exitCode).toBe(1);
+    expect(harness.stderr.join('\n')).toContain("--to 9 is beyond this package's latest schema version (1)");
+    expect(applyCalls).toBe(0);
+    expect(existsSync(join(root, '.config.json'))).toBe(false);
+  });
+
+  it('stops and reports at an applicable unsafe-manual step, leaving later steps untouched', async () => {
+    const root = await createTempVault('apply-manual');
+    const order: string[] = [];
+    const registry = [
+      fixtureStep(0, { onApply: async () => void order.push('0001-fixture') }),
+      fixtureStep(1, { category: 'unsafe-manual' }),
+      fixtureStep(2, { onApply: async () => void order.push('0003-fixture') }),
+    ];
+    const harness = makeIo();
+
+    const exitCode = await handleMigrateCommand(['--apply'], { io: harness.io, vaultRoot: root }, {
+      registry,
+      postStepValidate: noopValidator,
+    });
+
+    expect(exitCode).toBe(1);
+    expect(order).toEqual(['0001-fixture']);
+    expect(harness.stdout.join('\n')).toContain('Applied 0001-fixture (0 -> 1, safe-automatic)');
+    expect(harness.stderr.join('\n')).toContain('Manual action required: 0002-fixture - Fixture step 1 -> 2.');
+    expect(harness.stderr.join('\n')).toContain('Vault schema version remains 1.');
+    expect(await readVaultSchemaVersion(root)).toBe(1);
+  });
+
+  it('reports an interrupted apply without advancing and resumes from the incomplete step on re-run', async () => {
+    const root = await createTempVault('apply-resume');
+    let interrupt = true;
+    const order: string[] = [];
+    const registry = [
+      fixtureStep(0, { onApply: async () => void order.push('0001-fixture') }),
+      fixtureStep(1, {
+        onApply: async () => {
+          if (interrupt) {
+            throw new Error('simulated interruption');
+          }
+          order.push('0002-fixture');
+        },
+      }),
+    ];
+
+    const firstHarness = makeIo();
+    const first = await handleMigrateCommand(['--apply'], { io: firstHarness.io, vaultRoot: root }, {
+      registry,
+      postStepValidate: noopValidator,
+    });
+
+    expect(first).toBe(1);
+    expect(firstHarness.stderr.join('\n')).toContain('Migration step 0002-fixture failed during apply: simulated interruption');
+    expect(firstHarness.stderr.join('\n')).toContain('Vault schema version remains 1.');
+    expect(firstHarness.stderr.join('\n')).toContain('resume from the incomplete step');
+    expect(await readVaultSchemaVersion(root)).toBe(1);
+
+    interrupt = false;
+    const secondHarness = makeIo();
+    const second = await handleMigrateCommand(['--apply'], { io: secondHarness.io, vaultRoot: root }, {
+      registry,
+      postStepValidate: noopValidator,
+    });
+
+    expect(second).toBe(0);
+    // The completed first step is not re-applied on resume.
+    expect(order).toEqual(['0001-fixture', '0002-fixture']);
+    expect(secondHarness.stdout.join('\n')).toContain('Applied 0002-fixture');
+    expect(secondHarness.stdout.join('\n')).not.toContain('Applied 0001-fixture');
+    expect(await readVaultSchemaVersion(root)).toBe(2);
+  });
+
+  it('ties a default post-step validation failure to the step and does not advance the version', async () => {
+    const root = await createTempVault('apply-validation-failure');
+    // An invalid step note makes the real validate-all suite report errors.
+    await mkdir(join(root, '02_Phases', 'Phase_01_Broken', 'Steps'), { recursive: true });
+    await writeFile(join(root, '02_Phases', 'Phase_01_Broken', 'Steps', 'Step_01_broken.md'), [
+      '---',
+      'note_type: step',
+      'title: Broken step',
+      '---',
+      '',
+      '# Step 01 - Broken step',
+    ].join('\n'), 'utf-8');
+    const registry = [fixtureStep(0)];
+    const harness = makeIo();
+
+    const exitCode = await handleMigrateCommand(['--apply'], { io: harness.io, vaultRoot: root }, { registry });
+
+    expect(exitCode).toBe(1);
+    const errorOutput = harness.stderr.join('\n');
+    expect(errorOutput).toContain('Migration step 0001-fixture failed during post-step validation');
+    expect(errorOutput).toContain('vault validation failed after step 0001-fixture');
+    expect(errorOutput).toContain('Vault schema version remains 0.');
+    // The schema version never advanced, so no config file was written.
+    expect(existsSync(join(root, '.config.json'))).toBe(false);
+  });
+
+  it('surfaces default post-step validator warnings without failing the migration', async () => {
+    const root = await createTempVault('apply-validation-warnings');
+    // A plain unlinked note produces an orphan warning but no validation error.
+    await writeFile(join(root, 'note.md'), '# unlinked fixture note\n', 'utf-8');
+    const registry = [fixtureStep(0)];
+    const harness = makeIo();
+
+    const exitCode = await handleMigrateCommand(['--apply'], { io: harness.io, vaultRoot: root }, { registry });
+
+    expect(exitCode).toBe(0);
+    const output = harness.stdout.join('\n');
+    expect(output).toContain('[post-step validation after 0001-fixture] WARN ORPHAN_NOTE');
+    expect(output).toContain('Vault schema version is now 1.');
+    expect(await readVaultSchemaVersion(root)).toBe(1);
+  });
+});
+
 describe('vault migrate dispatcher wiring', () => {
   it('dispatches vault migrate against the shipped registry in plan mode', async () => {
     const root = await createTempVault('dispatch');
@@ -283,6 +528,72 @@ describe('vault migrate dispatcher wiring', () => {
     expect(output).toContain('Plan mode only: no changes were written.');
     expect(existsSync(join(root, '.config.json'))).toBe(false);
     expect(await snapshotVault(root)).toEqual(before);
+  });
+
+  it('applies the shipped registry from schema version 0 against a legacy fixture vault', async () => {
+    const root = await createTempVault('dispatch-apply');
+    await writeVaultConfig(root, { resolver: 'obsidian' });
+    await copyTemplate(root, 'Step_Template.md');
+    const phaseDirectory = join(root, '02_Phases', 'Phase_01_Foundation');
+    await mkdir(join(phaseDirectory, 'Steps'), { recursive: true });
+    await writeFile(join(phaseDirectory, 'Phase.md'), [
+      '---',
+      'note_type: phase',
+      'phase_id: PHASE-01',
+      'title: Foundation',
+      '---',
+      '',
+      '# Phase 01 Foundation',
+    ].join('\n'), 'utf-8');
+    const stepPath = join(phaseDirectory, 'Steps', 'Step_02_legacy-step.md');
+    await writeFile(stepPath, [
+      '---',
+      'note_type: step',
+      'title: Legacy step',
+      'step_id: STEP-01-02',
+      'phase: "[[02_Phases/Phase_01_Foundation/Phase|Phase 01 Foundation]]"',
+      '---',
+      '',
+      '# Step 02 - Legacy step',
+      '',
+      '## Purpose',
+      '',
+      '- Outcome: Legacy step.',
+      '',
+      '## Execution Prompt',
+      '',
+      '1. Do the legacy thing.',
+      '',
+      '## Implementation Notes',
+      '',
+      '- Found a thing.',
+      '',
+      '## Outcome Summary',
+      '',
+      '- It worked.',
+    ].join('\n'), 'utf-8');
+    const harness = makeIo();
+
+    // The minimal fixture is not a fully valid vault, so the real validate-all
+    // suite is stubbed out; default-validator behavior is covered separately.
+    const exitCode = await handleMigrateCommand(['--apply'], { io: harness.io, vaultRoot: root }, {
+      postStepValidate: noopValidator,
+    });
+
+    expect(exitCode).toBe(0);
+    const output = harness.stdout.join('\n');
+    expect(output).toContain('Applied 0001-thin-step-notes (0 -> 1, safe-confirm)');
+    expect(output).toContain('Code graph refreshed:');
+    expect(output).toContain('Vault schema version is now 1.');
+    const migrated = await readFile(stepPath, 'utf-8');
+    expect(migrated).toContain('## Companion Notes');
+    expect(migrated).not.toContain('## Execution Prompt');
+    const companionDir = join(phaseDirectory, 'Steps', 'Step_02_legacy-step');
+    expect(await readFile(join(companionDir, 'Execution_Brief.md'), 'utf-8')).toContain('## Execution Prompt');
+    expect(await readFile(join(companionDir, 'Outcome.md'), 'utf-8')).toContain('- It worked.');
+    const raw = JSON.parse(await readFile(join(root, '.config.json'), 'utf-8')) as Record<string, unknown>;
+    expect(raw.resolver).toBe('obsidian');
+    expect(raw.vault_schema_version).toBe(1);
   });
 
   it('shows migrate help through the dispatcher', async () => {

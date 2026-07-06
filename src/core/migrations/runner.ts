@@ -87,6 +87,20 @@ export interface ApplyMigrationsOptions {
    * step, never swallowed.
    */
   readonly validateAfterStep?: (step: MigrationStep) => Promise<void>;
+  /**
+   * Stop after reaching this schema version instead of the package's latest
+   * (`vault migrate --apply --to <version>`). Must be a registered step
+   * boundary at or above the vault's current version; downgrades are refused.
+   */
+  readonly targetVersion?: number;
+}
+
+/** Thrown when a requested `--to` target version is invalid. Raised before any write. */
+export class MigrationTargetError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'MigrationTargetError';
+  }
 }
 
 const toSummary = (step: MigrationStep): MigrationStepSummary => ({
@@ -152,11 +166,48 @@ export const planMigrations = async (
 };
 
 /**
+ * Validate a requested `--to` target version against the vault's current
+ * version and the registry. Throws `MigrationTargetError` before any write.
+ */
+const assertValidTargetVersion = (
+  targetVersion: number,
+  startVersion: number,
+  latestVersion: number,
+  registry: readonly MigrationStep[],
+): void => {
+  if (!Number.isInteger(targetVersion) || targetVersion < 0) {
+    throw new MigrationTargetError(
+      `--to target must be a non-negative integer schema version, got ${targetVersion}.`,
+    );
+  }
+  if (targetVersion > latestVersion) {
+    throw new MigrationTargetError(
+      `--to ${targetVersion} is beyond this package's latest schema version (${latestVersion}); ` +
+        'nothing can migrate past the latest registered step.',
+    );
+  }
+  if (targetVersion < startVersion) {
+    throw new MigrationTargetError(
+      `--to ${targetVersion} is below the vault's current schema version (${startVersion}); ` +
+        'downgrades are not supported.',
+    );
+  }
+  if (targetVersion > startVersion && !registry.some((step) => step.to_version === targetVersion)) {
+    const boundaries = registry.map((step) => step.to_version).join(', ');
+    throw new MigrationTargetError(
+      `No registered migration step ends at version ${targetVersion}; ` +
+        `valid stopping points are: ${boundaries}.`,
+    );
+  }
+};
+
+/**
  * Apply pending migrations in strictly ascending order.
  *
  * Stops and reports (never skips) at the first applicable unsafe/manual step.
  * The vault's `vault_schema_version` advances only after each step's writes
  * and the post-step validator succeed, keeping interrupted runs resumable.
+ * When `targetVersion` is set, the run stops once that version is reached.
  */
 export const applyMigrations = async (
   vaultRoot: string,
@@ -168,18 +219,24 @@ export const applyMigrations = async (
   const startVersion = await readVaultSchemaVersion(vaultRoot);
   const latestVersion = latestSchemaVersion(registry);
 
-  if (startVersion === latestVersion) {
-    return { status: 'up-to-date', startVersion, finalVersion: startVersion, latestVersion, applied: [] };
-  }
   if (startVersion > latestVersion) {
     return { status: 'ahead-of-latest', startVersion, finalVersion: startVersion, latestVersion, applied: [] };
+  }
+
+  if (options.targetVersion !== undefined) {
+    assertValidTargetVersion(options.targetVersion, startVersion, latestVersion, registry);
+  }
+  const goalVersion = options.targetVersion ?? latestVersion;
+
+  if (startVersion >= goalVersion) {
+    return { status: 'up-to-date', startVersion, finalVersion: startVersion, latestVersion, applied: [] };
   }
 
   const context = { vaultRoot };
   const applied: MigrationStepSummary[] = [];
   let currentVersion = startVersion;
 
-  while (currentVersion < latestVersion) {
+  while (currentVersion < goalVersion) {
     const step = stepForVersion(registry, currentVersion);
     if (!step) {
       return { status: 'gap', startVersion, finalVersion: currentVersion, latestVersion, applied };
