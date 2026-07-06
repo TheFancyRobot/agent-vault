@@ -21,6 +21,7 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
+      id-token: write
 
     steps:
       - name: Checkout repository
@@ -34,34 +35,43 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v5
         with:
-          node-version: 22
-          registry-url: https://registry.npmjs.org
+          node-version: 24
 
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
-      - name: Verify npm publish access
+      - name: Configure npm publishing authentication
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           set -euo pipefail
 
-          npm ping --registry https://registry.npmjs.org >/dev/null
-          npm_user="$(npm whoami --registry https://registry.npmjs.org)"
           package_name="$(node -p "require('./package.json').name")"
-          package_scope="${package_name%%/*}"
-
-          echo "Authenticated to npm as ${npm_user}"
           echo "Release package is ${package_name}"
 
-          if [[ "${package_scope}" == @* && "${package_scope#@}" != "${npm_user}" ]]; then
-            scope_name="${package_scope#@}"
-            if ! npm org ls "${scope_name}" >/dev/null 2>&1; then
-              echo "::error::NPM token authenticated as '${npm_user}', but could not verify access to npm scope '@${scope_name}'. Ensure the scope exists and this npm account has publish access."
-              exit 1
-            fi
+          if [[ -n "${NODE_AUTH_TOKEN}" ]]; then
+            npm config set //registry.npmjs.org/:_authToken "$NODE_AUTH_TOKEN"
+            npm ping --registry https://registry.npmjs.org >/dev/null
+            npm_user="$(npm whoami --registry https://registry.npmjs.org)"
+            package_scope="${package_name%%/*}"
 
-            echo "Verified access to npm org @${scope_name}"
+            echo "Authenticated to npm as ${npm_user}"
+
+            if [[ "${package_scope}" == @* && "${package_scope#@}" != "${npm_user}" ]]; then
+              scope_name="${package_scope#@}"
+              if ! npm org ls "${scope_name}" >/dev/null 2>&1; then
+                echo "::error::NPM token authenticated as '${npm_user}', but could not verify access to npm scope '@${scope_name}'. Ensure the scope exists and this npm account has publish access."
+                exit 1
+              fi
+
+              echo "Verified access to npm org @${scope_name}"
+            fi
+          else
+            npm_version="$(npm --version)"
+            echo "No NPM_TOKEN secret configured; using npm trusted publishing via GitHub OIDC."
+            echo "npm ${npm_version}"
+            node -e "const semver = process.argv[1].split('.').map(Number); if (semver[0] < 11 || (semver[0] === 11 && semver[1] < 5) || (semver[0] === 11 && semver[1] === 5 && semver[2] < 1)) { console.error('npm trusted publishing requires npm >= 11.5.1'); process.exit(1); }" "$npm_version"
+            echo "Ensure npmjs.com has a trusted publisher configured for TheFancyRobot/agent-vault, workflow .github/workflows/release.yml, branch main."
           fi
 
       - name: Create release PR or publish release
@@ -75,14 +85,9 @@ jobs:
           createGithubReleases: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish release (skip version bump)
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.skip_version }}
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: bun run release
 
       - name: Create git tag and GitHub release
