@@ -39,6 +39,7 @@ import { isProjectVault, resolveVaultRoot } from './core/vault-files';
 import { initVault } from './scaffold/init';
 import { scanProject } from './scaffold/scan';
 import { writeCodeGraph } from './scaffold/code-graph';
+import { generateStubs, initializeStubCache } from './scaffold/code-stubs';
 
 type CommandHandler = (argv: string[], environment?: AgentVaultCommandEnvironment) => Promise<number>;
 
@@ -329,7 +330,7 @@ export async function startServer(): Promise<void> {
     'vault_refresh',
     'Refresh generated indexes, active context, or the code graph.',
     {
-      target: z.enum(['all', 'indexes', 'active_context', 'code_graph']).default('all').describe('Refresh target.'),
+      target: z.enum(['all', 'indexes', 'active_context', 'code_graph', 'code_stubs']).default('all').describe('Refresh target.'),
     },
     async ({ target }) => {
       switch (target) {
@@ -363,6 +364,38 @@ export async function startServer(): Promise<void> {
               content: [{
                 type: 'text',
                 text: `Failed to refresh code graph: ${err instanceof Error ? err.message : String(err)}`,
+              }],
+            };
+          }
+        }
+
+        case 'code_stubs': {
+          try {
+            const vaultRoot = resolveVaultRoot(process.cwd());
+            if (!isProjectVault(vaultRoot)) {
+              return {
+                isError: true,
+                content: [{
+                  type: 'text',
+                  text: `No project vault found. Resolved ${vaultRoot} is not a vault created by vault_init. Run vault_init first.`,
+                }],
+              };
+            }
+            const projectRoot = dirname(vaultRoot);
+            // Initialize the stub cache directory and manifest
+            await initializeStubCache(vaultRoot);
+            return {
+              content: [{
+                type: 'text',
+                text: 'Code stubs cache initialized. Stubs are generated on-demand by the context compiler.',
+              }],
+            };
+          } catch (err) {
+            return {
+              isError: true,
+              content: [{
+                type: 'text',
+                text: `Failed to initialize stub cache: ${err instanceof Error ? err.message : String(err)}`,
               }],
             };
           }
