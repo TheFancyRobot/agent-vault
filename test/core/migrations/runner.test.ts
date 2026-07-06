@@ -52,9 +52,9 @@ const fixtureStep = (fromVersion: number, options: FixtureStepOptions = {}): Mig
 };
 
 describe('shipped registry', () => {
-  it('ships empty with latest schema version 0', () => {
-    expect(MIGRATION_REGISTRY).toEqual([]);
-    expect(latestSchemaVersion()).toBe(0);
+  it('ships the thin-step-notes migration as schema version 1', () => {
+    expect(MIGRATION_REGISTRY.map((step) => step.id)).toEqual(['0001-thin-step-notes']);
+    expect(latestSchemaVersion()).toBe(1);
     expect(() => validateMigrationRegistry(MIGRATION_REGISTRY)).not.toThrow();
   });
 });
