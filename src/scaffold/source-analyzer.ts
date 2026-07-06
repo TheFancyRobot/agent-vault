@@ -573,7 +573,6 @@ export class TreeSitterAnalyzer implements SourceAnalyzer {
     this.checked = true;
 
     try {
-      // @ts-expect-error - web-tree-sitter is an optional dependency
       const TreeSitter = await import('web-tree-sitter');
       await TreeSitter.default.init();
       this.Parser = TreeSitter.default;
