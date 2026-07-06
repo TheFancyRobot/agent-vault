@@ -1,3 +1,4 @@
+import { thinStepNotesMigration } from './steps/0001-thin-step-notes';
 import type { MigrationStep } from './types';
 
 /**
@@ -8,10 +9,9 @@ import type { MigrationStep } from './types';
  * in ascending version order. The registry is append-only in practice — new
  * steps are added as new files; shipped steps are never edited in place.
  *
- * Intentionally empty until the first real step (registry step `0 -> 1`,
- * wrapping `migrate-step-notes`) lands.
+ * Append-only: shipped steps stay in place and new steps are added after them.
  */
-export const MIGRATION_REGISTRY: readonly MigrationStep[] = [];
+export const MIGRATION_REGISTRY: readonly MigrationStep[] = [thinStepNotesMigration];
 
 /**
  * The package's latest vault schema version, derived from the highest ordered
