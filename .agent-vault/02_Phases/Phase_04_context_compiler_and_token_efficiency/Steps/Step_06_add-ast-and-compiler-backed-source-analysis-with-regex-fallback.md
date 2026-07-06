@@ -5,7 +5,7 @@ contract_version: 1
 title: Add AST and compiler-backed source analysis with regex fallback
 step_id: STEP-04-06
 phase: '[[02_Phases/Phase_04_context_compiler_and_token_efficiency/Phase|Phase 04 context compiler and token efficiency]]'
-status: planned
+status: done
 owner: ''
 created: '2026-07-05'
 updated: '2026-07-05'
