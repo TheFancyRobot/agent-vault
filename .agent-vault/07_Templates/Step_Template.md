@@ -50,6 +50,7 @@ Use this note as the thin index for one executable step inside a phase. Keep thi
 ## Human Notes
 
 - Use this section for judgment calls, cautions, or handoff guidance that should not be overwritten by automation.
+- Template maintainers: keep this structure aligned with [[07_Templates/Note_Contracts|Note Contracts]].
 
 ## Session History
 
