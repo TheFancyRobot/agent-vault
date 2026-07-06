@@ -37,6 +37,7 @@ import {
   extractVaultNoteTarget,
   type VaultNoteExtractionResult,
 } from './vault-extract';
+import { buildContextResourceUri } from './context-resources';
 
 
 const execFile = promisify(execFileCallback);
@@ -77,6 +78,7 @@ export interface PrepareContextInput {
 export interface PrepareContextItem {
   kind: 'vault_note' | 'source_file';
   path: string;
+  resourceUri: string;
   renderMode: 'full' | 'excerpt' | 'stub' | 'summary' | 'heading' | 'metadata';
   score: number;
   reasons: string[];
@@ -485,14 +487,20 @@ export const prepareContext = async (
   const rankingResult = rankContextCandidates(rankingInput);
 
   // ── Map ranked items to PrepareContextItem ────────────────────────
-  const items: PrepareContextItem[] = rankingResult.items.map((ranked) => ({
-    kind: ranked.kind,
-    path: ranked.path,
-    renderMode: determineRenderMode(ranked, mode, source_mode),
-    score: ranked.score,
-    reasons: [...ranked.reasons],
-    estimatedTokens: ranked.estimatedTokens,
-  }));
+  const items: PrepareContextItem[] = rankingResult.items.map((ranked) => {
+    const renderMode = determineRenderMode(ranked, mode, source_mode);
+    return {
+      kind: ranked.kind,
+      path: ranked.path,
+      resourceUri: ranked.kind === 'vault_note'
+        ? buildContextResourceUri('note', ranked.path)
+        : buildContextResourceUri(renderMode === 'summary' ? 'code-summary' : 'code-stub', ranked.path),
+      renderMode,
+      score: ranked.score,
+      reasons: [...ranked.reasons],
+      estimatedTokens: ranked.estimatedTokens,
+    };
+  });
 
   // ── Render content ────────────────────────────────────────────────
   const contentParts: string[] = [];

@@ -1,30 +1,30 @@
 {
   "version": 2,
-  "generatedAt": "2026-07-05T23:38:26.844Z",
+  "generatedAt": "2026-07-06T02:54:03.473Z",
   "repoName": "agent-vault",
-  "totalFiles": 36,
-  "totalSymbols": 617,
+  "totalFiles": 40,
+  "totalSymbols": 701,
   "directories": [
     {
       "directory": "src/core",
-      "files": 14,
-      "exportedSymbols": 124,
-      "internalSymbols": 263,
-      "totalSymbols": 387
+      "files": 16,
+      "exportedSymbols": 142,
+      "internalSymbols": 297,
+      "totalSymbols": 439
     },
     {
       "directory": "src/scaffold",
-      "files": 4,
-      "exportedSymbols": 24,
-      "internalSymbols": 47,
-      "totalSymbols": 71
+      "files": 6,
+      "exportedSymbols": 51,
+      "internalSymbols": 51,
+      "totalSymbols": 102
     },
     {
       "directory": "src",
       "files": 3,
       "exportedSymbols": 14,
-      "internalSymbols": 47,
-      "totalSymbols": 61
+      "internalSymbols": 48,
+      "totalSymbols": 62
     },
     {
       "directory": "src/templates",
@@ -557,37 +557,37 @@
         {
           "name": "CommandGroup",
           "kind": "type",
-          "line": 27,
+          "line": 28,
           "exported": false
         },
         {
           "name": "AgentVaultCommandDefinition",
           "kind": "interface",
-          "line": 29,
+          "line": 30,
           "exported": false
         },
         {
           "name": "getCommandDefinition",
           "kind": "const",
-          "line": 334,
+          "line": 351,
           "exported": true
         },
         {
           "name": "formatCommandUsage",
           "kind": "const",
-          "line": 337,
+          "line": 354,
           "exported": true
         },
         {
           "name": "formatCommandHelp",
           "kind": "const",
-          "line": 346,
+          "line": 363,
           "exported": true
         },
         {
           "name": "formatCommandCatalog",
           "kind": "const",
-          "line": 364,
+          "line": 381,
           "exported": true
         }
       ]
@@ -1056,6 +1056,186 @@
           "name": "rankContextCandidates",
           "kind": "const",
           "line": 476,
+          "exported": true
+        }
+      ]
+    },
+    {
+      "path": "src/core/context-resources.ts",
+      "language": "TypeScript",
+      "symbols": [
+        {
+          "name": "STUBS_DIR",
+          "kind": "const",
+          "line": 11,
+          "exported": false
+        },
+        {
+          "name": "MAX_EXCERPT_LINES",
+          "kind": "const",
+          "line": 12,
+          "exported": false
+        },
+        {
+          "name": "ContextResourceKind",
+          "kind": "type",
+          "line": 14,
+          "exported": true
+        },
+        {
+          "name": "ParsedContextResourceUri",
+          "kind": "interface",
+          "line": 16,
+          "exported": true
+        },
+        {
+          "name": "buildContextResourceUri",
+          "kind": "const",
+          "line": 22,
+          "exported": true
+        },
+        {
+          "name": "decodeUriComponentStrict",
+          "kind": "const",
+          "line": 36,
+          "exported": false
+        },
+        {
+          "name": "containsEncodedSeparator",
+          "kind": "const",
+          "line": 44,
+          "exported": false
+        },
+        {
+          "name": "assertSafeRelativeResourcePath",
+          "kind": "const",
+          "line": 46,
+          "exported": false
+        },
+        {
+          "name": "SECRET_PATH_PATTERN",
+          "kind": "const",
+          "line": 65,
+          "exported": false
+        },
+        {
+          "name": "assertNotSecretLikePath",
+          "kind": "const",
+          "line": 67,
+          "exported": false
+        },
+        {
+          "name": "parseContextResourceUri",
+          "kind": "const",
+          "line": 73,
+          "exported": true
+        },
+        {
+          "name": "resolveExistingVaultFile",
+          "kind": "const",
+          "line": 108,
+          "exported": false
+        },
+        {
+          "name": "safeRealpath",
+          "kind": "const",
+          "line": 122,
+          "exported": false
+        },
+        {
+          "name": "resolveProjectPath",
+          "kind": "const",
+          "line": 127,
+          "exported": false
+        },
+        {
+          "name": "assertWithinRoot",
+          "kind": "const",
+          "line": 141,
+          "exported": false
+        },
+        {
+          "name": "readCodeGraphV3",
+          "kind": "const",
+          "line": 148,
+          "exported": false
+        },
+        {
+          "name": "findCodeGraphFile",
+          "kind": "const",
+          "line": 156,
+          "exported": false
+        },
+        {
+          "name": "hashFile",
+          "kind": "const",
+          "line": 168,
+          "exported": false
+        },
+        {
+          "name": "checkStubFreshness",
+          "kind": "const",
+          "line": 173,
+          "exported": false
+        },
+        {
+          "name": "textResource",
+          "kind": "const",
+          "line": 191,
+          "exported": false
+        },
+        {
+          "name": "readNoteResource",
+          "kind": "function",
+          "line": 200,
+          "exported": true
+        },
+        {
+          "name": "readCodeStubResource",
+          "kind": "function",
+          "line": 209,
+          "exported": true
+        },
+        {
+          "name": "readCodeSummaryResource",
+          "kind": "function",
+          "line": 246,
+          "exported": true
+        },
+        {
+          "name": "readCodeExcerptResource",
+          "kind": "function",
+          "line": 279,
+          "exported": true
+        },
+        {
+          "name": "readContextResource",
+          "kind": "function",
+          "line": 321,
+          "exported": true
+        },
+        {
+          "name": "resourceName",
+          "kind": "const",
+          "line": 335,
+          "exported": false
+        },
+        {
+          "name": "listMarkdownNotes",
+          "kind": "function",
+          "line": 337,
+          "exported": false
+        },
+        {
+          "name": "listNoteResources",
+          "kind": "function",
+          "line": 357,
+          "exported": true
+        },
+        {
+          "name": "listCodeArtifactResources",
+          "kind": "function",
+          "line": 361,
           "exported": true
         }
       ]
@@ -2867,6 +3047,150 @@
       ]
     },
     {
+      "path": "src/core/vault-prepare-context.ts",
+      "language": "TypeScript",
+      "symbols": [
+        {
+          "name": "execFile",
+          "kind": "const",
+          "line": 43,
+          "exported": false
+        },
+        {
+          "name": "estimateTokens",
+          "kind": "const",
+          "line": 47,
+          "exported": false
+        },
+        {
+          "name": "PrepareContextMode",
+          "kind": "type",
+          "line": 51,
+          "exported": true
+        },
+        {
+          "name": "PrepareContextSourceMode",
+          "kind": "type",
+          "line": 52,
+          "exported": true
+        },
+        {
+          "name": "PrepareContextRanker",
+          "kind": "type",
+          "line": 53,
+          "exported": true
+        },
+        {
+          "name": "PrepareContextInput",
+          "kind": "interface",
+          "line": 55,
+          "exported": true
+        },
+        {
+          "name": "PrepareContextItem",
+          "kind": "interface",
+          "line": 78,
+          "exported": true
+        },
+        {
+          "name": "PrepareContextResult",
+          "kind": "interface",
+          "line": 88,
+          "exported": true
+        },
+        {
+          "name": "collectChangedFiles",
+          "kind": "const",
+          "line": 103,
+          "exported": false
+        },
+        {
+          "name": "normalizeCanonicalTarget",
+          "kind": "const",
+          "line": 119,
+          "exported": false
+        },
+        {
+          "name": "estimateNoteTokens",
+          "kind": "const",
+          "line": 122,
+          "exported": false
+        },
+        {
+          "name": "mapToVaultCandidate",
+          "kind": "const",
+          "line": 125,
+          "exported": false
+        },
+        {
+          "name": "buildGraphDistances",
+          "kind": "const",
+          "line": 140,
+          "exported": false
+        },
+        {
+          "name": "buildExplicitLinksFromRoot",
+          "kind": "const",
+          "line": 178,
+          "exported": false
+        },
+        {
+          "name": "buildDependencyEdges",
+          "kind": "const",
+          "line": 187,
+          "exported": false
+        },
+        {
+          "name": "buildSourceCandidates",
+          "kind": "const",
+          "line": 225,
+          "exported": false
+        },
+        {
+          "name": "determineRenderMode",
+          "kind": "const",
+          "line": 274,
+          "exported": false
+        },
+        {
+          "name": "STUBS_DIR",
+          "kind": "const",
+          "line": 293,
+          "exported": false
+        },
+        {
+          "name": "renderVaultNote",
+          "kind": "const",
+          "line": 295,
+          "exported": false
+        },
+        {
+          "name": "renderSourceStub",
+          "kind": "const",
+          "line": 310,
+          "exported": false
+        },
+        {
+          "name": "DEFAULT_TOKEN_BUDGET",
+          "kind": "const",
+          "line": 360,
+          "exported": false
+        },
+        {
+          "name": "prepareContext",
+          "kind": "const",
+          "line": 369,
+          "exported": true
+        },
+        {
+          "name": "relativePathFromProjectRoot",
+          "kind": "const",
+          "line": 548,
+          "exported": false
+        }
+      ]
+    },
+    {
       "path": "src/install.ts",
       "language": "TypeScript",
       "symbols": [
@@ -3009,189 +3333,195 @@
           "exported": true
         },
         {
-          "name": "upsertPiPackageSourceInConfig",
+          "name": "packageSourceAliases",
           "kind": "const",
           "line": 99,
+          "exported": false
+        },
+        {
+          "name": "upsertPiPackageSourceInConfig",
+          "kind": "const",
+          "line": 114,
           "exported": true
         },
         {
           "name": "removePiPackageSourcesFromConfig",
           "kind": "const",
-          "line": 123,
+          "line": 138,
           "exported": true
         },
         {
           "name": "getToolMcpRootKey",
           "kind": "const",
-          "line": 154,
+          "line": 172,
           "exported": false
         },
         {
           "name": "buildToolMcpServerConfig",
           "kind": "const",
-          "line": 156,
+          "line": 174,
           "exported": false
         },
         {
           "name": "resolvePiSettingsPath",
           "kind": "const",
-          "line": 162,
+          "line": 180,
           "exported": false
         },
         {
           "name": "parseInstallScope",
           "kind": "const",
-          "line": 168,
+          "line": 186,
           "exported": true
         },
         {
           "name": "parseNumberedSelection",
           "kind": "const",
-          "line": 180,
+          "line": 198,
           "exported": true
         },
         {
           "name": "writeRuntimeManifest",
           "kind": "const",
-          "line": 208,
+          "line": 226,
           "exported": false
         },
         {
           "name": "runPackageInstall",
           "kind": "const",
-          "line": 220,
+          "line": 238,
           "exported": false
         },
         {
           "name": "promptForInstallScope",
           "kind": "const",
-          "line": 246,
+          "line": 264,
           "exported": false
         },
         {
           "name": "resolveInstallScope",
           "kind": "const",
-          "line": 273,
+          "line": 291,
           "exported": false
         },
         {
           "name": "promptForInstallTools",
           "kind": "const",
-          "line": 286,
+          "line": 304,
           "exported": false
         },
         {
           "name": "resolveInstallTools",
           "kind": "const",
-          "line": 314,
+          "line": 332,
           "exported": false
         },
         {
           "name": "ensureRuntimeInstalled",
           "kind": "const",
-          "line": 326,
+          "line": 344,
           "exported": false
         },
         {
           "name": "maybeRemoveEmptyDir",
           "kind": "const",
-          "line": 343,
+          "line": 361,
           "exported": false
         },
         {
           "name": "uninstallInstalledRuntime",
           "kind": "const",
-          "line": 360,
+          "line": 378,
           "exported": false
         },
         {
           "name": "toCodexPromptName",
           "kind": "const",
-          "line": 397,
+          "line": 415,
           "exported": false
         },
         {
           "name": "getFirstNonEmptyLine",
           "kind": "const",
-          "line": 399,
+          "line": 417,
           "exported": false
         },
         {
           "name": "getCommandBody",
           "kind": "const",
-          "line": 409,
+          "line": 427,
           "exported": false
         },
         {
           "name": "withDescriptionFrontmatter",
           "kind": "const",
-          "line": 425,
+          "line": 443,
           "exported": false
         },
         {
           "name": "renderSlashCommandReference",
           "kind": "const",
-          "line": 430,
+          "line": 448,
           "exported": false
         },
         {
           "name": "renderToolCommand",
           "kind": "const",
-          "line": 438,
+          "line": 456,
           "exported": true
         },
         {
           "name": "readCommandTemplates",
           "kind": "const",
-          "line": 465,
+          "line": 483,
           "exported": false
         },
         {
           "name": "detectTools",
           "kind": "const",
-          "line": 481,
+          "line": 499,
           "exported": true
         },
         {
           "name": "readJsonSafe",
           "kind": "const",
-          "line": 519,
+          "line": 537,
           "exported": false
         },
         {
           "name": "writeJsonSafe",
           "kind": "const",
-          "line": 531,
+          "line": 549,
           "exported": false
         },
         {
           "name": "installToolConfiguration",
           "kind": "const",
-          "line": 536,
+          "line": 554,
           "exported": false
         },
         {
           "name": "installToolCommands",
           "kind": "const",
-          "line": 577,
+          "line": 595,
           "exported": false
         },
         {
           "name": "uninstallTool",
           "kind": "const",
-          "line": 605,
+          "line": 623,
           "exported": false
         },
         {
           "name": "runInstall",
           "kind": "function",
-          "line": 677,
+          "line": 695,
           "exported": true
         },
         {
           "name": "runUninstall",
           "kind": "function",
-          "line": 721,
+          "line": 739,
           "exported": true
         }
       ]
@@ -3203,25 +3533,25 @@
         {
           "name": "CommandHandler",
           "kind": "type",
-          "line": 43,
+          "line": 49,
           "exported": false
         },
         {
           "name": "captureOutput",
           "kind": "const",
-          "line": 45,
+          "line": 51,
           "exported": false
         },
         {
           "name": "noArgs",
           "kind": "const",
-          "line": 60,
+          "line": 66,
           "exported": false
         },
         {
           "name": "startServer",
           "kind": "function",
-          "line": 62,
+          "line": 68,
           "exported": true
         }
       ]
@@ -3329,242 +3659,362 @@
         {
           "name": "CodeSymbol",
           "kind": "interface",
-          "line": 7,
+          "line": 8,
           "exported": true
         },
         {
           "name": "FileSymbols",
           "kind": "interface",
-          "line": 14,
+          "line": 15,
           "exported": true
         },
         {
           "name": "CodeGraphResult",
           "kind": "interface",
-          "line": 20,
+          "line": 21,
           "exported": true
         },
         {
           "name": "CodeGraphDirectorySummary",
           "kind": "interface",
-          "line": 26,
+          "line": 27,
           "exported": true
         },
         {
           "name": "CodeGraphIndexPayload",
           "kind": "interface",
-          "line": 34,
+          "line": 35,
           "exported": true
         },
         {
           "name": "CodeSymbolV3",
           "kind": "interface",
-          "line": 46,
+          "line": 47,
           "exported": true
         },
         {
           "name": "ImportEdge",
           "kind": "interface",
-          "line": 53,
+          "line": 54,
           "exported": true
         },
         {
           "name": "ExportEdge",
           "kind": "interface",
-          "line": 61,
+          "line": 62,
           "exported": true
         },
         {
           "name": "FileSymbolsV3",
           "kind": "interface",
-          "line": 68,
+          "line": 69,
           "exported": true
         },
         {
           "name": "CodeGraphIndexV3",
           "kind": "interface",
-          "line": 81,
+          "line": 83,
           "exported": true
         },
         {
           "name": "SKIP_DIRS",
           "kind": "const",
-          "line": 88,
+          "line": 90,
           "exported": false
         },
         {
           "name": "parseNamesFromBraces",
           "kind": "const",
-          "line": 116,
+          "line": 118,
           "exported": false
         },
         {
           "name": "SymbolExtractorV3",
           "kind": "type",
-          "line": 128,
+          "line": 130,
           "exported": false
         },
         {
           "name": "extractJSDoc",
           "kind": "const",
-          "line": 134,
+          "line": 136,
           "exported": false
         },
         {
           "name": "extractFunctionSignature",
           "kind": "const",
-          "line": 167,
+          "line": 169,
           "exported": false
         },
         {
           "name": "extractImportEdges",
           "kind": "const",
-          "line": 182,
+          "line": 184,
           "exported": false
         },
         {
           "name": "extractExportEdges",
           "kind": "const",
-          "line": 275,
+          "line": 277,
           "exported": false
         },
         {
           "name": "extractTypeScript",
           "kind": "const",
-          "line": 327,
+          "line": 329,
           "exported": false
         },
         {
           "name": "extractPython",
           "kind": "const",
-          "line": 442,
+          "line": 444,
           "exported": false
         },
         {
           "name": "extractGo",
           "kind": "const",
-          "line": 480,
+          "line": 482,
           "exported": false
         },
         {
           "name": "extractRust",
           "kind": "const",
-          "line": 513,
+          "line": 515,
           "exported": false
         },
         {
           "name": "extractJava",
           "kind": "const",
-          "line": 555,
+          "line": 557,
           "exported": false
         },
         {
           "name": "extractKotlin",
           "kind": "const",
-          "line": 593,
+          "line": 595,
           "exported": false
         },
         {
           "name": "extractRuby",
           "kind": "const",
-          "line": 623,
+          "line": 625,
           "exported": false
         },
         {
           "name": "extractCSharp",
           "kind": "const",
-          "line": 648,
+          "line": 650,
           "exported": false
         },
         {
           "name": "extractSwift",
           "kind": "const",
-          "line": 686,
+          "line": 688,
           "exported": false
         },
         {
           "name": "extractPHP",
           "kind": "const",
-          "line": 722,
+          "line": 724,
           "exported": false
         },
         {
           "name": "extractScala",
           "kind": "const",
-          "line": 752,
+          "line": 754,
           "exported": false
         },
         {
           "name": "extractElixir",
           "kind": "const",
-          "line": 779,
+          "line": 781,
           "exported": false
         },
         {
           "name": "GENERATED_DIRS",
           "kind": "const",
-          "line": 816,
+          "line": 820,
           "exported": false
         },
         {
           "name": "VENDOR_DIRS",
           "kind": "const",
-          "line": 817,
+          "line": 821,
           "exported": false
         },
         {
           "name": "walkSourceFiles",
           "kind": "function",
-          "line": 819,
+          "line": 823,
           "exported": false
         },
         {
           "name": "buildCodeGraph",
           "kind": "function",
-          "line": 895,
+          "line": 930,
           "exported": true
         },
         {
           "name": "summarizeCodeGraph",
           "kind": "function",
-          "line": 905,
+          "line": 961,
           "exported": true
         },
         {
           "name": "buildCodeGraphIndexPayloadV3",
           "kind": "function",
-          "line": 935,
+          "line": 991,
           "exported": true
         },
         {
           "name": "buildCodeGraphIndexPayload",
           "kind": "function",
-          "line": 945,
+          "line": 1001,
           "exported": true
         },
         {
           "name": "renderCodeGraphMarkdown",
           "kind": "function",
-          "line": 957,
+          "line": 1013,
           "exported": true
         },
         {
           "name": "writeCodeGraph",
           "kind": "function",
-          "line": 1053,
+          "line": 1109,
           "exported": true
         },
         {
           "name": "findSymbols",
           "kind": "function",
-          "line": 1073,
+          "line": 1129,
           "exported": true
         },
         {
           "name": "getSymbolsForFiles",
           "kind": "function",
-          "line": 1091,
+          "line": 1147,
           "exported": true
+        }
+      ]
+    },
+    {
+      "path": "src/scaffold/code-stubs.ts",
+      "language": "TypeScript",
+      "symbols": [
+        {
+          "name": "StubManifestEntry",
+          "kind": "interface",
+          "line": 8,
+          "exported": true
+        },
+        {
+          "name": "StubManifest",
+          "kind": "interface",
+          "line": 29,
+          "exported": true
+        },
+        {
+          "name": "GenerateStubResult",
+          "kind": "interface",
+          "line": 38,
+          "exported": true
+        },
+        {
+          "name": "GenerateStubsResult",
+          "kind": "interface",
+          "line": 47,
+          "exported": true
+        },
+        {
+          "name": "STUBS_DIR",
+          "kind": "const",
+          "line": 58,
+          "exported": false
+        },
+        {
+          "name": "STUB_EXT",
+          "kind": "const",
+          "line": 59,
+          "exported": false
+        },
+        {
+          "name": "MAX_FILE_SIZE",
+          "kind": "const",
+          "line": 60,
+          "exported": false
+        },
+        {
+          "name": "sanitizeStubPath",
+          "kind": "function",
+          "line": 71,
+          "exported": true
+        },
+        {
+          "name": "resolveStubPath",
+          "kind": "function",
+          "line": 85,
+          "exported": true
+        },
+        {
+          "name": "generateTypeScriptStub",
+          "kind": "function",
+          "line": 107,
+          "exported": true
+        },
+        {
+          "name": "readStubManifest",
+          "kind": "function",
+          "line": 284,
+          "exported": true
+        },
+        {
+          "name": "writeStubManifest",
+          "kind": "function",
+          "line": 296,
+          "exported": true
+        },
+        {
+          "name": "isEntryStale",
+          "kind": "function",
+          "line": 304,
+          "exported": true
+        },
+        {
+          "name": "computeSourceMetadata",
+          "kind": "function",
+          "line": 317,
+          "exported": true
+        },
+        {
+          "name": "generateStubForFile",
+          "kind": "function",
+          "line": 347,
+          "exported": true
+        },
+        {
+          "name": "generateStubs",
+          "kind": "function",
+          "line": 458,
+          "exported": true
+        },
+        {
+          "name": "initializeStubCache",
+          "kind": "function",
+          "line": 497,
+          "exported": true
+        },
+        {
+          "name": "invalidateStub",
+          "kind": "function",
+          "line": 514,
+          "exported": true
+        },
+        {
+          "name": "getLanguageForExtension",
+          "kind": "function",
+          "line": 549,
+          "exported": false
         }
       ]
     },
@@ -3672,6 +4122,84 @@
           "name": "scanProject",
           "kind": "function",
           "line": 288,
+          "exported": true
+        }
+      ]
+    },
+    {
+      "path": "src/scaffold/source-analyzer.ts",
+      "language": "TypeScript",
+      "symbols": [
+        {
+          "name": "AnalysisTier",
+          "kind": "type",
+          "line": 16,
+          "exported": true
+        },
+        {
+          "name": "AnalyzedSymbol",
+          "kind": "interface",
+          "line": 18,
+          "exported": true
+        },
+        {
+          "name": "AnalyzedImport",
+          "kind": "interface",
+          "line": 29,
+          "exported": true
+        },
+        {
+          "name": "AnalyzedExport",
+          "kind": "interface",
+          "line": 37,
+          "exported": true
+        },
+        {
+          "name": "AnalysisResult",
+          "kind": "interface",
+          "line": 44,
+          "exported": true
+        },
+        {
+          "name": "SourceAnalyzer",
+          "kind": "interface",
+          "line": 52,
+          "exported": true
+        },
+        {
+          "name": "RegexAnalyzer",
+          "kind": "class",
+          "line": 71,
+          "exported": true
+        },
+        {
+          "name": "TypeScriptCompilerAnalyzer",
+          "kind": "class",
+          "line": 139,
+          "exported": true
+        },
+        {
+          "name": "TreeSitterAnalyzer",
+          "kind": "class",
+          "line": 564,
+          "exported": true
+        },
+        {
+          "name": "TieredAnalyzerOptions",
+          "kind": "interface",
+          "line": 793,
+          "exported": true
+        },
+        {
+          "name": "TieredSourceAnalyzer",
+          "kind": "class",
+          "line": 819,
+          "exported": true
+        },
+        {
+          "name": "createTieredAnalyzer",
+          "kind": "function",
+          "line": 895,
           "exported": true
         }
       ]

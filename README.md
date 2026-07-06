@@ -293,7 +293,7 @@ The migration is idempotent: already-split step notes are skipped, and the code-
 
 Step mirrors are optional — they appear only on step notes that have been linked to a session. Steps without linked sessions will not have mirror fields, which is normal and does not indicate a validation error.
 
-## MCP Tools (11 tools)
+## MCP Tools (12 tools)
 
 These tools are exposed via the MCP server and can be called by any MCP-compatible agent:
 
@@ -305,12 +305,25 @@ These tools are exposed via the MCP server and can be called by any MCP-compatib
 | `vault_traverse` | Load a connected subgraph for agent context — `root`, `depth`, `direction`, optional filters, `format`: `toon` or `json` |
 | `vault_extract` | Extract a bounded section from one note by exact markdown heading or generated-block name without returning the full note |
 | `vault_mutate` | Edit notes — `action`: `update_frontmatter`, `append_section` |
-| `vault_refresh` | Refresh home notes or the code graph — `target`: `all`, `indexes`, `active_context`, `code_graph` |
+| `vault_refresh` | Refresh home notes, the code graph, or the code-stub cache — `target`: `all`, `indexes`, `active_context`, `code_graph`, `code_stubs` |
 | `vault_validate` | Check integrity — `target`: `all`, `frontmatter`, `structure`, `links`, `orphans`, `doctor` |
 | `vault_config` | View or update vault configuration (e.g., link resolver preference) |
 | `vault_help` | List commands or show detailed help for one |
 | `vault_lookup_code_graph` | Search the generated code-graph index for matching symbols/files without loading the full index |
 | `vault_prepare_context` | Compile task-specific context: gather, rank, and render candidates from vault notes, source files, git changes, and code graph with token budgeting and explainable score reasons |
+
+## MCP Resources
+
+Read-only context artifacts are also exposed as stable `vault://` resources. Resource reads are side-effect free: they never refresh the code graph or regenerate stubs. Missing or stale generated artifacts return a refresh hint instead.
+
+| URI shape | Description |
+|---|---|
+| `vault://note/00_Home/Active_Context.md` | Read a vault Markdown note by vault-relative path |
+| `vault://code-stub/src/core/vault-graph.ts` | Read a cached source interface stub |
+| `vault://code-summary/src/core/vault-graph.ts` | Read code-graph metadata for a source file |
+| `vault://code-excerpt/src/core/vault-graph.ts#traverseVaultGraph` | Read a bounded source excerpt for an indexed symbol |
+
+Resource paths are vault-relative for notes and project-relative for code artifacts. Traversal attempts, absolute paths, encoded path separators, symlink escapes, generated/vendor files, and secret-like paths are rejected.
 
 ### `vault_traverse`
 
