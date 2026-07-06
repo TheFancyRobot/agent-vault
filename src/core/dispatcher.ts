@@ -1,6 +1,7 @@
 import { formatCommandCatalog, formatCommandHelp, getCommandDefinition, type AgentVaultCommandName } from './command-catalog';
 import type { AgentVaultCommandEnvironment } from './note-generators';
 import { handleLookupCodeGraphCommand } from './code-graph-lookup';
+import { handleMigrateCommand } from './migrations/command';
 import { handleVaultPrepareContextCommand } from './vault-prepare-context';
 import {
   handleAppendSectionCommand,
@@ -35,6 +36,7 @@ const COMMAND_HANDLERS: Partial<Record<AgentVaultCommandName, CommandHandler>> =
   'create-phase': handleCreatePhaseCommand,
   'create-session': handleCreateSessionCommand,
   'migrate-step-notes': handleMigrateStepNotesCommand,
+  'migrate': handleMigrateCommand,
   'create-bug': handleCreateBugCommand,
   'create-decision': handleCreateDecisionCommand,
   'update-frontmatter': handleUpdateFrontmatterCommand,
