@@ -11,6 +11,7 @@ const CONFIG_FILENAME = '.config.json';
 
 export interface VaultConfig {
   readonly resolver: VaultGraphResolver;
+  readonly vault_schema_version?: number;
 }
 
 const DEFAULT_CONFIG: VaultConfig = {
@@ -18,6 +19,9 @@ const DEFAULT_CONFIG: VaultConfig = {
 };
 
 const VALID_RESOLVERS = new Set<VaultGraphResolver>(['filesystem', 'obsidian']);
+
+const parseSchemaVersion = (value: unknown): number | undefined =>
+  typeof value === 'number' && Number.isInteger(value) && value >= 0 ? value : undefined;
 
 export const readVaultConfig = async (vaultRoot: string): Promise<VaultConfig> => {
   const configPath = join(vaultRoot, CONFIG_FILENAME);
@@ -27,14 +31,21 @@ export const readVaultConfig = async (vaultRoot: string): Promise<VaultConfig> =
 
   try {
     const raw = JSON.parse(await readFile(configPath, 'utf-8')) as Record<string, unknown>;
+    const schemaVersion = parseSchemaVersion(raw.vault_schema_version);
     return {
       resolver: typeof raw.resolver === 'string' && VALID_RESOLVERS.has(raw.resolver as VaultGraphResolver)
         ? raw.resolver as VaultGraphResolver
         : DEFAULT_CONFIG.resolver,
+      ...(schemaVersion !== undefined ? { vault_schema_version: schemaVersion } : {}),
     };
   } catch {
     return DEFAULT_CONFIG;
   }
+};
+
+export const readVaultSchemaVersion = async (vaultRoot: string): Promise<number> => {
+  const config = await readVaultConfig(vaultRoot);
+  return config.vault_schema_version ?? 0;
 };
 
 export const writeVaultConfig = async (vaultRoot: string, config: VaultConfig): Promise<void> => {
@@ -47,8 +58,10 @@ export const updateVaultConfig = async (
   updates: Partial<VaultConfig>,
 ): Promise<VaultConfig> => {
   const current = await readVaultConfig(vaultRoot);
+  const nextSchemaVersion = parseSchemaVersion(updates.vault_schema_version) ?? current.vault_schema_version;
   const next: VaultConfig = {
     resolver: updates.resolver && VALID_RESOLVERS.has(updates.resolver) ? updates.resolver : current.resolver,
+    ...(nextSchemaVersion !== undefined ? { vault_schema_version: nextSchemaVersion } : {}),
   };
   await writeVaultConfig(vaultRoot, next);
   return next;
