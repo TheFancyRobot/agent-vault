@@ -23,7 +23,7 @@ _Last refreshed: 2026-07-06._
 - Session in progress: none.
 - Current step: [[02_Phases/Phase_04_context_compiler_and_token_efficiency/Steps/Step_08_harden-path-safety-secret-exclusion-and-prompt-budget-validation|STEP-04-08 Harden path safety secret exclusion and prompt budget validation]] - status: planned - phase: [[02_Phases/Phase_04_context_compiler_and_token_efficiency/Phase|Phase 04 context compiler and token efficiency]]
 - Active phase: [[02_Phases/Phase_04_context_compiler_and_token_efficiency/Phase|PHASE-04 Context compiler and token efficiency]] - status: planned - updated: 2026-07-05
-- Also active: 6 more additional steps.
+- Also active: 5 more additional steps.
 <!-- AGENT-END:current-focus -->
 
 ## Repo Snapshot
