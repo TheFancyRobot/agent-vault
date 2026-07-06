@@ -6,6 +6,10 @@
     "access": "public"
   },
   "description": "Durable project memory for coding agents. Obsidian-compatible vault with MCP server, pi package, and workflow support for Claude Code, OpenCode, pi, and Codex.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TheFancyRobot/agent-vault.git"
+  },
   "bin": {
     "agent-vault": "./dist/cli.mjs"
   },
