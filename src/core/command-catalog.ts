@@ -10,6 +10,7 @@ export type AgentVaultCommandName =
   | 'create-step'
   | 'create-session'
   | 'migrate-step-notes'
+  | 'migrate'
   | 'create-bug'
   | 'create-decision'
   | 'update-frontmatter'
@@ -162,6 +163,22 @@ const COMMANDS: readonly AgentVaultCommandDefinition[] = [
       'Migration is idempotent: already-split step notes are skipped.',
       'Use this to upgrade older vaults to the compact step-note layout.',
       'Also refreshes Code_Graph.md into the thin summary format and regenerates `.agent-vault/08_Automation/code-graph/index.json`.',
+    ],
+  },
+  {
+    name: 'migrate',
+    group: 'Mutate Notes',
+    usage: 'migrate [--dry-run] [--apply] [--to <version>]',
+    summary: 'Report pending package-level vault schema migrations in read-only plan mode.',
+    examples: [
+      'vault migrate',
+      'vault migrate --dry-run',
+    ],
+    notes: [
+      'Plan mode is the default and performs zero writes: it reports the vault schema version, the package schema version, and the ordered pending steps with affected-path counts.',
+      '`--dry-run` is an explicit alias for the default plan mode.',
+      '`--apply` (run pending migrations) and `--to <version>` (stop at a target version) are documented ahead of time but are not implemented yet; they exit with an error before any write.',
+      'A vault without `.config.json` is treated as schema version 0.',
     ],
   },
   {
