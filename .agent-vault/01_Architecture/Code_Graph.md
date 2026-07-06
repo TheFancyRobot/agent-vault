@@ -27,9 +27,9 @@ tags:
 
 ## Overview
 
-- Repository: agent-vault
-- Files indexed: 40
-- Symbols found: 701
+- Repository: .
+- Files indexed: 90
+- Symbols found: 1535
 - Detailed index path: `.agent-vault/08_Automation/code-graph/index.json`
 
 ## Key Components
@@ -64,14 +64,14 @@ tags:
 
 ## Directory Hotspots
 
-- `src/core`: 16 files, 142 exported symbols, 297 internal symbols
-- `src/scaffold`: 6 files, 51 exported symbols, 51 internal symbols
+- `.claude/worktrees/brave-faraday-aac161/src/core`: 16 files, 143 exported symbols, 313 internal symbols
+- `src/core`: 16 files, 145 exported symbols, 310 internal symbols
+- `.claude/worktrees/brave-faraday-aac161/src/scaffold`: 6 files, 51 exported symbols, 54 internal symbols
+- `src/scaffold`: 6 files, 51 exported symbols, 54 internal symbols
+- `.claude/worktrees/brave-faraday-aac161/src`: 3 files, 14 exported symbols, 48 internal symbols
 - `src`: 3 files, 14 exported symbols, 48 internal symbols
-- `src/templates`: 8 files, 33 exported symbols, 3 internal symbols
-- `scripts`: 2 files, 1 exported symbols, 31 internal symbols
-- `pi-package/skills/vault-resume`: 2 files, 0 exported symbols, 21 internal symbols
-- `test`: 1 files, 3 exported symbols, 1 internal symbols
-- `pi-package/extensions`: 1 files, 0 exported symbols, 3 internal symbols
+- `src/core/migrations`: 4 files, 23 exported symbols, 14 internal symbols
+- `.claude/worktrees/brave-faraday-aac161/src/templates`: 8 files, 33 exported symbols, 3 internal symbols
 
 ## Related Notes
 

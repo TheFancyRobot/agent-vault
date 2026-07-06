@@ -357,6 +357,7 @@ const COMMANDS: readonly AgentVaultCommandDefinition[] = [
     ],
     notes: [
       'Use this before handing off automation or after structural note edits.',
+      'Also compares the vault schema version in `.config.json` against the package schema version and emits a warning — never an error — pointing at `vault migrate` when the vault is behind. A missing `.config.json` is treated as schema version 0.',
     ],
   },
 ];
