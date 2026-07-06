@@ -16,7 +16,7 @@ describe('Agent Vault command catalog', () => {
     expect(output).toContain('- create-decision - Create a decision note and optionally pre-link the related phase, session, and bug notes.');
     expect(output).toContain('- create-step - Create a step note inside an existing phase steps folder.');
     expect(output).toContain('- migrate-step-notes - Split legacy verbose step notes into thin step indexes and refresh compact code-graph artifacts.');
-    expect(output).toContain('- migrate - Report pending package-level vault schema migrations in read-only plan mode.');
+    expect(output).toContain('- migrate - Plan and apply pending package-level vault schema migrations.');
     expect(output).toContain('Validate Notes:');
     expect(output).toContain('- validate-all - Run all integrity validators and return a failing exit code if any errors are found.');
     expect(output).toContain('Advanced/manual context primitives:');
@@ -40,7 +40,8 @@ describe('Agent Vault command catalog', () => {
 
     expect(output).toContain('Usage: migrate [--dry-run] [--apply] [--to <version>]');
     expect(output).toContain('Plan mode is the default and performs zero writes');
-    expect(output).toContain('are documented ahead of time but are not implemented yet; they exit with an error before any write.');
+    expect(output).toContain('validates the vault after each step before advancing `vault_schema_version`');
+    expect(output).toContain('stops after reaching the named intermediate version');
     expect(output).toContain('A vault without `.config.json` is treated as schema version 0.');
   });
 
