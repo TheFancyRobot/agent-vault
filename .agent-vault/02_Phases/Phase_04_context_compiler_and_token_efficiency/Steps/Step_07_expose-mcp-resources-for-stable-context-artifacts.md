@@ -5,18 +5,23 @@ contract_version: 1
 title: Expose MCP resources for stable context artifacts
 step_id: STEP-04-07
 phase: '[[02_Phases/Phase_04_context_compiler_and_token_efficiency/Phase|Phase 04 context compiler and token efficiency]]'
-status: planned
-owner: ''
+status: done
+owner: pi
 created: '2026-07-05'
-updated: '2026-07-05'
+updated: '2026-07-06'
 depends_on:
   - '[[02_Phases/Phase_04_context_compiler_and_token_efficiency/Steps/Step_04_build-cached-source-interface-stub-generation|STEP-04-04 Build cached source interface-stub generation]]'
   - '[[02_Phases/Phase_04_context_compiler_and_token_efficiency/Steps/Step_05_add-vault-prepare-context-context-compiler-tool|STEP-04-05 Add vault_prepare_context context compiler tool]]'
-related_sessions: []
+related_sessions:
+  - '[[05_Sessions/2026-07-06-024405-expose-mcp-resources-for-stable-context-artifacts-pi|SESSION-2026-07-06-024405 pi session for Expose MCP resources for stable context artifacts]]'
 related_bugs: []
 tags:
   - agent-vault
   - step
+context_id: SESSION-2026-07-06-024405
+active_session_id: 05_Sessions/2026-07-06-024405-expose-mcp-resources-for-stable-context-artifacts-pi
+context_status: completed
+context_summary: Advance [[02_Phases/Phase_04_context_compiler_and_token_efficiency/Steps/Step_07_expose-mcp-resources-for-stable-context-artifacts|STEP-04-07 Expose MCP resources for stable context artifacts]].
 ---
 
 # Step 07 - Expose MCP resources for stable context artifacts
@@ -49,10 +54,10 @@ Use this note as the thin index for one executable step inside a phase. Keep thi
 ## Agent-Managed Snapshot
 
 <!-- AGENT-START:step-agent-managed-snapshot -->
-- Status: planned
-- Current owner: 
-- Last touched: 2026-07-05
-- Next action: Read [[02_Phases/Phase_04_context_compiler_and_token_efficiency/Steps/Step_07_expose-mcp-resources-for-stable-context-artifacts/Execution_Brief|Execution Brief]] and [[02_Phases/Phase_04_context_compiler_and_token_efficiency/Steps/Step_07_expose-mcp-resources-for-stable-context-artifacts/Validation_Plan|Validation Plan]].
+- Status: done
+- Current owner: pi
+- Last touched: 2026-07-06
+- Next action: Continue with [[02_Phases/Phase_04_context_compiler_and_token_efficiency/Steps/Step_08_harden-path-safety-secret-exclusion-and-prompt-budget-validation|STEP-04-08 Harden path safety secret exclusion and prompt budget validation]].
 <!-- AGENT-END:step-agent-managed-snapshot -->
 
 ## Human Notes
@@ -63,5 +68,5 @@ Use this note as the thin index for one executable step inside a phase. Keep thi
 ## Session History
 
 <!-- AGENT-START:step-session-history -->
-- No sessions yet.
+- 2026-07-06 - [[05_Sessions/2026-07-06-024405-expose-mcp-resources-for-stable-context-artifacts-pi|SESSION-2026-07-06-024405 pi session for Expose MCP resources for stable context artifacts]] - Completed MCP resource registration, tests, docs, and validation.
 <!-- AGENT-END:step-session-history -->

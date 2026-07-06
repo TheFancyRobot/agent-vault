@@ -1,7 +1,7 @@
 import { spawn } from 'child_process';
 import { existsSync } from 'fs';
 import { mkdir, readdir, readFile, rm, unlink, writeFile } from 'fs/promises';
-import { dirname, join } from 'path';
+import { dirname, join, normalize } from 'path';
 import { homedir } from 'os';
 import { createInterface } from 'node:readline/promises';
 
@@ -96,6 +96,21 @@ export const buildPiPackageSource = (target: InstallTarget): string => (
   join(target.runtimePath, 'node_modules', '@fancyrobot', 'agent-vault')
 );
 
+const packageSourceAliases = (source: string): string[] => {
+  const normalized = normalize(source);
+  const aliases = new Set([source, normalized]);
+
+  // macOS exposes /var as a symlink to /private/var. process.cwd() may return
+  // the real path while existing config files may contain the symlink spelling.
+  if (normalized.startsWith('/private/')) {
+    aliases.add(normalized.replace(/^\/private\//, '/'));
+  } else if (normalized.startsWith('/var/')) {
+    aliases.add(`/private${normalized}`);
+  }
+
+  return [...aliases];
+};
+
 export const upsertPiPackageSourceInConfig = (
   config: Record<string, unknown>,
   packageSource: string,
@@ -125,14 +140,17 @@ export const removePiPackageSourcesFromConfig = (
   packageSources: string[],
 ): { config: Record<string, unknown>; changed: boolean } => {
   const currentPackages = Array.isArray(config.packages) ? config.packages as PiPackageEntry[] : [];
-  const packageSourceSet = new Set(packageSources);
+  const packageSourceSet = new Set(packageSources.flatMap(packageSourceAliases));
+  const shouldRemovePackageSource = (source: string): boolean => (
+    packageSourceAliases(source).some((alias) => packageSourceSet.has(alias))
+  );
   const nextPackages = currentPackages.filter((entry) => {
     if (typeof entry === 'string') {
-      return !packageSourceSet.has(entry);
+      return !shouldRemovePackageSource(entry);
     }
 
     if (entry && typeof entry === 'object' && typeof entry.source === 'string') {
-      return !packageSourceSet.has(entry.source);
+      return !shouldRemovePackageSource(entry.source);
     }
 
     return true;

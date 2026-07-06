@@ -1,4 +1,4 @@
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { dirname } from 'path';
 import { z } from 'zod';
@@ -35,6 +35,11 @@ import {
 } from './core/vault-graph';
 import { readVaultConfig, updateVaultConfig } from './core/vault-config';
 import { extractVaultNoteTarget } from './core/vault-extract';
+import {
+  listCodeArtifactResources,
+  listNoteResources,
+  readContextResource,
+} from './core/context-resources';
 import { isProjectVault, resolveVaultRoot } from './core/vault-files';
 import { initVault } from './scaffold/init';
 import { scanProject } from './scaffold/scan';
@@ -62,6 +67,77 @@ const noArgs = (handler: CommandHandler) => captureOutput(handler, [], resolveVa
 
 export async function startServer(): Promise<void> {
   const server = new McpServer({ name: 'agent-vault', version: '0.0.1' });
+
+  const readVaultResource = async (uri: URL) => {
+    const vaultRoot = resolveVaultRoot(process.cwd());
+    if (!isProjectVault(vaultRoot)) {
+      throw new Error(`No project vault found. Resolved ${vaultRoot} is not a vault created by vault_init. Run vault_init first.`);
+    }
+    return readContextResource(vaultRoot, dirname(vaultRoot), uri);
+  };
+
+  const listResourcesByPrefix = async (prefix: string) => {
+    const vaultRoot = resolveVaultRoot(process.cwd());
+    const result = prefix === 'vault://note/'
+      ? await listNoteResources(vaultRoot)
+      : await listCodeArtifactResources(vaultRoot);
+    return {
+      resources: result.resources.filter((resource) => resource.uri.startsWith(prefix)),
+    };
+  };
+
+  // ── MCP context artifact resources ─────────────────────────────────
+  server.resource(
+    'vault-note',
+    new ResourceTemplate('vault://note/{+path}', {
+      list: () => listResourcesByPrefix('vault://note/'),
+    }),
+    {
+      title: 'Vault note',
+      description: 'Read a vault Markdown note by vault-relative path. Reads are side-effect free.',
+      mimeType: 'text/markdown',
+    },
+    (uri) => readVaultResource(uri),
+  );
+
+  server.resource(
+    'vault-code-stub',
+    new ResourceTemplate('vault://code-stub/{+path}', {
+      list: () => listResourcesByPrefix('vault://code-stub/'),
+    }),
+    {
+      title: 'Code interface stub',
+      description: 'Read a cached source interface stub by project-relative source path. Missing/stale artifacts return refresh hints; reads never regenerate stubs.',
+      mimeType: 'text/typescript',
+    },
+    (uri) => readVaultResource(uri),
+  );
+
+  server.resource(
+    'vault-code-summary',
+    new ResourceTemplate('vault://code-summary/{+path}', {
+      list: () => listResourcesByPrefix('vault://code-summary/'),
+    }),
+    {
+      title: 'Code graph file summary',
+      description: 'Read code graph metadata for a project-relative source path.',
+      mimeType: 'application/json',
+    },
+    (uri) => readVaultResource(uri),
+  );
+
+  server.resource(
+    'vault-code-excerpt',
+    new ResourceTemplate('vault://code-excerpt/{+path}{#symbol}', {
+      list: () => listResourcesByPrefix('vault://code-excerpt/'),
+    }),
+    {
+      title: 'Code symbol excerpt',
+      description: 'Read a bounded source excerpt for a symbol indexed in the code graph, using vault://code-excerpt/path#symbol.',
+      mimeType: 'text/plain',
+    },
+    (uri) => readVaultResource(uri),
+  );
 
   // ── vault_init ──────────────────────────────────────────────────────
   server.tool(
