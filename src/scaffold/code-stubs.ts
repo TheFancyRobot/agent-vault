@@ -1,6 +1,6 @@
 import { createHash } from 'crypto';
 import { existsSync } from 'fs';
-import { mkdir, readFile, stat, writeFile } from 'fs/promises';
+import { mkdir, readFile, rm, stat, writeFile } from 'fs/promises';
 import { extname, join, resolve } from 'path';
 
 // ─── Types ────────────────────────────────────────────────────────────
@@ -181,9 +181,9 @@ export function generateTypeScriptStub(content: string): { stubContent: string; 
           const arrowMatch = /^(export\s+(?:const|let|var)\s+)?(\w+)\s*=\s*(?:async\s+)?\(([^)]*)\)(\s*:\s*(\S+))?\s*=>/.exec(trimmed);
           if (arrowMatch) {
             const isExport = !!arrowMatch[1];
-            const ret = arrowMatch[5] || '';
+            const ret = arrowMatch[5] || 'unknown';
             const declarePrefix = isExport ? 'export declare' : 'declare';
-            outputLines.push(`${declarePrefix} const ${arrowMatch[2]}: (${arrowMatch[3]})${ret ? `: ${ret}` : ''}`);
+            outputLines.push(`${declarePrefix} const ${arrowMatch[2]}: (${arrowMatch[3]}) => ${ret};`);
           }
         }
         i++;
@@ -526,16 +526,11 @@ export async function invalidateStub(
   }
 
   const entry = manifest.entries[entryIndex];
-  // Remove the stub file
-  const stubAbsolutePath = resolve(vaultRoot, entry.stubPath);
+  // Remove the stub file; deletion failures propagate so callers never
+  // believe a stub was invalidated while the artifact remains on disk.
+  const stubAbsolutePath = resolve(vaultRoot, STUBS_DIR, entry.stubPath);
   if (existsSync(stubAbsolutePath)) {
-    // Use fs.promises.rm if available, otherwise just delete
-    try {
-      const { rm } = await import('fs/promises');
-      await rm(stubAbsolutePath, { force: true });
-    } catch {
-      // Ignore deletion errors
-    }
+    await rm(stubAbsolutePath, { force: true });
   }
 
   manifest.entries.splice(entryIndex, 1);

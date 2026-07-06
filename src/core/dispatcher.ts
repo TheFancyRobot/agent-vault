@@ -1,6 +1,7 @@
 import { formatCommandCatalog, formatCommandHelp, getCommandDefinition, type AgentVaultCommandName } from './command-catalog';
 import type { AgentVaultCommandEnvironment } from './note-generators';
 import { handleLookupCodeGraphCommand } from './code-graph-lookup';
+import { handleVaultPrepareContextCommand } from './vault-prepare-context';
 import {
   handleAppendSectionCommand,
   handleCreateBugCommand,
@@ -29,6 +30,7 @@ type CommandHandler = (argv: string[], environment?: AgentVaultCommandEnvironmen
 
 const COMMAND_HANDLERS: Partial<Record<AgentVaultCommandName, CommandHandler>> = {
   'lookup-code-graph': handleLookupCodeGraphCommand,
+  'vault-prepare-context': handleVaultPrepareContextCommand,
   'create-step': handleCreateStepCommand,
   'create-phase': handleCreatePhaseCommand,
   'create-session': handleCreateSessionCommand,

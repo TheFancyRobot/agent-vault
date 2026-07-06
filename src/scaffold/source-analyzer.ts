@@ -750,7 +750,12 @@ export class TreeSitterAnalyzer implements SourceAnalyzer {
         return !nameNode.text.startsWith('_');
       }
     }
-    if (language === 'Go' || language === 'Rust') {
+    if (language === 'Go') {
+      // Go exports by identifier capitalization, not a keyword.
+      const name = this.extractNodeName(node, language);
+      return name ? /^[A-Z]/.test(name) : false;
+    }
+    if (language === 'Rust') {
       return text.startsWith('pub ') || text.startsWith('pub(');
     }
     return false;

@@ -149,6 +149,7 @@ describe('context MCP resources', () => {
     const { vaultRoot } = await writeFixtureVault(projectRoot);
 
     await expect(readNoteResource(vaultRoot, 'vault://note/../outside.md')).rejects.toThrow(/unsafe segment/);
+    await expect(readNoteResource(vaultRoot, 'vault://note/08_Automation/code-graph/index.json')).rejects.toThrow(/only expose Markdown notes/);
     await expect(readCodeSummaryResource(vaultRoot, projectRoot, 'vault://code-summary/.env')).rejects.toThrow(/secret-like|Source file not found/);
 
     const outsideRoot = await createTempProject('outside');
