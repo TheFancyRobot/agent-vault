@@ -1,6 +1,7 @@
 import { createHash } from 'crypto';
 import { mkdir, readFile, readdir, stat, writeFile } from 'fs/promises';
 import { extname, join, relative } from 'path';
+import type { AnalysisTier } from './source-analyzer';
 
 // ─── v2 types (kept for backward-compat lookup) ───
 
@@ -76,6 +77,7 @@ export interface FileSymbolsV3 {
   readonly size?: number;
   readonly generated?: boolean;
   readonly vendor?: boolean;
+  readonly parser?: AnalysisTier;
 }
 
 export interface CodeGraphIndexV3 {
@@ -813,6 +815,8 @@ const EXTRACTORS: Record<string, SymbolExtractorV3> = {
   Elixir: extractElixir,
 };
 
+import { createTieredAnalyzer, type TieredSourceAnalyzer } from './source-analyzer';
+
 const GENERATED_DIRS = new Set(['.next', '.nuxt', '.svelte-kit', 'dist', 'build', 'out', '__pycache__', '.gradle']);
 const VENDOR_DIRS = new Set(['node_modules', '.git', '.agent-vault', 'vendor', '.venv', 'venv', '.idea', '.vscode', 'coverage', '.planning', '.obsidian']);
 
@@ -820,6 +824,7 @@ async function walkSourceFiles(
   projectRoot: string,
   dir: string,
   results: FileSymbolsV3[],
+  tieredAnalyzer?: TieredSourceAnalyzer,
   depth = 0,
 ): Promise<void> {
   if (depth > 8) return;
@@ -831,7 +836,7 @@ async function walkSourceFiles(
 
     if (entry.isDirectory()) {
       if (!SKIP_DIRS.has(entry.name)) {
-        await walkSourceFiles(projectRoot, fullPath, results, depth + 1);
+        await walkSourceFiles(projectRoot, fullPath, results, tieredAnalyzer, depth + 1);
       }
       continue;
     }
@@ -851,7 +856,43 @@ async function walkSourceFiles(
       const extractor = EXTRACTORS[language];
       if (!extractor) continue;
 
-      const symbols = extractor(content);
+      let symbols: CodeSymbolV3[] = [];
+      let imports: ImportEdge[] | undefined;
+      let exports: ExportEdge[] | undefined;
+      let parserTier: AnalysisTier = 'regex';
+
+      // Try the tiered analyzer for TS/JS when available
+      if (tieredAnalyzer && (language === 'TypeScript' || language === 'JavaScript')) {
+        try {
+          const analysisResult = await tieredAnalyzer.analyze(fullPath, content, language);
+          if (analysisResult && analysisResult.symbols.length > 0) {
+            symbols = analysisResult.symbols as CodeSymbolV3[];
+            imports = analysisResult.imports as ImportEdge[];
+            exports = analysisResult.exports as ExportEdge[];
+            parserTier = analysisResult.tier;
+          } else {
+            // Tiered analyzer returned empty, fall back to regex
+            symbols = extractor(content);
+            imports = extractImportEdges(content);
+            exports = extractExportEdges(content);
+            parserTier = 'regex';
+          }
+        } catch {
+          // Tiered analyzer threw, fall back to regex
+          symbols = extractor(content);
+          imports = extractImportEdges(content);
+          exports = extractExportEdges(content);
+          parserTier = 'regex';
+        }
+      } else {
+        // Use regex extractor for non-TS/JS languages or when no tiered analyzer
+        symbols = extractor(content);
+        if (language === 'TypeScript' || language === 'JavaScript') {
+          imports = extractImportEdges(content);
+          exports = extractExportEdges(content);
+        }
+      }
+
       if (symbols.length > 0) {
         const relativePath = relative(projectRoot, fullPath).replace(/\\/g, '/');
         const fileStats = await stat(fullPath);
@@ -864,25 +905,19 @@ async function walkSourceFiles(
         const generated = GENERATED_DIRS.has(rel) || genArray.some((d: string) => relativePath.includes('/' + d + '/'));
         const vendor = VENDOR_DIRS.has(rel) || vendArray.some((d: string) => relativePath.includes('/' + d + '/'));
 
-        let fileResult: FileSymbolsV3 = {
+        const fileResult: FileSymbolsV3 = {
           path: relativePath,
           language,
           symbols,
+          imports,
+          exports,
           hash,
           mtimeMs: fileStats.mtimeMs,
           size: fileStats.size,
           generated,
           vendor,
+          parser: parserTier,
         };
-
-        // Only extract import/export edges for TS/JS
-        if (language === 'TypeScript' || language === 'JavaScript') {
-          fileResult = {
-            ...fileResult,
-            imports: extractImportEdges(content),
-            exports: extractExportEdges(content),
-          };
-        }
 
         results.push(fileResult);
       }
@@ -894,7 +929,28 @@ async function walkSourceFiles(
 
 export async function buildCodeGraph(projectRoot: string): Promise<CodeGraphResult> {
   const files: FileSymbolsV3[] = [];
-  await walkSourceFiles(projectRoot, projectRoot, files);
+
+  // Create tiered analyzer for TS/JS files
+  const tieredAnalyzer = createTieredAnalyzer({
+    typescript: extractTypeScript,
+    other: {
+      Python: extractPython,
+      Go: extractGo,
+      Rust: extractRust,
+      Java: extractJava,
+      Kotlin: extractKotlin,
+      Ruby: extractRuby,
+      'C#': extractCSharp,
+      Swift: extractSwift,
+      PHP: extractPHP,
+      Scala: extractScala,
+      Elixir: extractElixir,
+    },
+    imports: extractImportEdges,
+    exports: extractExportEdges,
+  });
+
+  await walkSourceFiles(projectRoot, projectRoot, files, tieredAnalyzer);
 
   files.sort((a, b) => a.path.localeCompare(b.path));
   const totalSymbols = files.reduce((sum, f) => sum + f.symbols.length, 0);
