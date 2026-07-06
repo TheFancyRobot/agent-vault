@@ -1,5 +1,17 @@
 # @fancyrobot/agent-vault
 
+## 0.5.0
+
+### Minor Changes
+
+- Add package-level vault migrations and schema drift guidance.
+
+  - Introduce the `vault migrate` command with plan/apply modes, ordered schema steps, resumable applies, and `--to <version>` support.
+  - Record vault schema versions in `.agent-vault/.config.json` and add warning-only schema drift detection to `vault validate-all` / `vault_validate`.
+  - Expose migration entry points through the published CLI, MCP server, and pi package via `vault_migrate`.
+  - Keep `vault migrate-step-notes` available as the scoped alias for the thin step-note migration.
+  - Improve pi installer coverage, bundled migration skill packaging, target-rooted context loading docs, and generated code-graph stability.
+
 ## 0.4.1
 
 ### Patch Changes
@@ -9,26 +21,6 @@
   - Refresh `Code_Graph.md` into a thin summary note and regenerate `.agent-vault/08_Automation/code-graph/index.json`
   - Make `migrate-step-notes` upgrade legacy step notes and compact code-graph artifacts in one pass
   - Document the migration behavior in README and command help so slash-command users understand the upgrade path
-
-## Unreleased
-
-### Minor Changes
-
-- Add the package-level `vault migrate` command and introduce vault schema version 1.
-
-  - Vaults now record a schema version in `.config.json` (`vault_schema_version`); a missing config is treated as version 0
-  - Schema version 1 is the thin step-note layout: the `0 -> 1` migration step wraps the existing `migrate-step-notes` upgrade (thin step indexes plus companion notes, compact code-graph refresh)
-  - `vault migrate` (default plan mode / `--dry-run`) reports the vault and package schema versions and the ordered pending steps with zero writes
-  - `vault migrate --apply` runs pending steps strictly in order, validating the vault after each step before advancing the schema version, and supports `--to <version>` for stopping at an intermediate boundary; interrupted applies resume safely
-  - `vault validate-all` (and the `vault_validate` MCP tool) now warns — never errors — when the vault's schema version is behind the package's, pointing at `vault migrate`; existing validation pass/fail semantics are unchanged
-  - Published entry points now expose the migration handler via `npx @fancyrobot/agent-vault vault migrate` / `npx @fancyrobot/agent-vault migrate` and the `vault_migrate` MCP/pi tool
-  - `vault migrate-step-notes` remains available as the scoped alias for the step-note migration
-
-### Patch Changes
-
-- Add end-to-end pi installer coverage and document pi integration more clearly across the README and contributing guide.
-- Ship the missing `vault-migrate-step-notes` bundled pi skill and cover pi tool detection in installer tests.
-- Clarify target-rooted context loading guidance in the `vault:execute` workflow prompt.
 
 ## 0.4.0
 
