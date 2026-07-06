@@ -462,6 +462,39 @@ describe('Agent Vault note validators', () => {
     expect(harness.stdout.some((line) => line.includes('ERROR') && line.includes('Execution_Brief.md'))).toBe(false);
   });
 
+  it('detect-orphans allows linked leaf notes without requiring outbound links', async () => {
+    const vaultRoot = await createTempVault();
+    await writeFile(join(vaultRoot, '01_Architecture', 'Template_User.md'), [
+      '---',
+      'note_type: architecture',
+      'template_version: 2',
+      'contract_version: 1',
+      'title: Template User',
+      'architecture_id: ARCH-0001',
+      'status: active',
+      'owner: ""',
+      'reviewed_on: "2026-03-14"',
+      'created: "2026-03-14"',
+      'updated: "2026-03-14"',
+      'related_notes: []',
+      'tags:',
+      '  - agent-vault',
+      '  - architecture',
+      '---',
+      '',
+      '# Template User',
+      '',
+      'See [[07_Templates/Step_Template|Step Template]].',
+    ].join('\n'), 'utf-8');
+
+    const harness = makeIo();
+    const exitCode = await handleDetectOrphansCommand([], { vaultRoot, io: harness.io });
+
+    expect(exitCode).toBe(0);
+    expect(harness.stdout.some((line) => line.includes('NO_OUTBOUND_LINKS'))).toBe(false);
+    expect(harness.stdout.some((line) => line.includes('07_Templates/Step_Template.md'))).toBe(false);
+  });
+
   it('detect-orphans reports fully isolated notes as warnings', async () => {
     const vaultRoot = await createTempVault();
     await writeFile(join(vaultRoot, '01_Architecture', 'Orphan.md'), [
