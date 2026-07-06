@@ -501,7 +501,7 @@ const validateRequiredLinks = (notes: readonly ParsedNote[]): ValidationSummary 
 
 const detectOrphans = (notes: readonly ParsedNote[]): ValidationSummary => {
   const graphNotes: GraphNote[] = notes
-    .filter((note) => !note.relativePath.startsWith('.obsidian/'))
+    .filter((note) => !note.relativePath.startsWith('.obsidian/') && !isTemplateNote(note.relativePath))
     .map((note) => ({
       ...note,
       outboundLinks: collectLinks(note.relativePath, note.content),
@@ -532,12 +532,9 @@ const detectOrphans = (notes: readonly ParsedNote[]): ValidationSummary => {
       issues.push(makeIssue('warning', 'NO_INBOUND_LINKS', note.relativePath, 'note has outbound links but nothing else in the vault links back to it'));
       continue;
     }
-    if (outbound === 0) {
-      issues.push(makeIssue('warning', 'NO_OUTBOUND_LINKS', note.relativePath, 'note is linked from elsewhere but does not link out to other vault notes'));
-    }
   }
 
-  return buildSummary('detect-orphans', graphNotes.length, 0, issues);
+  return buildSummary('detect-orphans', graphNotes.length, notes.length - graphNotes.length, issues);
 };
 
 /**
