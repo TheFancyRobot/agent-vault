@@ -4,10 +4,10 @@ template_version: 2
 contract_version: 1
 title: Implement package-level vault migration
 phase_id: PHASE-05
-status: planned
-owner: ''
+status: completed
+owner: pi
 created: '2026-07-05'
-updated: '2026-07-05'
+updated: '2026-07-06'
 depends_on:
   - '[[02_Phases/Phase_04_context_compiler_and_token_efficiency/Phase|PHASE-04 Context compiler and token efficiency]]'
 related_architecture:
@@ -66,17 +66,17 @@ The checklist note is the source of truth for per-PR files, tests, categories, a
 ## Acceptance Criteria
 
 - [x] Step notes exist for PR-1 through PR-6 and inherit scope from the checklist without re-deciding product behavior.
-- [ ] Each landed step satisfies its checklist entry: named files touched, fixture-backed tests added, and the stated risk mitigations honored.
-- [ ] The full existing test suite passes unmodified through PR-3, proving `migrate-step-notes` behavior is preserved.
-- [ ] `vault migrate` plan mode performs zero writes; apply mode advances `vault_schema_version` only after a step's writes and post-step validation succeed, and re-running after completion is a no-op.
-- [ ] `validate-all` warns (not errors) on schema drift and points at `vault migrate`.
-- [ ] README and CHANGELOG document the new command, the schema version, and `migrate-step-notes` as the scoped alias.
+- [x] Each landed step satisfies its checklist entry: named files touched, fixture-backed tests added, and the stated risk mitigations honored.
+- [x] The full existing test suite passes unmodified through PR-3, proving `migrate-step-notes` behavior is preserved.
+- [x] `vault migrate` plan mode performs zero writes; apply mode advances `vault_schema_version` only after a step's writes and post-step validation succeed, and re-running after completion is a no-op.
+- [x] `validate-all` warns (not errors) on schema drift and points at `vault migrate`.
+- [x] README and CHANGELOG document the new command, the schema version, and `migrate-step-notes` as the scoped alias.
 
 ## Linear Context
 
 <!-- AGENT-START:phase-linear-context -->
 - Previous phase: [[02_Phases/Phase_04_context_compiler_and_token_efficiency/Phase|PHASE-04 Context compiler and token efficiency]]
-- Current phase status: planned
+- Current phase status: completed
 - Next phase: not planned yet.
 <!-- AGENT-END:phase-linear-context -->
 
@@ -104,12 +104,12 @@ The checklist note is the source of truth for per-PR files, tests, categories, a
 ## Steps
 
 <!-- AGENT-START:phase-steps -->
-- [ ] [[02_Phases/Phase_05_implement_package_level_vault_migration/Steps/Step_01_add-vault-schema-version-plumbing|STEP-05-01 Add vault schema version plumbing]]
-- [ ] [[02_Phases/Phase_05_implement_package_level_vault_migration/Steps/Step_02_build-migration-registry-scaffold-and-runner|STEP-05-02 Build migration registry scaffold and runner]]
-- [ ] [[02_Phases/Phase_05_implement_package_level_vault_migration/Steps/Step_03_wrap-migrate-step-notes-as-registry-step-zero-to-one|STEP-05-03 Wrap migrate-step-notes as registry step zero to one]]
-- [ ] [[02_Phases/Phase_05_implement_package_level_vault_migration/Steps/Step_04_add-vault-migrate-command-in-plan-mode|STEP-05-04 Add vault migrate command in plan mode]]
-- [ ] [[02_Phases/Phase_05_implement_package_level_vault_migration/Steps/Step_05_add-vault-migrate-apply-with-target-version-support|STEP-05-05 Add vault migrate apply with target version support]]
-- [ ] [[02_Phases/Phase_05_implement_package_level_vault_migration/Steps/Step_06_add-validate-all-schema-drift-warning-and-release-docs|STEP-05-06 Add validate-all schema drift warning and release docs]]
+- [x] [[02_Phases/Phase_05_implement_package_level_vault_migration/Steps/Step_01_add-vault-schema-version-plumbing|STEP-05-01 Add vault schema version plumbing]]
+- [x] [[02_Phases/Phase_05_implement_package_level_vault_migration/Steps/Step_02_build-migration-registry-scaffold-and-runner|STEP-05-02 Build migration registry scaffold and runner]]
+- [x] [[02_Phases/Phase_05_implement_package_level_vault_migration/Steps/Step_03_wrap-migrate-step-notes-as-registry-step-zero-to-one|STEP-05-03 Wrap migrate-step-notes as registry step zero to one]]
+- [x] [[02_Phases/Phase_05_implement_package_level_vault_migration/Steps/Step_04_add-vault-migrate-command-in-plan-mode|STEP-05-04 Add vault migrate command in plan mode]]
+- [x] [[02_Phases/Phase_05_implement_package_level_vault_migration/Steps/Step_05_add-vault-migrate-apply-with-target-version-support|STEP-05-05 Add vault migrate apply with target version support]]
+- [x] [[02_Phases/Phase_05_implement_package_level_vault_migration/Steps/Step_06_add-validate-all-schema-drift-warning-and-release-docs|STEP-05-06 Add validate-all schema drift warning and release docs]]
 <!-- AGENT-END:phase-steps -->
 
 ## Notes

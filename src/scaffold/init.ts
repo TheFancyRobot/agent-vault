@@ -1,6 +1,7 @@
 import { existsSync } from 'fs';
 import { mkdir, readFile, writeFile } from 'fs/promises';
 import { join } from 'path';
+import { latestSchemaVersion } from '../core/migrations/registry';
 import { probeObsidianCli, readVaultConfig, writeVaultConfig } from '../core/vault-config';
 import { scanProject, type ScanResult } from './scan';
 import { backfillFromPlanning, type PlanningBackfillResult } from './backfill-planning';
@@ -203,11 +204,24 @@ export async function initVault(projectRoot: string): Promise<InitResult> {
 
   // Configure resolver — prefer obsidian CLI when available
   const existingConfig = await readVaultConfig(vaultRoot);
+  let config = existingConfig;
   if (existingConfig.resolver === 'filesystem') {
     const obsidianAvailable = await probeObsidianCli();
     if (obsidianAvailable) {
-      await writeVaultConfig(vaultRoot, { ...existingConfig, resolver: 'obsidian' });
+      config = { ...config, resolver: 'obsidian' };
     }
+  }
+
+  // A freshly scaffolded vault is already at the package's latest schema, so
+  // stamp it to keep validate-all schema-drift checks silent. Existing vaults
+  // keep their recorded version (or version 0 when unrecorded) so drift
+  // detection and `vault migrate` stay meaningful for them.
+  if (!alreadyExists && config.vault_schema_version === undefined) {
+    config = { ...config, vault_schema_version: latestSchemaVersion() };
+  }
+
+  if (config !== existingConfig) {
+    await writeVaultConfig(vaultRoot, config);
   }
 
   // Backfill from .planning/ directory if present (only on fresh init)

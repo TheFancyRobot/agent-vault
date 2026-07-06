@@ -3,6 +3,7 @@ import { mkdir, mkdtemp, rm, writeFile } from 'fs/promises';
 import { tmpdir } from 'os';
 import { join } from 'path';
 import {
+  checkSchemaDrift,
   handleDetectOrphansCommand,
   handleVaultDoctorCommand,
   handleValidateAllCommand,
@@ -10,6 +11,7 @@ import {
   handleValidateNoteStructureCommand,
   handleValidateRequiredLinksCommand,
 } from '../../src/core/note-validators';
+import { latestSchemaVersion } from '../../src/core/migrations/registry';
 import { copyTemplate, makeIo } from '../helpers';
 
 const tempRoots: string[] = [];
@@ -510,5 +512,60 @@ describe('Agent Vault note validators', () => {
     expect(harness.stdout.some((line) => line.includes('validate-required-links:'))).toBe(true);
     expect(harness.stdout.some((line) => line.includes('detect-orphans:'))).toBe(true);
     expect(harness.stdout.some((line) => line.includes('Validated all Agent Vault note integrity checks.'))).toBe(false);
+  });
+
+  it('validate-all warns without failing when the vault schema version is behind the package version', async () => {
+    const vaultRoot = await createTempVault();
+    await writeFile(join(vaultRoot, '.config.json'), JSON.stringify({ resolver: 'filesystem', vault_schema_version: 0 }) + '\n', 'utf-8');
+
+    const harness = makeIo();
+    const exitCode = await handleValidateAllCommand([], { vaultRoot, io: harness.io });
+
+    expect(exitCode).toBe(0);
+    expect(harness.stdout.some((line) => line.includes('check-schema-drift:'))).toBe(true);
+    const warning = harness.stdout.find((line) => line.includes('WARN SCHEMA_VERSION_BEHIND .config.json'));
+    expect(warning).toBeDefined();
+    expect(warning).toContain('vault migrate');
+    expect(harness.stdout.some((line) => line.includes('Validated all Agent Vault note integrity checks.'))).toBe(true);
+  });
+
+  it('validate-all stays silent about schema drift when the vault is current', async () => {
+    const vaultRoot = await createTempVault();
+    await writeFile(join(vaultRoot, '.config.json'), JSON.stringify({ resolver: 'filesystem', vault_schema_version: latestSchemaVersion() }) + '\n', 'utf-8');
+
+    const harness = makeIo();
+    const exitCode = await handleValidateAllCommand([], { vaultRoot, io: harness.io });
+
+    expect(exitCode).toBe(0);
+    expect(harness.stdout.some((line) => line.includes('SCHEMA_VERSION_BEHIND'))).toBe(false);
+    expect(harness.stdout.some((line) => line.includes('SCHEMA_VERSION_AHEAD'))).toBe(false);
+  });
+
+  it('schema drift treats a missing .config.json as version 0', async () => {
+    const vaultRoot = await createTempVault();
+
+    // Silent when the package baseline is also version 0: absence alone must not warn.
+    const baselineSummary = await checkSchemaDrift(vaultRoot, 0);
+    expect(baselineSummary.issues).toHaveLength(0);
+
+    // Behind once the package registry has moved past version 0.
+    const driftedSummary = await checkSchemaDrift(vaultRoot, 1);
+    expect(driftedSummary.issues).toHaveLength(1);
+    expect(driftedSummary.issues[0].severity).toBe('warning');
+    expect(driftedSummary.issues[0].code).toBe('SCHEMA_VERSION_BEHIND');
+    expect(driftedSummary.issues[0].message).toContain('vault migrate');
+  });
+
+  it('schema drift warns about mismatch without suggesting a downgrade when the vault is ahead', async () => {
+    const vaultRoot = await createTempVault();
+    await writeFile(join(vaultRoot, '.config.json'), JSON.stringify({ resolver: 'filesystem', vault_schema_version: latestSchemaVersion() + 1 }) + '\n', 'utf-8');
+
+    const summary = await checkSchemaDrift(vaultRoot);
+
+    expect(summary.issues).toHaveLength(1);
+    expect(summary.issues[0].severity).toBe('warning');
+    expect(summary.issues[0].code).toBe('SCHEMA_VERSION_AHEAD');
+    expect(summary.issues[0].message).not.toContain('vault migrate');
+    expect(summary.issues[0].message).toContain('upgrade @fancyrobot/agent-vault');
   });
 });

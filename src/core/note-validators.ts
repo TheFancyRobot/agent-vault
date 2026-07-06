@@ -9,6 +9,8 @@ import {
 } from './context-contract';
 import { collectLinks } from './vault-graph';
 import { getRelativeNotePath, listMarkdownFiles, resolveVaultRoot } from './vault-files';
+import { latestSchemaVersion } from './migrations/registry';
+import { readVaultSchemaVersion } from './vault-config';
 
 type FrontmatterNoteType =
   | 'architecture'
@@ -538,6 +540,43 @@ const detectOrphans = (notes: readonly ParsedNote[]): ValidationSummary => {
   return buildSummary('detect-orphans', graphNotes.length, 0, issues);
 };
 
+/**
+ * Compare the vault's recorded schema version (`.config.json`
+ * `vault_schema_version`, absent config = version 0) against the package's
+ * latest registry version.
+ *
+ * Schema drift is always a warning, never an error (RFC "Validator
+ * Relationship"): validation surfaces drift and points at `vault migrate`,
+ * but existing pass/fail semantics stay stable. A behind vault warns toward
+ * `vault migrate`; an ahead vault warns about the mismatch without suggesting
+ * a downgrade. Reads only `.config.json` — no extra note scanning.
+ */
+export const checkSchemaDrift = async (
+  vaultRoot: string,
+  packageSchemaVersion: number = latestSchemaVersion(),
+): Promise<ValidationSummary> => {
+  const issues: ValidationIssue[] = [];
+  const vaultSchemaVersion = await readVaultSchemaVersion(vaultRoot);
+
+  if (vaultSchemaVersion < packageSchemaVersion) {
+    issues.push(makeIssue(
+      'warning',
+      'SCHEMA_VERSION_BEHIND',
+      '.config.json',
+      `vault schema version ${vaultSchemaVersion} is behind the package schema version ${packageSchemaVersion}; run \`vault migrate\` to review and apply pending vault migrations`,
+    ));
+  } else if (vaultSchemaVersion > packageSchemaVersion) {
+    issues.push(makeIssue(
+      'warning',
+      'SCHEMA_VERSION_AHEAD',
+      '.config.json',
+      `vault schema version ${vaultSchemaVersion} is ahead of the package schema version ${packageSchemaVersion}; this vault was migrated by a newer package release, so upgrade @fancyrobot/agent-vault rather than downgrading the vault`,
+    ));
+  }
+
+  return buildSummary('check-schema-drift', 1, 0, issues);
+};
+
 const runValidation = async (
   environment: AgentVaultCommandEnvironment,
   runner: (notes: readonly ParsedNote[]) => ValidationSummary,
@@ -620,6 +659,7 @@ export async function handleValidateAllCommand(
       validateStructure(notes),
       validateRequiredLinks(notes),
       detectOrphans(notes),
+      await checkSchemaDrift(vaultRoot),
     ];
 
     let hasErrors = false;

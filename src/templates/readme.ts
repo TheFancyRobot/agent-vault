@@ -81,6 +81,7 @@ Agent Vault is the repo-local memory layer for this repository. Keep durable con
 - \`vault help create-step\`
 - \`vault create-phase "Workflow Adoption"\`
 - \`vault lookup-code-graph auth --path src/core --exports-only\`
+- \`vault migrate\`
 - \`vault migrate-step-notes\`
 - \`vault refresh-all-home-notes\`
 - \`vault validate-all\`

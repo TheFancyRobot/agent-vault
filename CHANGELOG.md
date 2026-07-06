@@ -12,6 +12,17 @@
 
 ## Unreleased
 
+### Minor Changes
+
+- Add the package-level `vault migrate` command and introduce vault schema version 1.
+
+  - Vaults now record a schema version in `.config.json` (`vault_schema_version`); a missing config is treated as version 0
+  - Schema version 1 is the thin step-note layout: the `0 -> 1` migration step wraps the existing `migrate-step-notes` upgrade (thin step indexes plus companion notes, compact code-graph refresh)
+  - `vault migrate` (default plan mode / `--dry-run`) reports the vault and package schema versions and the ordered pending steps with zero writes
+  - `vault migrate --apply` runs pending steps strictly in order, validating the vault after each step before advancing the schema version, and supports `--to <version>` for stopping at an intermediate boundary; interrupted applies resume safely
+  - `vault validate-all` (and the `vault_validate` MCP tool) now warns — never errors — when the vault's schema version is behind the package's, pointing at `vault migrate`; existing validation pass/fail semantics are unchanged
+  - `vault migrate-step-notes` remains available as the scoped alias for the step-note migration
+
 ### Patch Changes
 
 - Add end-to-end pi installer coverage and document pi integration more clearly across the README and contributing guide.

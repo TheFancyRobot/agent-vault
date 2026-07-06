@@ -171,7 +171,7 @@ After installation, these commands are available in each tool:
 | `/vault:create-phase` | `/prompts:vault-create-phase` | Create a new phase (auto-generates phase number, supports `--insert-before` to insert at a position) |
 | `/vault:create-step` | `/prompts:vault-create-step` | Create a step inside a phase |
 | `/vault:create-session` | `/prompts:vault-create-session` | Create a timestamped session linked to a step |
-| `/vault:migrate-step-notes` | `/prompts:vault-migrate-step-notes` | Upgrade legacy verbose step notes into thin step indexes with companion notes |
+| `/vault:migrate-step-notes` | `/prompts:vault-migrate-step-notes` | Upgrade legacy verbose step notes into thin step indexes with companion notes — the scoped alias for one migration; `vault migrate` is the general CLI entry point |
 | `/vault:create-bug` | `/prompts:vault-create-bug` | Create a bug note (auto-generates bug ID) |
 | `/vault:create-decision` | `/prompts:vault-create-decision` | Create a decision note (auto-generates decision ID) |
 | `/vault:plan` | `/prompts:vault-plan` | Turn a freeform request into researched phases, executable step notes, and parallelism guidance |
@@ -279,7 +279,20 @@ If you created a vault before the context subsystem was added (sessions without 
 
 3. After backfilling, run `/vault:validate --target doctor` to confirm the vault passes
 
-If you created step notes before the compact split-note layout was added, you can upgrade them in place:
+### `vault migrate` — the general migration entry point
+
+`vault migrate` is the general entry point for upgrading a vault to the schema version shipped by the installed package:
+
+1. Run `vault migrate` (or the explicit alias `vault migrate --dry-run`) to see a zero-write plan: the vault's recorded schema version (`.config.json` `vault_schema_version`, missing config = version 0), the package's schema version, and the ordered pending migration steps with affected-path counts
+2. Run `vault migrate --apply` to run the pending steps strictly in order — the vault is validated after each step before the schema version advances, so interrupted runs are safe to re-run and resume from the incomplete step
+3. Use `vault migrate --apply --to <version>` to stop at a named intermediate schema version
+4. Re-run `vault validate-all` or `vault-doctor` afterward
+
+`vault validate-all` also surfaces drift on its own: when the vault's schema version is behind the package's, it emits a warning (never an error) pointing at `vault migrate`, so existing validation pass/fail semantics do not change.
+
+### `vault migrate-step-notes` — the scoped step-note alias
+
+If you created step notes before the compact split-note layout was added, you can upgrade them in place. `vault migrate-step-notes` remains available as a scoped alias for just this step-note migration (the same upgrade also runs as part of `vault migrate --apply`):
 
 1. Run `vault migrate-step-notes` (or filter with `--phase PHASE-01` / `--step STEP-01-02`)
 2. The command rewrites each legacy step note into a thin index note and creates companion notes alongside it:
