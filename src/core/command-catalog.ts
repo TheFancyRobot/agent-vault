@@ -3,6 +3,7 @@ import { formatContextManualCommandSummary } from './context-contract';
 export type AgentVaultCommandName =
   | 'vault'
   | 'vault-doctor'
+  | 'vault-prepare-context'
   | 'help'
   | 'lookup-code-graph'
   | 'create-phase'
@@ -60,6 +61,22 @@ const COMMANDS: readonly AgentVaultCommandDefinition[] = [
     ],
     notes: [
       'Fails if validation emits warnings or errors.',
+    ],
+  },
+  {
+    name: 'vault-prepare-context',
+    group: 'Discovery',
+    usage: 'vault-prepare-context [options]',
+    summary: 'Compile task-specific context by gathering, ranking, and rendering candidates from vault notes, source files, git changes, and code graph. Token-budgeted with explainable score reasons.',
+    examples: [
+      'vault-prepare-context --task "improve vault_traverse ranking" --active-file src/core/vault-graph.ts --mode edit --max-tokens 40000',
+      'vault-prepare-context --step STEP-04-05 --mode edit',
+      'vault-prepare-context --phase PHASE-04 --task "context compiler" --max-tokens 20000',
+    ],
+    notes: [
+      'Consumes outputs from STEP-04-02 (ranking), STEP-04-03 (v3 code graph), and STEP-04-04 (stub cache).',
+      'Fail-safe: if code graph or stub cache is missing, degrades to vault-note-only context with a vault_refresh hint.',
+      'All note paths are vault-root constrained; all source paths are project-root constrained.',
     ],
   },
   {

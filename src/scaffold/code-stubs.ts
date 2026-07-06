@@ -1,7 +1,7 @@
 import { createHash } from 'crypto';
 import { existsSync } from 'fs';
 import { mkdir, readFile, stat, writeFile } from 'fs/promises';
-import { basename, extname, join, relative, resolve } from 'path';
+import { extname, join, resolve } from 'path';
 
 // ─── Types ────────────────────────────────────────────────────────────
 
@@ -69,7 +69,6 @@ const MAX_FILE_SIZE = 500_000; // 500KB limit, same as code-graph
  * sanitized base name.
  */
 export function sanitizeStubPath(projectRelativePath: string, sha256: string): string {
-  const base = basename(projectRelativePath, extname(projectRelativePath));
   const sanitized = projectRelativePath
     .replace(/\.[^.]+$/, '') // remove extension
     .replace(/[^a-zA-Z0-9_\-\.]/g, '_') // sanitize separators
@@ -109,11 +108,7 @@ export function generateTypeScriptStub(content: string): { stubContent: string; 
   const lines = content.split('\n');
   const outputLines: string[] = [];
   let incomplete = false;
-  let inFunctionBody = false;
   let braceDepth = 0;
-  let inClass = false;
-  let classDepth = 0;
-  let currentMethodName = '';
 
   // We process line-by-line, tracking brace depth to identify function/class bodies.
   // Strategy:

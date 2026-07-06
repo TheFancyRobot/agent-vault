@@ -39,7 +39,7 @@ import { isProjectVault, resolveVaultRoot } from './core/vault-files';
 import { initVault } from './scaffold/init';
 import { scanProject } from './scaffold/scan';
 import { writeCodeGraph } from './scaffold/code-graph';
-import { generateStubs, initializeStubCache } from './scaffold/code-stubs';
+import { initializeStubCache } from './scaffold/code-stubs';
 
 type CommandHandler = (argv: string[], environment?: AgentVaultCommandEnvironment) => Promise<number>;
 
@@ -381,7 +381,6 @@ export async function startServer(): Promise<void> {
                 }],
               };
             }
-            const projectRoot = dirname(vaultRoot);
             // Initialize the stub cache directory and manifest
             await initializeStubCache(vaultRoot);
             return {
@@ -400,6 +399,66 @@ export async function startServer(): Promise<void> {
             };
           }
         }
+      }
+    },
+  );
+
+  // ── vault_prepare_context ──────────────────────────────────────────
+  server.tool(
+    'vault_prepare_context',
+    'Compile task-specific context by gathering, ranking, and rendering candidates from vault notes, source files, git changes, and code graph. Token-budgeted with explainable score reasons.',
+    {
+      task: z.string().optional().describe('Free-text task description for relevance matching.'),
+      active_file: z.string().optional().describe('Path to the file currently being edited (relative to project root).'),
+      root_note: z.string().optional().describe('Root vault note to start traversal from.'),
+      phase: z.string().optional().describe('Phase ID or canonical target.'),
+      step: z.string().optional().describe('Step ID or canonical target.'),
+      mode: z.enum(['plan', 'edit', 'review', 'debug', 'resume']).default('edit').describe('Mode for weighting differences.'),
+      max_tokens: z.number().int().min(1).optional().describe('Token budget for the compiled context.'),
+      include_source: z.boolean().default(true).describe('Whether to include source-file context.'),
+      source_mode: z.enum(['summary', 'stub', 'excerpt', 'full']).default('stub').describe('Default source render mode.'),
+      ranker: z.enum(['deterministic', 'local']).default('deterministic').describe('Ranker backend.'),
+    },
+    async ({ task, active_file, root_note, phase, step, mode, max_tokens, include_source, source_mode, ranker }) => {
+      try {
+        const vaultRoot = resolveVaultRoot(process.cwd());
+        if (!isProjectVault(vaultRoot)) {
+          return {
+            isError: true,
+            content: [{
+              type: 'text',
+              text: `No project vault found. Resolved ${vaultRoot} is not a vault created by vault_init. Run vault_init first.`,
+            }],
+          };
+        }
+        const projectRoot = dirname(vaultRoot);
+        const { prepareContext } = await import('./core/vault-prepare-context');
+        const result = await prepareContext(vaultRoot, projectRoot, {
+          task,
+          active_file,
+          root_note,
+          phase,
+          step,
+          mode,
+          max_tokens,
+          include_source,
+          source_mode,
+          ranker,
+        });
+        return {
+          content: [{
+            type: 'text',
+            text: JSON.stringify(result, null, 2),
+          }],
+        };
+      } catch (err) {
+        return {
+          isError: true,
+          content: [{
+            type: 'text',
+            text: `Failed to prepare context: ${err instanceof Error ? err.message : String(err)}`,
+          }],
+        };
       }
     },
   );
