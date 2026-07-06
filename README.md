@@ -310,6 +310,7 @@ These tools are exposed via the MCP server and can be called by any MCP-compatib
 | `vault_config` | View or update vault configuration (e.g., link resolver preference) |
 | `vault_help` | List commands or show detailed help for one |
 | `vault_lookup_code_graph` | Search the generated code-graph index for matching symbols/files without loading the full index |
+| `vault_prepare_context` | Compile task-specific context: gather, rank, and render candidates from vault notes, source files, git changes, and code graph with token budgeting and explainable score reasons |
 
 ### `vault_traverse`
 
