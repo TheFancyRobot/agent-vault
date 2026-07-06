@@ -88,7 +88,8 @@ Agent Vault stores durable planning, architecture, bug, decision, and session co
 ├── 05_Sessions/          # Timestamped work session logs
 ├── 06_Shared_Knowledge/  # Standards, playbooks, taxonomy
 ├── 07_Templates/         # Note contracts and templates
-├── 08_Automation/        # Generated machine state (code-graph, code-stubs)
+├── 08_Automation/        # Generated machine state (code-graph)
+├── code-stubs/           # Generated source interface stubs + manifest
 └── .obsidian/            # Graph and plugin config for Obsidian
 ```
 
@@ -96,19 +97,19 @@ Each note type has a canonical template with structured YAML frontmatter (note t
 
 ## Generated Automation Area
 
-Agent Vault writes machine-readable project state to `.agent-vault/08_Automation/`. This area is **auto-generated** by vault tools — it is not the same as human-authored phase, session, or step notes. Do not hand-edit files here; re-run the relevant vault command to regenerate them.
+Agent Vault writes machine-readable project state to `.agent-vault/08_Automation/` and `.agent-vault/code-stubs/`. These areas are **auto-generated** by vault tools — they are not the same as human-authored phase, session, or step notes. Do not hand-edit files here; re-run the relevant vault command to regenerate them.
 
 ```
 08_Automation/
-├── code-graph/
-│   └── index.json      # Regex-based symbol-to-file index (v2 schema)
-└── code-stubs/
-    ├── manifest.json    # Future: cached interface-stub manifest
-    └── ...              # Future: generated source interface stubs
+└── code-graph/
+    └── index.json      # Symbol-to-file index (v3 schema, tiered parsers)
+code-stubs/
+├── manifest.json        # Cached interface-stub manifest
+└── *.stub.ts            # Generated source interface stubs
 ```
 
-- **`code-graph/index.json`** — Compact machine-readable index of exported and internal symbols, grouped by directory. Consumed by `vault_lookup_code_graph` for low-cost symbol/file discovery. Built from regex-based extraction; not a full AST or compiler-backed analysis. Refreshed by `vault_refresh` with `"target": "code_graph"`.
-- **`code-stubs/`** — Reserved for a future interface-stub cache that serves compact source skeletons as substitutes for full source files in indirect dependency contexts. Not yet implemented.
+- **`08_Automation/code-graph/index.json`** — Compact machine-readable index of exported and internal symbols with per-file imports/exports metadata (v3 schema). Consumed by `vault_lookup_code_graph` and `vault_prepare_context` for low-cost symbol/file discovery. Built by tiered analyzers (TypeScript compiler → Tree-sitter → regex fallback). Refreshed by `vault_refresh` with `"target": "code_graph"`.
+- **`code-stubs/`** — Interface-stub cache serving compact source skeletons as substitutes for full source files in indirect dependency contexts. Populated by `vault_refresh` with `"target": "code_stubs"` or on demand by `vault_prepare_context`, and exposed read-only via `vault://code-stub/...` MCP resources.
 
 ## Install
 

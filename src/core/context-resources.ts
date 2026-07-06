@@ -176,12 +176,15 @@ const checkStubFreshness = async (
 ): Promise<{ stale: boolean; reasons: string[] }> => {
   const reasons: string[] = [];
   try {
+    // The content hash is authoritative; mtime can drift on some filesystems
+    // (rounding) without the source actually changing.
     const sourcePath = await resolveProjectPath(projectRoot, entry.path);
-    const sourceStats = await stat(sourcePath);
-    if (sourceStats.size !== entry.size) reasons.push('source size changed');
-    if (Math.abs(sourceStats.mtimeMs - entry.mtimeMs) > 1) reasons.push('source mtime changed');
     const sha256 = await hashFile(sourcePath);
-    if (sha256 !== entry.sha256) reasons.push('source hash changed');
+    if (sha256 !== entry.sha256) {
+      reasons.push('source hash changed');
+      const sourceStats = await stat(sourcePath);
+      if (sourceStats.size !== entry.size) reasons.push('source size changed');
+    }
   } catch (error) {
     reasons.push(error instanceof Error ? error.message : String(error));
   }
@@ -201,6 +204,9 @@ export async function readNoteResource(vaultRoot: string, uri: URL | string): Pr
   const parsed = parseContextResourceUri(uri);
   if (parsed.kind !== 'note') throw new Error(`Expected vault://note resource, got ${parsed.kind}.`);
   if (parsed.fragment) throw new Error('vault://note resources do not support fragments; use vault://code-excerpt for symbol fragments.');
+  if (extname(parsed.path).toLowerCase() !== '.md') {
+    throw new Error(`vault://note resources only expose Markdown notes: ${parsed.path}`);
+  }
   const absolutePath = await resolveExistingVaultFile(vaultRoot, parsed.path);
   const content = await readFile(absolutePath, 'utf-8');
   return textResource(buildContextResourceUri('note', parsed.path), content, 'text/markdown');

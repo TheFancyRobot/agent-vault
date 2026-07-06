@@ -77,7 +77,17 @@ export async function startServer(): Promise<void> {
   };
 
   const listResourcesByPrefix = async (prefix: string) => {
-    const vaultRoot = resolveVaultRoot(process.cwd());
+    // Mirror the readVaultResource project-vault guard so listing never
+    // enumerates unintended .agent-vault directories.
+    let vaultRoot: string;
+    try {
+      vaultRoot = resolveVaultRoot(process.cwd());
+    } catch {
+      return { resources: [] };
+    }
+    if (!isProjectVault(vaultRoot)) {
+      return { resources: [] };
+    }
     const result = prefix === 'vault://note/'
       ? await listNoteResources(vaultRoot)
       : await listCodeArtifactResources(vaultRoot);

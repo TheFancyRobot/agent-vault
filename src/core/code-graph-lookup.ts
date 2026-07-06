@@ -170,13 +170,14 @@ export function formatCodeGraphLookupResultsAsToon(
     }, { delimiter: '\t', keyFolding: 'safe' });
   }
 
-  // v2 has repoName, v3 has root; use whichever is available
+  // v2 has repoName, v3 has root; use whichever is available.
+  // generatedAt exists on both schemas.
   const index2 = index as CodeGraphIndexPayload;
   const index3 = index as CodeGraphIndexV3;
   return encode({
     repoName: index2.repoName,
     root: index3.root,
-    generatedAt: index2.generatedAt,
+    generatedAt: index.generatedAt,
     query,
     matchCount: matches.length,
     matches,
