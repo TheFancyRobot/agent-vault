@@ -1,5 +1,15 @@
 # @fancyrobot/agent-vault
 
+## 0.5.2
+
+### Patch Changes
+
+- Add /vault:migrate slash command for package-level schema migrations.
+
+  - New slash command `/vault:migrate` (MCP tool: `vault_migrate`) for planning and applying pending schema migrations
+  - Closes BUG-0001: context inflation addressed
+  - Closes BUG-0003: pi create-phase workflow behavior confirmed as by-design
+
 ## 0.5.1
 
 ### Patch Changes
