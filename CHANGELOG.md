@@ -2,6 +2,28 @@
 
 ## 0.5.0
 
+### Patch Changes
+
+- **Dependencies and Security Updates**
+
+  - Update dependencies and run full test suite after each package update
+  - Security audit fixes addressing 33 vulnerabilities (4 low, 18 moderate, 8 high, 3 critical)
+  - Updated packages:
+    - `@modelcontextprotocol/sdk` 1.12.0 → 1.29.0
+    - `@toon-format/toon` 2.1.0 → 2.3.0
+    - `js-yaml` 4.1.0 → 4.3.0
+    - `playwright` 1.59.1 → 1.61.1
+    - `zod` 3.24.0 → 3.25.76
+    - `@changesets/cli` 2.30.0 → 2.31.0
+    - `@types/node` 22.0.0 → 22.20.0
+    - `tsup` 8.0.0 → 8.5.1
+    - `typescript` 5.7.0 → 5.9.3
+    - `verdaccio` 6.3.2 → 5.32.2
+    - `vitest` 3.0.0 → 3.2.7
+    - `web-tree-sitter` 0.24.0 → 0.24.7
+  - Critical security fixes in: handlebars, form-data, uuid, lodash, minimatch, qs, validator, and others
+  - All 237 tests pass successfully
+
 ### Minor Changes
 
 - Add package-level vault migrations and schema drift guidance.
