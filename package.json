@@ -1,6 +1,6 @@
 {
   "name": "@fancyrobot/agent-vault",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "type": "module",
   "publishConfig": {
     "access": "public"
@@ -48,7 +48,7 @@
     "@types/node": "^22.20.0",
     "tsup": "^8.5.1",
     "typescript": "^5.9.3",
-    "verdaccio": "^5.32.2",
+    "verdaccio": "^6.7.4",
     "vitest": "^3.2.7"
   },
   "optionalDependencies": {

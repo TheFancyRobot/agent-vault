@@ -1,5 +1,28 @@
 # @fancyrobot/agent-vault
 
+## 0.5.1
+
+### Patch Changes
+
+- **Maintenance release: update dependencies and security fixes**
+
+  - Update `@modelcontextprotocol/sdk` 1.12.0 → 1.29.0
+  - Update `@toon-format/toon` 2.1.0 → 2.3.0
+  - Update `js-yaml` 4.1.0 → 4.3.0
+  - Update `playwright` 1.59.1 → 1.61.1
+  - Update `zod` 3.24.0 → 3.25.76
+  - Update `@changesets/cli` 2.30.0 → 2.31.0
+  - Update `@types/node` 22.0.0 → 22.20.0
+  - Update `tsup` 8.0.0 → 8.5.1
+  - Update `typescript` 5.7.0 → 5.9.3
+  - Update `verdaccio` 6.3.2 → 6.7.4
+  - Update `vitest` 3.0.0 → 3.2.7
+  - Update `web-tree-sitter` 0.24.0 → 0.24.7
+
+  Security fixes address 33 vulnerabilities (4 low, 18 moderate, 8 high, 3 critical) including fixes in handlebars, form-data, uuid, lodash, minimatch, qs, and validator.
+
+  All 306 tests passing after updates.
+
 ## 0.5.0
 
 ### Patch Changes
