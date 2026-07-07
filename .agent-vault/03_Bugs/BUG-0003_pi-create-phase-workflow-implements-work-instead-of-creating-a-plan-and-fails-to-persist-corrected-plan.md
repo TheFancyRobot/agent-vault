@@ -4,14 +4,15 @@ template_version: 2
 contract_version: 1
 title: Pi create-phase workflow implements work instead of creating a plan and fails to persist corrected plan
 bug_id: BUG-0003
-status: new
+status: resolved
 severity: sev-3
 category: logic
 reported_on: '2026-04-26'
-fixed_on: ''
+fixed_on: '2026-07-06'
+resolution: by-design
 owner: ''
 created: '2026-04-26'
-updated: '2026-04-26'
+updated: '2026-07-06'
 related_notes:
   - '[[02_Phases/Phase_02_targeted_context_extraction/Phase|PHASE-02 Targeted context extraction]]'
   - '[[02_Phases/Phase_02_targeted_context_extraction/Steps/Step_02_expose-vault-extract-in-pi-extension-and-workflow-docs|STEP-02-02 Expose vault_extract in pi extension and workflow docs]]'
