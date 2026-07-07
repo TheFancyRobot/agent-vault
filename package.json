@@ -35,24 +35,24 @@
     "release": "bun run build && changeset publish"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.12.0",
-    "@toon-format/toon": "^2.1.0",
-    "js-yaml": "^4.1.0",
-    "playwright": "^1.59.1",
-    "zod": "^3.24.0"
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "@toon-format/toon": "^2.3.0",
+    "js-yaml": "^4.3.0",
+    "playwright": "^1.61.1",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@changesets/changelog-github": "^0.6.0",
-    "@changesets/cli": "^2.30.0",
+    "@changesets/cli": "^2.31.0",
     "@types/js-yaml": "^4.0.9",
-    "@types/node": "^22.0.0",
-    "tsup": "^8.0.0",
-    "typescript": "^5.7.0",
-    "verdaccio": "^6.3.2",
-    "vitest": "^3.0.0"
+    "@types/node": "^22.20.0",
+    "tsup": "^8.5.1",
+    "typescript": "^5.9.3",
+    "verdaccio": "^5.32.2",
+    "vitest": "^3.2.7"
   },
   "optionalDependencies": {
-    "web-tree-sitter": "^0.24.0"
+    "web-tree-sitter": "^0.24.7"
   },
   "keywords": [
     "pi-package",
