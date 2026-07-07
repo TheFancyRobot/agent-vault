@@ -174,6 +174,7 @@ After installation, these commands are available in each tool:
 | `/vault:create-step` | `/prompts:vault-create-step` | Create a step inside a phase |
 | `/vault:create-session` | `/prompts:vault-create-session` | Create a timestamped session linked to a step |
 | `/vault:migrate-step-notes` | `/prompts:vault-migrate-step-notes` | Upgrade legacy verbose step notes into thin step indexes with companion notes — the scoped alias for one migration; `vault migrate` is the general CLI entry point |
+| `/vault:migrate` | `vault_migrate` (MCP tool) | Plan or apply pending package-level vault schema migrations |
 | `/vault:create-bug` | `/prompts:vault-create-bug` | Create a bug note (auto-generates bug ID) |
 | `/vault:create-decision` | `/prompts:vault-create-decision` | Create a decision note (auto-generates decision ID) |
 | `/vault:plan` | `/prompts:vault-plan` | Turn a freeform request into researched phases, executable step notes, and parallelism guidance |
@@ -195,7 +196,7 @@ When Agent Vault is installed into **pi**, pi loads the package's bundled prompt
 - **Helper skills:** the bundled skills remain available for explicit `/skill:...` use or as implementation references, but they are not the primary workflow entrypoints.
 - **Manual helpers:** lower-level commands such as `/vault:create-phase`, `/vault:create-step`, and `/vault:create-session` remain available when you want to manage notes directly rather than run `/vault:plan`.
 
-If you are looking for the package-level migration workflow specifically in pi, use the `vault_migrate` tool. For only the scoped step-note split migration, use `/vault:migrate-step-notes` (or the bundled `vault-migrate-step-notes` skill explicitly).
+If you are looking for the package-level migration workflow specifically in pi, use `/vault:migrate` (or the `vault_migrate` MCP tool directly). For only the scoped step-note split migration, use `/vault:migrate-step-notes` (or the bundled `vault-migrate-step-notes` skill explicitly).
 
 ### Recommended Workflow
 
