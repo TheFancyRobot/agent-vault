@@ -18,11 +18,11 @@
     - `@types/node` 22.0.0 → 22.20.0
     - `tsup` 8.0.0 → 8.5.1
     - `typescript` 5.7.0 → 5.9.3
-    - `verdaccio` 6.3.2 → 5.32.2
+    - `verdaccio` 6.3.2 → 6.7.4
     - `vitest` 3.0.0 → 3.2.7
     - `web-tree-sitter` 0.24.0 → 0.24.7
   - Critical security fixes in: handlebars, form-data, uuid, lodash, minimatch, qs, validator, and others
-  - All 237 tests pass successfully
+  - All 306 tests pass successfully
 
 ### Minor Changes
 
