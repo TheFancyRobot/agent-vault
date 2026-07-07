@@ -4,7 +4,7 @@ template_version: 2
 contract_version: 1
 title: Pi create-phase workflow implements work instead of creating a plan and fails to persist corrected plan
 bug_id: BUG-0003
-status: resolved
+status: closed
 severity: sev-3
 category: logic
 reported_on: '2026-04-26'

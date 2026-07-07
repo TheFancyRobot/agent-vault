@@ -19,7 +19,7 @@ Workflow:
 Rules:
 - Migration is idempotent: already-applied migrations are skipped.
 - Use `--dry-run` to preview changes without applying them.
-- Run `/vault:validate-all` or `vault_validate` after migrations to verify integrity.
+- Run `/vault:validate` or the `vault_validate` MCP tool after migrations to verify integrity.
 - If a migration fails, fix the issue and re-run to resume from the incomplete step.
 
 MCP tools to use: `vault_migrate`, `vault_validate`.

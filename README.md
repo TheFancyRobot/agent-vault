@@ -174,7 +174,7 @@ After installation, these commands are available in each tool:
 | `/vault:create-step` | `/prompts:vault-create-step` | Create a step inside a phase |
 | `/vault:create-session` | `/prompts:vault-create-session` | Create a timestamped session linked to a step |
 | `/vault:migrate-step-notes` | `/prompts:vault-migrate-step-notes` | Upgrade legacy verbose step notes into thin step indexes with companion notes — the scoped alias for one migration; `vault migrate` is the general CLI entry point |
-| `/vault:migrate` | `vault_migrate` (MCP tool) | Plan or apply pending package-level vault schema migrations |
+| `/vault:migrate` | `/prompts:vault-migrate` | Plan or apply pending package-level vault schema migrations — also available as the `vault_migrate` MCP tool |
 | `/vault:create-bug` | `/prompts:vault-create-bug` | Create a bug note (auto-generates bug ID) |
 | `/vault:create-decision` | `/prompts:vault-create-decision` | Create a decision note (auto-generates decision ID) |
 | `/vault:plan` | `/prompts:vault-plan` | Turn a freeform request into researched phases, executable step notes, and parallelism guidance |
