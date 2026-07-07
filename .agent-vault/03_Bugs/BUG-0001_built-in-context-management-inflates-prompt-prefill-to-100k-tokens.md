@@ -4,14 +4,15 @@ template_version: 2
 contract_version: 1
 title: Built-in context management inflates prompt prefill to 100k+ tokens
 bug_id: BUG-0001
-status: new
+status: resolved
 severity: sev-3
 category: logic
 reported_on: '2026-04-23'
-fixed_on: ''
+fixed_on: '2026-07-06'
+resolution: address
 owner: ''
 created: '2026-04-23'
-updated: '2026-04-23'
+updated: '2026-07-06'
 related_notes:
   - '[[02_Phases/Phase_01_built_in_vault_context_management/Phase|PHASE-01 Built-in vault context management]]'
   - '[[02_Phases/Phase_01_built_in_vault_context_management/Steps/Step_03_implement-step-mirrors-and-workflow-integration|STEP-01-03 Implement step mirrors and workflow integration]]'
