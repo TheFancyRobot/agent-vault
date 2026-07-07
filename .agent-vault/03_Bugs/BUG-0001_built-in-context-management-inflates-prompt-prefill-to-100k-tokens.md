@@ -4,7 +4,7 @@ template_version: 2
 contract_version: 1
 title: Built-in context management inflates prompt prefill to 100k+ tokens
 bug_id: BUG-0001
-status: resolved
+status: closed
 severity: sev-3
 category: logic
 reported_on: '2026-04-23'
