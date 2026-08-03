@@ -288,9 +288,16 @@ const parseSeverityRank = (severity: string | undefined): number => {
 const BUG_STATUS_ORDER = new Map<string, number>([
   ['new', 0],
   ['investigating', 1],
-  ['fixed-awaiting-verification', 2],
-  ['fixed-awaiting-retest', 2],
-  ['closed', 3],
+  ['fix-in-progress', 2],
+  ['fixed-awaiting-verification', 3],
+  ['fixed-awaiting-retest', 3],
+  ['closed', 4],
+]);
+
+const RESOLVED_BUG_STATUSES = new Set([
+  'fixed',
+  'invalid',
+  'closed',
 ]);
 
 const DECISION_STATUS_ORDER = new Map<string, number>([
@@ -373,6 +380,9 @@ const isOpenWorkStatus = (status: string | undefined): boolean => {
   const key = status === undefined ? '' : normalizeMetadataKey(status);
   return key.length > 0 && !COMPLETED_WORK_STATUSES.has(key) && !BLOCKER_STATUSES.has(key);
 };
+
+const isOpenBugStatus = (status: string | undefined): boolean =>
+  !isStatusInSet(status, RESOLVED_BUG_STATUSES);
 
 const compareByUpdatedDesc = (
   left: Record<string, string | undefined>,
@@ -1683,7 +1693,7 @@ const buildCurrentFocusBlock = (
     .sort(compareByUpdatedDesc);
   const criticalBugCount = bugs
     .map(buildBugSummary)
-    .filter((bug) => parseSeverityRank(bug.severity) <= 2 && normalizeMetadataKey(bug.status ?? '') !== 'closed')
+    .filter((bug) => parseSeverityRank(bug.severity) <= 2 && isOpenBugStatus(bug.status))
     .length;
 
   const lines = [`_Last refreshed: ${refreshedOn}._`];
@@ -1757,7 +1767,7 @@ const buildBlockersBlock = (
 const buildCriticalBugsBlock = (bugs: readonly IndexedVaultNote[]): string => {
   const criticalBugs = bugs
     .map(buildBugSummary)
-    .filter((bug) => parseSeverityRank(bug.severity) <= 2 && normalizeMetadataKey(bug.status ?? '') !== 'closed')
+    .filter((bug) => parseSeverityRank(bug.severity) <= 2 && isOpenBugStatus(bug.status))
     .sort((left, right) => {
       const severityDiff = parseSeverityRank(left.severity) - parseSeverityRank(right.severity);
       if (severityDiff !== 0) {
