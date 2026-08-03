@@ -288,17 +288,16 @@ const parseSeverityRank = (severity: string | undefined): number => {
 const BUG_STATUS_ORDER = new Map<string, number>([
   ['new', 0],
   ['investigating', 1],
-  ['fixed-awaiting-verification', 2],
-  ['fixed-awaiting-retest', 2],
-  ['closed', 3],
+  ['fix-in-progress', 2],
+  ['fixed-awaiting-verification', 3],
+  ['fixed-awaiting-retest', 3],
+  ['closed', 4],
 ]);
 
-const OPEN_BUG_STATUSES = new Set([
-  'new',
-  'investigating',
-  'fix-in-progress',
-  'fixed-awaiting-verification',
-  'fixed-awaiting-retest',
+const RESOLVED_BUG_STATUSES = new Set([
+  'fixed',
+  'invalid',
+  'closed',
 ]);
 
 const DECISION_STATUS_ORDER = new Map<string, number>([
@@ -383,7 +382,7 @@ const isOpenWorkStatus = (status: string | undefined): boolean => {
 };
 
 const isOpenBugStatus = (status: string | undefined): boolean =>
-  status !== undefined && OPEN_BUG_STATUSES.has(normalizeMetadataKey(status));
+  !isStatusInSet(status, RESOLVED_BUG_STATUSES);
 
 const compareByUpdatedDesc = (
   left: Record<string, string | undefined>,

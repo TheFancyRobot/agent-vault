@@ -102,6 +102,7 @@ Use this taxonomy to keep bug notes consistent.
 - investigating
 - fix-in-progress
 - fixed-awaiting-verification
+- fixed-awaiting-retest
 - closed
 
 ## Minimum Bug Record

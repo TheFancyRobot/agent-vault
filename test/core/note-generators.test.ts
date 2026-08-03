@@ -776,6 +776,20 @@ describe('Agent Vault note generators', () => {
       '',
       '# BUG-0010 - Closed release blocker',
     ].join('\n'), 'utf-8');
+    await writeFile(join(vaultRoot, '03_Bugs', 'BUG-0011_unknown-release-blocker.md'), [
+      '---',
+      'note_type: bug',
+      'title: Unknown release blocker',
+      'bug_id: BUG-0011',
+      'status: typoed-status',
+      'severity: sev-1',
+      'reported_on: "2026-03-14"',
+      'created: "2026-03-14"',
+      'updated: "2026-03-14"',
+      '---',
+      '',
+      '# BUG-0011 - Unknown release blocker',
+    ].join('\n'), 'utf-8');
 
     const harness = makeIo();
     const exitCode = await handleRefreshActiveContextCommand([], { vaultRoot, io: harness.io, now: () => FIXED_NOW });
@@ -787,7 +801,8 @@ describe('Agent Vault note generators', () => {
     expect(content).toContain('Active phase: [[02_Phases/Phase_01_Foundation/Phase|PHASE-01 Foundation]]');
     expect(content).toContain('<!-- AGENT-START:critical-bugs -->');
     expect(content).toContain('BUG-0007 Release blocker');
-    expect(content).toContain('1 open critical bug');
+    expect(content).toContain('BUG-0011 Unknown release blocker');
+    expect(content).toContain('2 open critical bugs');
     expect(content).not.toContain('BUG-0008 Fixed release blocker');
     expect(content).not.toContain('BUG-0009 Invalid release blocker');
     expect(content).not.toContain('BUG-0010 Closed release blocker');
