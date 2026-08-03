@@ -1,5 +1,11 @@
 # @fancyrobot/agent-vault
 
+## 0.5.3
+
+### Patch Changes
+
+- f78ac2b: Exclude resolved bugs from the Active Context critical-bug rollup while keeping unknown critical statuses visible for triage.
+
 ## 0.5.2
 
 ### Patch Changes
