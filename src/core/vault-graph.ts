@@ -90,6 +90,8 @@ export interface VaultTraverseResult {
 interface CachedVaultGraph {
   readonly signature: string;
   readonly graph: VaultGraph;
+  /** Warnings the degraded entry was built with; re-emitted on cache hits. */
+  readonly warnings?: readonly string[];
 }
 
 interface ParsedVaultNote {
@@ -379,7 +381,7 @@ export const ensureVaultGraph = async (
   const cacheKey = `${vaultRoot}:${resolver}:${policy.denylist.join('|')}:${policy.allowlist.join('|')}`;
   const cached = graphCache.get(cacheKey);
   if (cached && cached.signature === signature) {
-    return { graph: cached.graph, warnings: [] };
+    return { graph: cached.graph, warnings: cached.warnings ? [...cached.warnings] : [] };
   }
 
   const parsedNotes = await loadParsedVaultNotes(files);
@@ -391,20 +393,19 @@ export const ensureVaultGraph = async (
       return { graph, warnings: [] };
     } catch (error) {
       const fallbackGraph = buildFilesystemGraph(vaultRoot, parsedNotes, signature);
-      // Cache under the requested resolver key as well, so repeated
-      // 'obsidian' calls reuse this fallback until the vault signature
-      // changes instead of retrying (and re-warning) on every call.
+      const warnings = [
+        `Obsidian CLI resolver failed, falling back to filesystem links: ${error instanceof Error ? error.message : String(error)}`,
+      ];
+      // Cache the fallback under the requested resolver key, so repeated
+      // 'obsidian' calls reuse it until the vault signature changes instead
+      // of retrying the CLI on every call. The warning is cached with the
+      // entry so the degraded result is never served silently.
       const filesystemCacheKey = `${vaultRoot}:filesystem:${policy.denylist.join('|')}:${policy.allowlist.join('|')}`;
-      setGraphCache(cacheKey, { signature, graph: fallbackGraph });
+      setGraphCache(cacheKey, { signature, graph: fallbackGraph, warnings });
       if (filesystemCacheKey !== cacheKey) {
         setGraphCache(filesystemCacheKey, { signature, graph: fallbackGraph });
       }
-      return {
-        graph: fallbackGraph,
-        warnings: [
-          `Obsidian CLI resolver failed, falling back to filesystem links: ${error instanceof Error ? error.message : String(error)}`,
-        ],
-      };
+      return { graph: fallbackGraph, warnings };
     }
   }
 
