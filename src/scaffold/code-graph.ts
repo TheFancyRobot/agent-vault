@@ -2,7 +2,7 @@ import { createHash } from 'crypto';
 import { mkdir, readFile, readdir, stat, writeFile } from 'fs/promises';
 import { basename, extname, join, relative, resolve } from 'path';
 import type { AnalysisTier } from './source-analyzer';
-
+import { createContextSafetyPolicy, getContextPathExclusion, readContextSafetyPolicy, type ContextSafetyPolicy } from '../core/context-safety';
 // ─── v2 types (kept for backward-compat lookup) ───
 
 export interface CodeSymbol {
@@ -828,6 +828,7 @@ async function walkSourceFiles(
   dir: string,
   results: FileSymbolsV3[],
   tieredAnalyzer?: TieredSourceAnalyzer,
+  policy: ContextSafetyPolicy = createContextSafetyPolicy(),
   depth = 0,
 ): Promise<void> {
   if (depth > 8) return;
@@ -839,7 +840,7 @@ async function walkSourceFiles(
 
     if (entry.isDirectory()) {
       if (!shouldSkipDirectory(entry.name)) {
-        await walkSourceFiles(projectRoot, fullPath, results, tieredAnalyzer, depth + 1);
+        await walkSourceFiles(projectRoot, fullPath, results, tieredAnalyzer, policy, depth + 1);
       }
       continue;
     }
@@ -851,6 +852,9 @@ async function walkSourceFiles(
     if (!language) continue;
 
     if (entry.name.includes('.test.') || entry.name.includes('.spec.')) continue;
+    const relativePath = relative(projectRoot, fullPath).replace(/\\/g, '/');
+    if (getContextPathExclusion(relativePath, policy)) continue;
+
 
     try {
       const content = await readFile(fullPath, 'utf-8');
@@ -897,7 +901,6 @@ async function walkSourceFiles(
       }
 
       if (symbols.length > 0) {
-        const relativePath = relative(projectRoot, fullPath).replace(/\\/g, '/');
         const fileStats = await stat(fullPath);
         const hash = createHash('sha256').update(content).digest('hex');
 
@@ -930,7 +933,10 @@ async function walkSourceFiles(
   }
 }
 
-export async function buildCodeGraph(projectRoot: string): Promise<CodeGraphResult> {
+export async function buildCodeGraph(
+  projectRoot: string,
+  policy: ContextSafetyPolicy = createContextSafetyPolicy(),
+): Promise<CodeGraphResult> {
   const root = resolve(projectRoot);
   const files: FileSymbolsV3[] = [];
 
@@ -954,8 +960,7 @@ export async function buildCodeGraph(projectRoot: string): Promise<CodeGraphResu
     exports: extractExportEdges,
   });
 
-  await walkSourceFiles(root, root, files, tieredAnalyzer);
-
+  await walkSourceFiles(root, root, files, tieredAnalyzer, policy);
   files.sort((a, b) => a.path.localeCompare(b.path));
   const totalSymbols = files.reduce((sum, f) => sum + f.symbols.length, 0);
 
@@ -1117,7 +1122,8 @@ export async function writeCodeGraph(
 ): Promise<CodeGraphResult> {
   const root = resolve(projectRoot);
   const stableRepoName = repoName === '.' ? basename(root) : repoName;
-  const graph = await buildCodeGraph(root);
+  const policy = await readContextSafetyPolicy(vaultRoot);
+  const graph = await buildCodeGraph(root, policy);
   const markdown = renderCodeGraphMarkdown(graph, stableRepoName);
   const indexPayload = buildCodeGraphIndexPayloadV3(graph, root);
 

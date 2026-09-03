@@ -1,11 +1,19 @@
 import { createHash } from 'crypto';
 import { existsSync } from 'fs';
-import { readFile, readdir, stat } from 'fs/promises';
+import { readFile, readdir, realpath, stat } from 'fs/promises';
 import { extname, isAbsolute, relative, resolve } from 'path';
 import type { ListResourcesResult, ReadResourceResult, Resource } from '@modelcontextprotocol/sdk/types.js';
 import type { CodeGraphIndexV3, FileSymbolsV3 } from '../scaffold/code-graph';
 import { loadCodeGraphIndex } from './code-graph-lookup';
 import { readStubManifest, resolveStubPath, type StubManifestEntry } from '../scaffold/code-stubs';
+import {
+  assertContextPathAllowed,
+  assertSafeRelativeContextPath,
+  getContextPathExclusion,
+  isContextPathAllowed,
+  readContextSafetyPolicy,
+  type ContextSafetyPolicy,
+} from './context-safety';
 import { assertWithinVaultRoot, resolveVaultRelativePath } from './vault-files';
 
 const STUBS_DIR = 'code-stubs';
@@ -44,30 +52,7 @@ const decodeUriComponentStrict = (value: string, label: string): string => {
 const containsEncodedSeparator = (value: string): boolean => /%(?:2f|5c)/i.test(value);
 
 const assertSafeRelativeResourcePath = (path: string): void => {
-  if (!path || path.trim().length === 0) {
-    throw new Error('Resource path is required.');
-  }
-  if (path.includes('\0')) {
-    throw new Error('Resource path contains a NUL byte.');
-  }
-  if (path.includes('\\')) {
-    throw new Error('Resource path must use forward slashes, not backslashes.');
-  }
-  if (isAbsolute(path) || path.startsWith('/')) {
-    throw new Error(`Resource path must be relative: ${path}`);
-  }
-  const segments = path.split('/');
-  if (segments.some((segment) => segment === '' || segment === '.' || segment === '..')) {
-    throw new Error(`Resource path contains an unsafe segment: ${path}`);
-  }
-};
-
-const SECRET_PATH_PATTERN = /(^|\/)(?:\.env(?:\.|$)|\.npmrc$|\.pypirc$|id_rsa$|id_dsa$|id_ed25519$|.*(?:secret|secrets|credential|credentials|token|private-key).*)(\/|$)/i;
-
-const assertNotSecretLikePath = (path: string): void => {
-  if (SECRET_PATH_PATTERN.test(path)) {
-    throw new Error(`Refusing to expose secret-like resource path: ${path}`);
-  }
+  assertSafeRelativeContextPath(path, 'Resource path');
 };
 
 export const parseContextResourceUri = (uri: URL | string): ParsedContextResourceUri => {
@@ -105,9 +90,12 @@ export const parseContextResourceUri = (uri: URL | string): ParsedContextResourc
   return { kind, path, fragment };
 };
 
-const resolveExistingVaultFile = async (vaultRoot: string, notePath: string): Promise<string> => {
-  assertSafeRelativeResourcePath(notePath);
-  assertNotSecretLikePath(notePath);
+const resolveExistingVaultFile = async (
+  vaultRoot: string,
+  notePath: string,
+  policy: ContextSafetyPolicy,
+): Promise<string> => {
+  assertContextPathAllowed(notePath, 'Resource path', policy);
   const absolutePath = resolveVaultRelativePath(vaultRoot, notePath);
   assertWithinVaultRoot(vaultRoot, absolutePath);
   if (!existsSync(absolutePath)) {
@@ -119,15 +107,15 @@ const resolveExistingVaultFile = async (vaultRoot: string, notePath: string): Pr
   return absolutePath;
 };
 
-const safeRealpath = async (path: string): Promise<string> => {
-  const { realpath } = await import('fs/promises');
-  return realpath(path);
-};
+const safeRealpath = async (path: string): Promise<string> => realpath(path);
 
-const resolveProjectPath = async (projectRoot: string, projectRelativePath: string): Promise<string> => {
-  assertSafeRelativeResourcePath(projectRelativePath);
-  assertNotSecretLikePath(projectRelativePath);
-  const absolutePath = resolve(projectRoot, projectRelativePath);
+const resolveProjectPath = async (
+  projectRoot: string,
+  projectRelativePath: string,
+  policy: ContextSafetyPolicy,
+): Promise<string> => {
+  const safePath = assertContextPathAllowed(projectRelativePath, 'Source path', policy);
+  const absolutePath = resolve(projectRoot, safePath);
   assertWithinRoot(resolve(projectRoot), absolutePath, 'project root');
   if (!existsSync(absolutePath)) {
     throw new Error(`Source file not found: ${projectRelativePath}`);
@@ -152,14 +140,19 @@ const readCodeGraphV3 = async (vaultRoot: string): Promise<CodeGraphIndexV3> => 
   }
   return index;
 };
-
-const findCodeGraphFile = async (vaultRoot: string, sourcePath: string): Promise<FileSymbolsV3> => {
+const findCodeGraphFile = async (
+  vaultRoot: string,
+  sourcePath: string,
+  policy: ContextSafetyPolicy,
+): Promise<FileSymbolsV3> => {
+  const safePath = assertContextPathAllowed(sourcePath, 'Source path', policy);
   const index = await readCodeGraphV3(vaultRoot);
-  const file = index.files.find((candidate) => candidate.path === sourcePath);
+  const file = index.files.find((candidate) => candidate.path === safePath);
   if (!file) {
     throw new Error(`Code graph has no entry for ${sourcePath}. Run vault_refresh target=code_graph.`);
   }
-  if (file.generated || file.vendor) {
+  const generatedOrVendor = file.generated || file.vendor;
+  if (generatedOrVendor && !isContextPathAllowed(safePath, policy)) {
     throw new Error(`Refusing to expose generated/vendor source artifact: ${sourcePath}`);
   }
   return file;
@@ -173,12 +166,13 @@ const hashFile = async (absolutePath: string): Promise<string> => {
 const checkStubFreshness = async (
   projectRoot: string,
   entry: StubManifestEntry,
+  policy: ContextSafetyPolicy,
 ): Promise<{ stale: boolean; reasons: string[] }> => {
   const reasons: string[] = [];
   try {
     // The content hash is authoritative; mtime can drift on some filesystems
     // (rounding) without the source actually changing.
-    const sourcePath = await resolveProjectPath(projectRoot, entry.path);
+    const sourcePath = await resolveProjectPath(projectRoot, entry.path, policy);
     const sha256 = await hashFile(sourcePath);
     if (sha256 !== entry.sha256) {
       reasons.push('source hash changed');
@@ -201,13 +195,14 @@ const textResource = (
 });
 
 export async function readNoteResource(vaultRoot: string, uri: URL | string): Promise<ReadResourceResult> {
+  const policy = await readContextSafetyPolicy(vaultRoot);
   const parsed = parseContextResourceUri(uri);
   if (parsed.kind !== 'note') throw new Error(`Expected vault://note resource, got ${parsed.kind}.`);
   if (parsed.fragment) throw new Error('vault://note resources do not support fragments; use vault://code-excerpt for symbol fragments.');
   if (extname(parsed.path).toLowerCase() !== '.md') {
     throw new Error(`vault://note resources only expose Markdown notes: ${parsed.path}`);
   }
-  const absolutePath = await resolveExistingVaultFile(vaultRoot, parsed.path);
+  const absolutePath = await resolveExistingVaultFile(vaultRoot, parsed.path, policy);
   const content = await readFile(absolutePath, 'utf-8');
   return textResource(buildContextResourceUri('note', parsed.path), content, 'text/markdown');
 }
@@ -217,11 +212,12 @@ export async function readCodeStubResource(
   projectRoot: string,
   uri: URL | string,
 ): Promise<ReadResourceResult> {
+  const policy = await readContextSafetyPolicy(vaultRoot);
   const parsed = parseContextResourceUri(uri);
   if (parsed.kind !== 'code-stub') throw new Error(`Expected vault://code-stub resource, got ${parsed.kind}.`);
   if (parsed.fragment) throw new Error('vault://code-stub resources do not support fragments.');
-  assertNotSecretLikePath(parsed.path);
-  await resolveProjectPath(projectRoot, parsed.path);
+  assertContextPathAllowed(parsed.path, 'Source path', policy);
+  await resolveProjectPath(projectRoot, parsed.path, policy);
 
   const manifest = await readStubManifest(vaultRoot);
   const entry = manifest?.entries.find((candidate) => candidate.path === parsed.path);
@@ -235,8 +231,10 @@ export async function readCodeStubResource(
   }
   const absoluteStubPath = resolve(vaultRoot, STUBS_DIR, stubPath);
   assertWithinVaultRoot(vaultRoot, absoluteStubPath);
-  const content = await readFile(absoluteStubPath, 'utf-8');
-  const freshness = await checkStubFreshness(projectRoot, entry);
+  const realStubPath = await safeRealpath(absoluteStubPath);
+  assertWithinRoot(await safeRealpath(vaultRoot), realStubPath, 'vault root');
+  const content = await readFile(realStubPath, 'utf-8');
+  const freshness = await checkStubFreshness(projectRoot, entry, policy);
   const prefix = freshness.stale
     ? `// STALE CODE STUB: ${freshness.reasons.join('; ')}. Refresh hint: run vault_prepare_context or regenerate code stubs.\n\n`
     : '';
@@ -254,11 +252,12 @@ export async function readCodeSummaryResource(
   projectRoot: string,
   uri: URL | string,
 ): Promise<ReadResourceResult> {
+  const policy = await readContextSafetyPolicy(vaultRoot);
   const parsed = parseContextResourceUri(uri);
   if (parsed.kind !== 'code-summary') throw new Error(`Expected vault://code-summary resource, got ${parsed.kind}.`);
   if (parsed.fragment) throw new Error('vault://code-summary resources do not support fragments.');
-  await resolveProjectPath(projectRoot, parsed.path);
-  const file = await findCodeGraphFile(vaultRoot, parsed.path);
+  await resolveProjectPath(projectRoot, parsed.path, policy);
+  const file = await findCodeGraphFile(vaultRoot, parsed.path, policy);
   const text = JSON.stringify({
     path: file.path,
     language: file.language,
@@ -288,13 +287,14 @@ export async function readCodeExcerptResource(
   uri: URL | string,
 ): Promise<ReadResourceResult> {
   const parsed = parseContextResourceUri(uri);
+  const policy = await readContextSafetyPolicy(vaultRoot);
   if (parsed.kind !== 'code-excerpt') throw new Error(`Expected vault://code-excerpt resource, got ${parsed.kind}.`);
   if (!parsed.fragment) {
     throw new Error('vault://code-excerpt requires a #symbol fragment.');
   }
-  const sourcePath = await resolveProjectPath(projectRoot, parsed.path);
-  const file = await findCodeGraphFile(vaultRoot, parsed.path);
   const [symbolName, lineSuffix] = parsed.fragment.split(':');
+  const sourcePath = await resolveProjectPath(projectRoot, parsed.path, policy);
+  const file = await findCodeGraphFile(vaultRoot, parsed.path, policy);
   const matchingSymbols = file.symbols.filter((symbol) => (
     symbol.name === symbolName && (!lineSuffix || String(symbol.line) === lineSuffix)
   ));
@@ -339,16 +339,32 @@ export async function readContextResource(
 }
 
 const resourceName = (kind: ContextResourceKind, resourcePath: string): string => `${kind}: ${resourcePath}`;
+const isListableContextPath = (path: string, policy: ContextSafetyPolicy): boolean => {
+  try {
+    assertContextPathAllowed(path, 'Context path', policy);
+    return true;
+  } catch {
+    return false;
+  }
+};
 
-async function listMarkdownNotes(vaultRoot: string, relativeDir = ''): Promise<Resource[]> {
+async function listMarkdownNotes(
+  vaultRoot: string,
+  policy: ContextSafetyPolicy,
+  relativeDir = '',
+): Promise<Resource[]> {
   const absoluteDir = resolve(vaultRoot, relativeDir);
   assertWithinVaultRoot(vaultRoot, absoluteDir);
   if (!existsSync(absoluteDir)) return [];
   const entries = await readdir(absoluteDir, { withFileTypes: true });
   const nested = await Promise.all(entries.map(async (entry) => {
     const childRelative = relativeDir ? `${relativeDir}/${entry.name}` : entry.name;
-    if (entry.isDirectory()) return listMarkdownNotes(vaultRoot, childRelative);
-    if (entry.isFile() && extname(entry.name).toLowerCase() === '.md' && !SECRET_PATH_PATTERN.test(childRelative)) {
+    if (entry.isDirectory()) return listMarkdownNotes(vaultRoot, policy, childRelative);
+    if (
+      entry.isFile()
+      && extname(entry.name).toLowerCase() === '.md'
+      && !getContextPathExclusion(childRelative, policy)
+    ) {
       return [{
         uri: buildContextResourceUri('note', childRelative),
         name: resourceName('note', childRelative),
@@ -361,15 +377,18 @@ async function listMarkdownNotes(vaultRoot: string, relativeDir = ''): Promise<R
 }
 
 export async function listNoteResources(vaultRoot: string): Promise<ListResourcesResult> {
-  return { resources: await listMarkdownNotes(vaultRoot) };
+  const policy = await readContextSafetyPolicy(vaultRoot);
+  return { resources: await listMarkdownNotes(vaultRoot, policy) };
 }
 
 export async function listCodeArtifactResources(vaultRoot: string): Promise<ListResourcesResult> {
+  const policy = await readContextSafetyPolicy(vaultRoot);
   const resources: Resource[] = [];
   try {
     const index = await readCodeGraphV3(vaultRoot);
     for (const file of index.files) {
-      if (file.generated || file.vendor || SECRET_PATH_PATTERN.test(file.path)) continue;
+      if ((file.generated || file.vendor) && !isContextPathAllowed(file.path, policy)) continue;
+      if (!isListableContextPath(file.path, policy)) continue;
       resources.push({
         uri: buildContextResourceUri('code-summary', file.path),
         name: resourceName('code-summary', file.path),
@@ -390,7 +409,7 @@ export async function listCodeArtifactResources(vaultRoot: string): Promise<List
   try {
     const manifest = await readStubManifest(vaultRoot);
     for (const entry of manifest?.entries ?? []) {
-      if (SECRET_PATH_PATTERN.test(entry.path)) continue;
+      if (!isListableContextPath(entry.path, policy)) continue;
       resources.push({
         uri: buildContextResourceUri('code-stub', entry.path),
         name: resourceName('code-stub', entry.path),

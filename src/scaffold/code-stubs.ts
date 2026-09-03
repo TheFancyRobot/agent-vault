@@ -1,7 +1,15 @@
 import { createHash } from 'crypto';
 import { existsSync } from 'fs';
-import { mkdir, readFile, rm, stat, writeFile } from 'fs/promises';
-import { extname, join, resolve } from 'path';
+import { mkdir, readFile, realpath, rm, stat, writeFile } from 'fs/promises';
+import { extname, join, relative, resolve, isAbsolute } from 'path';
+import {
+  assertSafeRelativeContextPath,
+  createContextSafetyPolicy,
+  getContextPathExclusion,
+  readContextSafetyPolicy,
+  type ContextSafetyPolicy,
+} from '../core/context-safety';
+import { assertWithinVaultRoot } from '../core/vault-files';
 
 // ─── Types ────────────────────────────────────────────────────────────
 
@@ -70,9 +78,9 @@ const MAX_FILE_SIZE = 500_000; // 500KB limit, same as code-graph
  */
 export function sanitizeStubPath(projectRelativePath: string, sha256: string): string {
   const sanitized = projectRelativePath
-    .replace(/\.[^.]+$/, '') // remove extension
-    .replace(/[^a-zA-Z0-9_\-\.]/g, '_') // sanitize separators
-    .replace(/_{2,}/g, '_'); // collapse multiple underscores
+    .replace(/\.[^.]+$/, '')
+    .replace(/[^a-zA-Z0-9_\-\.]/g, '_')
+    .replace(/_{2,}/g, '_');
 
   const hashPrefix = sha256.slice(0, 8);
   return `${sanitized}.${hashPrefix}${STUB_EXT}`;
@@ -83,8 +91,10 @@ export function sanitizeStubPath(projectRelativePath: string, sha256: string): s
  * Returns undefined if the stub doesn't exist on disk.
  */
 export function resolveStubPath(vaultRoot: string, manifestEntry: StubManifestEntry): string | undefined {
-  const absoluteStub = resolve(vaultRoot, STUBS_DIR, manifestEntry.stubPath);
-  return existsSync(absoluteStub) ? manifestEntry.stubPath : undefined;
+  const stubPath = assertSafeRelativeContextPath(manifestEntry.stubPath, 'Stub path');
+  const absoluteStub = resolve(vaultRoot, STUBS_DIR, stubPath);
+  assertWithinVaultRoot(vaultRoot, absoluteStub);
+  return existsSync(absoluteStub) ? stubPath : undefined;
 }
 
 // ─── Stub content generation ────────────────────────────────────────
@@ -286,8 +296,12 @@ export async function readStubManifest(vaultRoot: string): Promise<StubManifest 
   if (!existsSync(manifestPath)) {
     return undefined;
   }
-  const raw = await readFile(manifestPath, 'utf-8');
-  return JSON.parse(raw) as StubManifest;
+  try {
+    const raw = await readFile(manifestPath, 'utf-8');
+    return JSON.parse(raw) as StubManifest;
+  } catch {
+    return undefined;
+  }
 }
 
 /**
@@ -298,14 +312,34 @@ export async function writeStubManifest(vaultRoot: string, manifest: StubManifes
   await writeFile(manifestPath, JSON.stringify(manifest, null, 2) + '\n', 'utf-8');
 }
 
+const resolveSafeSourcePath = async (
+  projectRoot: string,
+  projectRelativePath: string,
+  policy: ContextSafetyPolicy,
+): Promise<string | undefined> => {
+  const safePath = assertSafeRelativeContextPath(projectRelativePath, 'Source path');
+  if (getContextPathExclusion(safePath, policy)) return undefined;
+
+  const absolutePath = resolve(projectRoot, safePath);
+  if (!existsSync(absolutePath)) return undefined;
+
+  try {
+    const realProjectRoot = await realpath(projectRoot);
+    const realSourcePath = await realpath(absolutePath);
+    const relativePath = relative(realProjectRoot, realSourcePath);
+    if (relativePath.startsWith('..') || isAbsolute(relativePath)) return undefined;
+    return realSourcePath;
+  } catch {
+    return undefined;
+  }
+};
+
 /**
  * Check if a manifest entry is still valid by comparing the stored hash with the current source file hash.
  */
 export async function isEntryStale(entry: StubManifestEntry, projectRoot: string): Promise<boolean> {
-  const sourcePath = join(projectRoot, entry.path);
-  if (!existsSync(sourcePath)) {
-    return true; // Source file deleted
-  }
+  const sourcePath = await resolveSafeSourcePath(projectRoot, entry.path, createContextSafetyPolicy());
+  if (!sourcePath) return true;
   const content = await readFile(sourcePath, 'utf-8');
   const currentHash = createHash('sha256').update(content).digest('hex');
   return currentHash !== entry.sha256;
@@ -314,20 +348,20 @@ export async function isEntryStale(entry: StubManifestEntry, projectRoot: string
 /**
  * Compute metadata for a source file: size, mtime, and SHA-256 hash.
  */
-export async function computeSourceMetadata(projectRoot: string, projectRelativePath: string): Promise<{
+export async function computeSourceMetadata(
+  projectRoot: string,
+  projectRelativePath: string,
+  policy: ContextSafetyPolicy = createContextSafetyPolicy(),
+): Promise<{
   size: number;
   mtimeMs: number;
   sha256: string;
   content: string;
 } | undefined> {
-  const absolutePath = join(projectRoot, projectRelativePath);
-  if (!existsSync(absolutePath)) {
-    return undefined;
-  }
+  const absolutePath = await resolveSafeSourcePath(projectRoot, projectRelativePath, policy);
+  if (!absolutePath) return undefined;
   const stats = await stat(absolutePath);
-  if (stats.size > MAX_FILE_SIZE) {
-    return undefined; // Too large to stub
-  }
+  if (stats.size > MAX_FILE_SIZE) return undefined;
   const content = await readFile(absolutePath, 'utf-8');
   const hash = createHash('sha256').update(content).digest('hex');
   return {
@@ -350,21 +384,21 @@ export async function generateStubForFile(
   projectRelativePath: string,
   parser: string = 'regex',
 ): Promise<GenerateStubResult | undefined> {
-  const metadata = await computeSourceMetadata(projectRoot, projectRelativePath);
-  if (!metadata) {
-    return undefined;
-  }
+  const policy = await readContextSafetyPolicy(vaultRoot);
+  const safePath = assertSafeRelativeContextPath(projectRelativePath, 'Source path');
+  if (getContextPathExclusion(safePath, policy)) return undefined;
+
+  const metadata = await computeSourceMetadata(projectRoot, safePath, policy);
+  if (!metadata) return undefined;
 
   const { sha256, size, mtimeMs, content } = metadata;
-  const ext = extname(projectRelativePath);
+  const ext = extname(safePath);
   const language = getLanguageForExtension(ext);
-  if (!language) {
-    return undefined;
-  }
+  if (!language) return undefined;
 
   // Check manifest for a valid entry
   const manifest = await readStubManifest(vaultRoot);
-  const existingEntry = manifest?.entries.find((e) => e.path === projectRelativePath);
+  const existingEntry = manifest?.entries.find((e) => e.path === safePath);
 
   if (existingEntry && existingEntry.sha256 === sha256 && existingEntry.size === size) {
     // Valid cached stub — nothing to regenerate
@@ -387,16 +421,17 @@ export async function generateStubForFile(
     // Fallback: metadata-only stub with a comment
     stubContent = [
       `// Stub placeholder — full parsing not yet implemented for ${language}.`,
-      `// Source: ${projectRelativePath}`,
+      `// Source: ${safePath}`,
       `// Hash: ${sha256}`,
     ].join('\n');
     incomplete = true;
   }
 
   // Write stub file
-  const stubFilename = sanitizeStubPath(projectRelativePath, sha256);
+  const stubFilename = sanitizeStubPath(safePath, sha256);
   const stubPathInVault = join(STUBS_DIR, stubFilename);
   const absoluteStubPath = resolve(vaultRoot, stubPathInVault);
+  assertWithinVaultRoot(vaultRoot, absoluteStubPath);
 
   await mkdir(join(vaultRoot, STUBS_DIR), { recursive: true });
   await writeFile(absoluteStubPath, stubContent, 'utf-8');
@@ -404,9 +439,9 @@ export async function generateStubForFile(
   // Update manifest
   if (manifest) {
     // Replace existing entry or add new one
-    const existingIndex = manifest.entries.findIndex((e) => e.path === projectRelativePath);
+    const existingIndex = manifest.entries.findIndex((e) => e.path === safePath);
     const newEntry: StubManifestEntry = {
-      path: projectRelativePath,
+      path: safePath,
       language,
       size,
       mtimeMs,
@@ -430,7 +465,7 @@ export async function generateStubForFile(
       version: 1,
       generatedAt: new Date().toISOString(),
       entries: [{
-        path: projectRelativePath,
+        path: safePath,
         language,
         size,
         mtimeMs,
@@ -515,12 +550,13 @@ export async function invalidateStub(
   vaultRoot: string,
   projectRelativePath: string,
 ): Promise<boolean> {
+  const safePath = assertSafeRelativeContextPath(projectRelativePath, 'Source path');
   const manifest = await readStubManifest(vaultRoot);
   if (!manifest) {
     return false;
   }
 
-  const entryIndex = manifest.entries.findIndex((e) => e.path === projectRelativePath);
+  const entryIndex = manifest.entries.findIndex((e) => e.path === safePath);
   if (entryIndex < 0) {
     return false;
   }
@@ -528,7 +564,9 @@ export async function invalidateStub(
   const entry = manifest.entries[entryIndex];
   // Remove the stub file; deletion failures propagate so callers never
   // believe a stub was invalidated while the artifact remains on disk.
-  const stubAbsolutePath = resolve(vaultRoot, STUBS_DIR, entry.stubPath);
+  const stubPath = assertSafeRelativeContextPath(entry.stubPath, 'Stub path');
+  const stubAbsolutePath = resolve(vaultRoot, STUBS_DIR, stubPath);
+  assertWithinVaultRoot(vaultRoot, stubAbsolutePath);
   if (existsSync(stubAbsolutePath)) {
     await rm(stubAbsolutePath, { force: true });
   }

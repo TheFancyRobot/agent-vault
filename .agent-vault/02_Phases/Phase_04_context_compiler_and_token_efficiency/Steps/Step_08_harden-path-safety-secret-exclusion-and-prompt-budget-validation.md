@@ -5,23 +5,25 @@ contract_version: 1
 title: Harden path safety secret exclusion and prompt budget validation
 step_id: STEP-04-08
 phase: '[[02_Phases/Phase_04_context_compiler_and_token_efficiency/Phase|Phase 04 context compiler and token efficiency]]'
-status: planned
-owner: ''
+status: done
+owner: pi
 created: '2026-07-05'
-updated: '2026-07-06'
+updated: '2026-09-02'
 depends_on:
   - '[[02_Phases/Phase_04_context_compiler_and_token_efficiency/Steps/Step_05_add-vault-prepare-context-context-compiler-tool|STEP-04-05 Add vault_prepare_context context compiler tool]]'
   - '[[02_Phases/Phase_04_context_compiler_and_token_efficiency/Steps/Step_07_expose-mcp-resources-for-stable-context-artifacts|STEP-04-07 Expose MCP resources for stable context artifacts]]'
 related_sessions:
   - '[[05_Sessions/2026-07-06-145240-harden-path-safety-secret-exclusion-and-prompt-budget-validation-pi|SESSION-2026-07-06-145240 pi session for Harden path safety secret exclusion and prompt budget validation]]'
+  - '[[05_Sessions/2026-09-02-190230-harden-path-safety-secret-exclusion-and-prompt-budget-validation-pi|SESSION-2026-09-02-190230 pi session for Harden path safety secret exclusion and prompt budget validation]]'
 related_bugs: []
 tags:
   - agent-vault
   - step
-context_id: SESSION-2026-07-06-145240
-active_session_id: 05_Sessions/2026-07-06-145240-harden-path-safety-secret-exclusion-and-prompt-budget-validation-pi
+context_id: CTX-STEP-04-08-20260902
+active_session_id: SESSION-2026-09-02-190230
 context_status: completed
-context_summary: Portable Vitest peer-dependency resolution completed in SESSION-2026-07-06-145240; STEP-04-08 itself remains planned.
+context_summary: Implemented centralized path safety, secret-like default exclusions with explicit allowlist overrides, safe graph/stub/resource enforcement, and final rendered prompt max_tokens truncation with warnings. Validation passes except unrelated optional pi-ai peer tests.
+last_action: completed
 ---
 
 # Step 08 - Harden path safety secret exclusion and prompt budget validation
@@ -51,19 +53,24 @@ Use this note as the thin index for one executable step inside a phase. Keep thi
 ## Agent-Managed Snapshot
 
 <!-- AGENT-START:step-agent-managed-snapshot -->
-- Status: planned
-- Current owner: 
-- Last touched: 2026-07-05
-- Next action: Read [[02_Phases/Phase_04_context_compiler_and_token_efficiency/Steps/Step_08_harden-path-safety-secret-exclusion-and-prompt-budget-validation/Execution_Brief|Execution Brief]] and [[02_Phases/Phase_04_context_compiler_and_token_efficiency/Steps/Step_08_harden-path-safety-secret-exclusion-and-prompt-budget-validation/Validation_Plan|Validation Plan]].
+- Status: done
+- Current owner: pi
+- Last touched: 2026-09-02
+- Next action: None. Step complete; see Human Notes and the completed continuation session.
 <!-- AGENT-END:step-agent-managed-snapshot -->
 
 ## Human Notes
 
 - Placement confirmed during refinement (2026-07-05): this step stays a final cross-cutting adversarial sweep; feature steps 02–07 keep owning their own basic guards as written in their briefs.
 - Denylist defaults should be overridable by explicit configuration, but the safe default always wins when config is absent.
+- Completed 2026-09-02: added src/core/context-safety.ts with lexical traversal rejection, realpath root containment, default denylist, and explicit allowlist overrides. Enforced it across Markdown discovery, graph build/cache/lookup, source graph scanning, stubs, resources, MCP handlers, and prompt compilation.
+- Prompt compilation now enforces the final rendered max_tokens budget, preserves a truncation suffix, and reports truncation. Missing/stale graph and stub artifacts degrade with warnings.
+- Validation: npm run typecheck, npm run build, focused changed tests (15 passed), and full Vitest excluding the two pi extension files whose optional @mariozechner/pi-ai peer is unavailable (302 passed across 26 files).
 
 ## Session History
 
 <!-- AGENT-START:step-session-history -->
 - 2026-07-06 - [[05_Sessions/2026-07-06-145240-harden-path-safety-secret-exclusion-and-prompt-budget-validation-pi|SESSION-2026-07-06-145240 pi session for Harden path safety secret exclusion and prompt budget validation]] - Session created.
+- 2026-09-02 - [[05_Sessions/2026-09-02-190230-harden-path-safety-secret-exclusion-and-prompt-budget-validation-pi|SESSION-2026-09-02-190230 pi session for Harden path safety secret exclusion and prompt budget validation]] - Session created.
 <!-- AGENT-END:step-session-history -->
+- 2026-09-02 - [[05_Sessions/2026-09-02-190230-harden-path-safety-secret-exclusion-and-prompt-budget-validation-pi|SESSION-2026-09-02-190230 pi session for Harden path safety secret exclusion and prompt budget validation]] - Completed STEP-04-08 implementation and validation.

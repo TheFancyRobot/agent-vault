@@ -5,6 +5,7 @@ import { basename, dirname, join } from 'path';
 import { promisify } from 'util';
 import { parseYamlFrontmatter } from './note-mutations';
 import { readUtf8File, scanVaultMarkdownFiles, type VaultFileRecord } from './vault-files';
+import { readContextSafetyPolicy } from './context-safety';
 
 const execFile = promisify(execFileCallback);
 
@@ -358,11 +359,11 @@ const buildObsidianGraph = async (vaultRoot: string, notes: readonly ParsedVault
     signature,
   };
 };
-
 export const invalidateVaultGraphCache = (vaultRoot?: string): void => {
   if (vaultRoot) {
-    graphCache.delete(`${vaultRoot}:filesystem`);
-    graphCache.delete(`${vaultRoot}:obsidian`);
+    for (const key of graphCache.keys()) {
+      if (key.startsWith(`${vaultRoot}:`)) graphCache.delete(key);
+    }
     return;
   }
   graphCache.clear();
@@ -372,9 +373,10 @@ export const ensureVaultGraph = async (
   vaultRoot: string,
   resolver: VaultGraphResolver = 'filesystem',
 ): Promise<{ graph: VaultGraph; warnings: string[] }> => {
-  const files = await scanVaultMarkdownFiles(vaultRoot);
+  const policy = await readContextSafetyPolicy(vaultRoot);
+  const files = await scanVaultMarkdownFiles(vaultRoot, policy);
   const signature = buildSignature(files);
-  const cacheKey = `${vaultRoot}:${resolver}`;
+  const cacheKey = `${vaultRoot}:${resolver}:${policy.denylist.join('|')}:${policy.allowlist.join('|')}`;
   const cached = graphCache.get(cacheKey);
   if (cached && cached.signature === signature) {
     return { graph: cached.graph, warnings: [] };
@@ -389,7 +391,7 @@ export const ensureVaultGraph = async (
       return { graph, warnings: [] };
     } catch (error) {
       const fallbackGraph = buildFilesystemGraph(vaultRoot, parsedNotes, signature);
-      setGraphCache(`${vaultRoot}:filesystem`, { signature, graph: fallbackGraph });
+      setGraphCache(`${vaultRoot}:filesystem:${policy.denylist.join('|')}:${policy.allowlist.join('|')}`, { signature, graph: fallbackGraph });
       return {
         graph: fallbackGraph,
         warnings: [

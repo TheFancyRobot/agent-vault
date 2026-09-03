@@ -1,7 +1,7 @@
 import { existsSync } from 'fs';
 import { readFile, readdir, stat } from 'fs/promises';
 import { basename, dirname, extname, isAbsolute, join, relative, resolve } from 'path';
-
+import { createContextSafetyPolicy, getContextPathExclusion, type ContextSafetyPolicy } from './context-safety';
 export interface VaultFileRecord {
   readonly absolutePath: string;
   readonly relativePath: string;
@@ -75,10 +75,12 @@ export const listMarkdownFiles = async (directory: string): Promise<string[]> =>
   return files.flat().sort();
 };
 
-export const scanVaultMarkdownFiles = async (vaultRoot: string): Promise<VaultFileRecord[]> => {
+export const scanVaultMarkdownFiles = async (
+  vaultRoot: string,
+  policy: ContextSafetyPolicy = createContextSafetyPolicy(),
+): Promise<VaultFileRecord[]> => {
   const files = await listMarkdownFiles(vaultRoot);
-
-  return Promise.all(files.map(async (absolutePath) => {
+  const records = await Promise.all(files.map(async (absolutePath) => {
     const fileStats = await stat(absolutePath);
     return {
       absolutePath,
@@ -86,6 +88,8 @@ export const scanVaultMarkdownFiles = async (vaultRoot: string): Promise<VaultFi
       mtimeMs: fileStats.mtimeMs,
     } satisfies VaultFileRecord;
   }));
+
+  return records.filter((record) => getContextPathExclusion(record.relativePath, policy) === undefined);
 };
 
 export const readUtf8File = async (absolutePath: string): Promise<string> => readFile(absolutePath, 'utf-8');

@@ -3,9 +3,9 @@ import { join } from 'path';
 import { encode } from '@toon-format/toon';
 import type { AgentVaultCommandEnvironment } from './note-generators';
 import { formatCommandHelp } from './command-catalog';
+import { assertSafeRelativeContextPath, createContextSafetyPolicy, getContextPathExclusion, readContextSafetyPolicy, type ContextSafetyPolicy } from './context-safety';
 import { resolveVaultRoot } from './vault-files';
 import type { CodeGraphIndexPayload, CodeGraphIndexV3, CodeSymbolV3 } from '../scaffold/code-graph';
-
 export interface CodeGraphLookupMatch {
   readonly file: string;
   readonly language: string;
@@ -17,6 +17,7 @@ export interface QueryCodeGraphIndexInput {
   readonly limit: number;
   readonly pathSubstring?: string;
   readonly exportedOnly?: boolean;
+  readonly policy?: ContextSafetyPolicy;
 }
 
 export interface FormatCodeGraphLookupToonOptions {
@@ -26,6 +27,14 @@ export interface FormatCodeGraphLookupToonOptions {
 const CODE_GRAPH_INDEX_PATH = join('08_Automation', 'code-graph', 'index.json');
 
 const normalize = (value: string): string => value.trim().toLowerCase();
+const isSafeGraphPath = (path: string, policy: ContextSafetyPolicy): boolean => {
+  try {
+    assertSafeRelativeContextPath(path, 'Code graph path');
+    return getContextPathExclusion(path, policy) === undefined;
+  } catch {
+    return false;
+  }
+};
 
 const parsePositiveIntOption = (flag: string, value: string | undefined): number => {
   if (!value) {
@@ -49,29 +58,31 @@ export async function loadCodeGraphIndex(vaultRoot: string): Promise<CodeGraphIn
 
 export function queryCodeGraphIndex(
   index: CodeGraphIndex,
-  { query, limit, pathSubstring, exportedOnly }: QueryCodeGraphIndexInput,
+  input: QueryCodeGraphIndexInput,
 ): CodeGraphLookupMatch[] {
+  const {
+    query,
+    limit,
+    pathSubstring,
+    exportedOnly,
+    policy = createContextSafetyPolicy(),
+  } = input;
   const normalizedQuery = normalize(query);
   const normalizedPath = pathSubstring ? normalize(pathSubstring) : undefined;
   const matches: CodeGraphLookupMatch[] = [];
 
   for (const file of index.files) {
+    if (!isSafeGraphPath(file.path, policy)) continue;
     if (normalizedPath && !file.path.toLowerCase().includes(normalizedPath)) {
       continue;
     }
 
     for (const symbol of file.symbols) {
-      if (exportedOnly && !symbol.exported) {
-        continue;
-      }
-      if (!symbol.name.toLowerCase().includes(normalizedQuery)) {
-        continue;
-      }
+      if (exportedOnly && !symbol.exported) continue;
+      if (!symbol.name.toLowerCase().includes(normalizedQuery)) continue;
 
       matches.push({ file: file.path, language: file.language, symbol });
-      if (matches.length >= limit) {
-        return matches;
-      }
+      if (matches.length >= limit) return matches;
     }
   }
 
@@ -207,12 +218,14 @@ export async function handleLookupCodeGraphCommand(
     }
 
     const vaultRoot = environment.vaultRoot ?? resolveVaultRoot(environment.cwd ? environment.cwd() : process.cwd());
+    const policy = await readContextSafetyPolicy(vaultRoot);
     const index = await loadCodeGraphIndex(vaultRoot);
     const matches = queryCodeGraphIndex(index, {
       query: parsed.query,
       limit: parsed.limit,
       pathSubstring: parsed.pathSubstring,
       exportedOnly: parsed.exportedOnly,
+      policy,
     });
     io.stdout(formatCodeGraphLookupResults(matches, parsed.query));
     return 0;

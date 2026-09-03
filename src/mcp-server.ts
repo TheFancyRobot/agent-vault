@@ -34,6 +34,7 @@ import {
   invalidateVaultGraphCache,
   traverseVaultGraph,
 } from './core/vault-graph';
+import { readContextSafetyPolicy } from './core/context-safety';
 import { readVaultConfig, updateVaultConfig } from './core/vault-config';
 import { extractVaultNoteTarget } from './core/vault-extract';
 import {
@@ -343,12 +344,14 @@ export async function startServer(): Promise<void> {
     async ({ query, limit, path_substring, exported_only, compact }) => {
       try {
         const vaultRoot = resolveVaultRoot(process.cwd());
+        const policy = await readContextSafetyPolicy(vaultRoot);
         const index = await loadCodeGraphIndex(vaultRoot);
         const matches = queryCodeGraphIndex(index, {
           query,
           limit,
           pathSubstring: path_substring,
           exportedOnly: exported_only,
+          policy,
         });
         return {
           content: [{
@@ -594,11 +597,15 @@ export async function startServer(): Promise<void> {
     'View or update `.agent-vault/.config.json`.',
     {
       resolver: z.enum(['filesystem', 'obsidian']).optional().describe('Default link resolver.'),
+      context_safety: z.object({
+        denylist: z.array(z.string()).optional().describe('Additional path globs to deny.'),
+        allowlist: z.array(z.string()).optional().describe('Explicit path globs allowed to override a denylist match.'),
+      }).optional().describe('Context path safety overrides.'),
     },
-    async ({ resolver }) => {
+    async ({ resolver, context_safety }) => {
       const vaultRoot = resolveVaultRoot(process.cwd());
-      if (resolver) {
-        const config = await updateVaultConfig(vaultRoot, { resolver });
+      if (resolver || context_safety) {
+        const config = await updateVaultConfig(vaultRoot, { resolver, context_safety });
         return { content: [{ type: 'text', text: formatVaultConfigAsToon(config) }] };
       }
       const config = await readVaultConfig(vaultRoot);

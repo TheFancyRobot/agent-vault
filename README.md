@@ -324,10 +324,10 @@ These tools are exposed via the MCP server and can be called by any MCP-compatib
 | `vault_mutate` | Edit notes — `action`: `update_frontmatter`, `append_section` |
 | `vault_refresh` | Refresh home notes, the code graph, or the code-stub cache — `target`: `all`, `indexes`, `active_context`, `code_graph`, `code_stubs` |
 | `vault_validate` | Check integrity — `target`: `all`, `frontmatter`, `structure`, `links`, `orphans`, `doctor` |
-| `vault_config` | View or update vault configuration (e.g., link resolver preference) |
+| `vault_config` | View or update `.agent-vault/.config.json` — `resolver`, `context_safety` (`denylist`, `allowlist`) |
 | `vault_help` | List commands or show detailed help for one |
 | `vault_lookup_code_graph` | Search the generated code-graph index for matching symbols/files without loading the full index |
-| `vault_prepare_context` | Compile task-specific context: gather, rank, and render candidates from vault notes, source files, git changes, and code graph with token budgeting and explainable score reasons |
+| `vault_prepare_context` | Compile task-specific context: gather, rank, and render candidates from vault notes, source files, git changes, and code graph. Token-budgeted with explainable score reasons; reports truncation when `max_tokens` binds |
 
 ## MCP Resources
 
@@ -340,7 +340,7 @@ Read-only context artifacts are also exposed as stable `vault://` resources. Res
 | `vault://code-summary/src/core/vault-graph.ts` | Read code-graph metadata for a source file |
 | `vault://code-excerpt/src/core/vault-graph.ts#traverseVaultGraph` | Read a bounded source excerpt for an indexed symbol |
 
-Resource paths are vault-relative for notes and project-relative for code artifacts. Traversal attempts, absolute paths, encoded path separators, symlink escapes, generated/vendor files, and secret-like paths are rejected.
+Resource paths are vault-relative for notes and project-relative for code artifacts. Traversal attempts, absolute paths, encoded path separators, symlink escapes, generated/vendor files, and secret-like paths are rejected. The default denylist covers `.env*`, PEM/key/P12/SQLite files, `.git/`, `node_modules/`, `dist/`, `build/`, `coverage/`, `vendor/`, `generated/`, `secrets/`, `credentials/`, `tokens/`, lockfiles, and filenames matching `*secret*`/`*credential*`/`*token*`/`*private-key*`. Override with `context_safety.allowlist` in `.config.json`.
 
 ### `vault_traverse`
 
@@ -403,6 +403,65 @@ Example:
   "compact": true
 }
 ```
+
+### `vault_prepare_context`
+
+Compiles task-specific context by gathering candidates from vault notes, source files, git changes, and the code graph; ranks them with explainable score reasons; and renders them within a token budget.
+
+- `task` — free-text description for relevance matching
+- `active_file` — path to the file currently being edited (project-relative)
+- `root_note` — root vault note to start traversal from
+- `phase` / `step` — phase or step ID or canonical target
+- `mode` — weighting strategy: `plan`, `edit`, `review`, `debug`, `resume` (default: `edit`)
+- `max_tokens` — token budget for compiled context; omitted means no hard budget
+- `include_source` — whether to include source-file candidates (default: `true`)
+- `source_mode` — default source render mode: `summary`, `stub`, `excerpt`, `full` (default: `stub`)
+- `ranker` — `deterministic` (default) or `local`
+
+Returns a result with `meta` (`mode`, `maxTokens`, `estimatedTokens`, `ranker`, `truncated`, `warnings`), an `items` array (each with `kind`, `path`, `renderMode`, `score`, `reasons`, `estimatedTokens`), and the rendered `content` string. When the token budget binds, `meta.truncated` is `true` and each rendered block that was cut includes a `[truncated — max_tokens budget]` suffix. Missing or stale graph/stub indexes degrade with warnings rather than crashing.
+
+Example:
+
+```json
+{
+  "task": "Add SSO login callback",
+  "active_file": "src/auth/callback.ts",
+  "mode": "edit",
+  "max_tokens": 16000,
+  "source_mode": "stub"
+}
+```
+
+### `vault_config`
+
+Views or updates `.agent-vault/.config.json`:
+
+- `resolver` — default link resolver: `filesystem` or `obsidian`
+- `context_safety` — context path safety overrides:
+  - `denylist` — additional path globs to deny (defaults always apply)
+  - `allowlist` — explicit path globs allowed to override a denylist match
+
+Example — add a custom deny pattern:
+
+```json
+{
+  "context_safety": {
+    "denylist": ["**/experimental/**"]
+  }
+}
+```
+
+Example — allow a specific path that matches the default denylist:
+
+```json
+{
+  "context_safety": {
+    "allowlist": ["src/generated/definitions.ts"]
+  }
+}
+```
+
+Note: traversal and root-containment guards cannot be overridden by the allowlist.
 
 ### `vault_create`
 
