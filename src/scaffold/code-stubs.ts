@@ -1,7 +1,7 @@
 import { createHash } from 'crypto';
 import { existsSync } from 'fs';
 import { lstat, mkdir, readFile, realpath, rm, stat, writeFile } from 'fs/promises';
-import { extname, join, relative, resolve, isAbsolute } from 'path';
+import { extname, join, relative, resolve, isAbsolute, sep } from 'path';
 import {
   assertSafeRelativeContextPath,
   createContextSafetyPolicy,
@@ -347,10 +347,24 @@ function parseStubManifest(value: unknown): StubManifest | undefined {
 }
 
 /**
- * Write the stub manifest atomically (write to temp, then rename — simplified: just overwrite).
+ * Write the stub manifest through the same containment- and symlink-safe path
+ * used for generated stubs, so a tampered symlink at `manifest.json` (or a
+ * symlinked stubs directory) cannot redirect the write outside the vault root.
  */
 export async function writeStubManifest(vaultRoot: string, manifest: StubManifest): Promise<void> {
-  const manifestPath = join(vaultRoot, STUBS_DIR, 'manifest.json');
+  const stubsDir = join(vaultRoot, STUBS_DIR);
+  const manifestPath = join(stubsDir, 'manifest.json');
+  await mkdir(stubsDir, { recursive: true });
+
+  const existingTarget = await lstat(manifestPath).catch((error: unknown) => {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') return undefined;
+    throw error;
+  });
+  if (existingTarget?.isSymbolicLink()) {
+    throw new Error(`Refusing to write manifest through a symlink: ${STUBS_DIR}/manifest.json`);
+  }
+  const realVaultRoot = await realpath(vaultRoot);
+  assertWithinVaultRoot(realVaultRoot, await realpath(stubsDir));
   await writeFile(manifestPath, JSON.stringify(manifest, null, 2) + '\n', 'utf-8');
 }
 
@@ -370,6 +384,10 @@ const resolveSafeSourcePath = async (
     const realSourcePath = await realpath(absolutePath);
     const relativePath = relative(realProjectRoot, realSourcePath);
     if (relativePath.startsWith('..') || isAbsolute(relativePath)) return undefined;
+    // The declared path passed the policy, but it may be a symlink to a denied
+    // target inside the project (e.g. src/util.ts -> secrets/keys.json).
+    const resolvedRelative = relativePath.split(sep).join('/');
+    if (getContextPathExclusion(resolvedRelative, policy)) return undefined;
     return realSourcePath;
   } catch {
     return undefined;
