@@ -1,7 +1,7 @@
-import { createHash } from 'crypto';
+import { createHash, randomUUID } from 'crypto';
 import { existsSync } from 'fs';
-import { mkdir, readFile, realpath, rm, stat, writeFile } from 'fs/promises';
-import { extname, join, relative, resolve, isAbsolute } from 'path';
+import { lstat, mkdir, readFile, realpath, rename, rm, stat, writeFile } from 'fs/promises';
+import { extname, join, relative, resolve, isAbsolute, sep } from 'path';
 import {
   assertSafeRelativeContextPath,
   createContextSafetyPolicy,
@@ -298,18 +298,94 @@ export async function readStubManifest(vaultRoot: string): Promise<StubManifest 
   }
   try {
     const raw = await readFile(manifestPath, 'utf-8');
-    return JSON.parse(raw) as StubManifest;
+    const parsed: unknown = JSON.parse(raw);
+    return parseStubManifest(parsed);
   } catch {
     return undefined;
   }
 }
 
 /**
- * Write the stub manifest atomically (write to temp, then rename — simplified: just overwrite).
+ * Validate a parsed manifest so a corrupted or truncated file degrades to
+ * "no cache" instead of throwing on later field access.
+ */
+function parseStubManifest(value: unknown): StubManifest | undefined {
+  if (typeof value !== 'object' || value === null) return undefined;
+  const candidate = value as Record<string, unknown>;
+  if (candidate.version !== 1) return undefined;
+  if (typeof candidate.generatedAt !== 'string') return undefined;
+  if (!Array.isArray(candidate.entries)) return undefined;
+
+  const entries: StubManifestEntry[] = [];
+  for (const raw of candidate.entries) {
+    if (typeof raw !== 'object' || raw === null) return undefined;
+    const entry = raw as Record<string, unknown>;
+    if (typeof entry.path !== 'string') return undefined;
+    if (typeof entry.language !== 'string') return undefined;
+    if (typeof entry.size !== 'number') return undefined;
+    if (typeof entry.mtimeMs !== 'number') return undefined;
+    if (typeof entry.sha256 !== 'string') return undefined;
+    if (entry.stubVersion !== 1) return undefined;
+    if (typeof entry.parser !== 'string') return undefined;
+    if (typeof entry.stubPath !== 'string') return undefined;
+    if (entry.incomplete !== undefined && typeof entry.incomplete !== 'boolean') return undefined;
+
+    entries.push({
+      path: entry.path,
+      language: entry.language,
+      size: entry.size,
+      mtimeMs: entry.mtimeMs,
+      sha256: entry.sha256,
+      stubVersion: 1,
+      parser: entry.parser,
+      stubPath: entry.stubPath,
+      ...(entry.incomplete === undefined ? {} : { incomplete: entry.incomplete as boolean }),
+    });
+  }
+
+  return { version: 1, generatedAt: candidate.generatedAt, entries };
+}
+
+/**
+ * Write a file inside the stubs directory through a containment- and
+ * symlink-safe path: the content goes to a unique temp file inside the
+ * verified real directory, then `rename` replaces the target directory entry.
+ * Neither a symlinked nor a hard-linked target can receive the bytes, and a
+ * symlinked stubs directory cannot redirect the write outside the vault root.
+ */
+const writeWithinStubsDir = async (vaultRoot: string, filename: string, content: string): Promise<void> => {
+  const stubsDir = join(vaultRoot, STUBS_DIR);
+  await mkdir(stubsDir, { recursive: true });
+
+  const realVaultRoot = await realpath(vaultRoot);
+  const realStubsDir = await realpath(stubsDir);
+  assertWithinVaultRoot(realVaultRoot, realStubsDir);
+
+  const targetPath = join(realStubsDir, filename);
+  const existingTarget = await lstat(targetPath).catch((error: unknown) => {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') return undefined;
+    throw error;
+  });
+  if (existingTarget?.isSymbolicLink()) {
+    throw new Error(`Refusing to write through a symlink: ${STUBS_DIR}/${filename}`);
+  }
+
+  const tempPath = join(realStubsDir, `.${filename}.${randomUUID()}.tmp`);
+  try {
+    await writeFile(tempPath, content, 'utf-8');
+    await rename(tempPath, targetPath);
+  } catch (error) {
+    await rm(tempPath, { force: true });
+    throw error;
+  }
+};
+
+/**
+ * Write the stub manifest through the containment- and symlink-safe stubs-dir
+ * writer.
  */
 export async function writeStubManifest(vaultRoot: string, manifest: StubManifest): Promise<void> {
-  const manifestPath = join(vaultRoot, STUBS_DIR, 'manifest.json');
-  await writeFile(manifestPath, JSON.stringify(manifest, null, 2) + '\n', 'utf-8');
+  await writeWithinStubsDir(vaultRoot, 'manifest.json', JSON.stringify(manifest, null, 2) + '\n');
 }
 
 const resolveSafeSourcePath = async (
@@ -328,6 +404,10 @@ const resolveSafeSourcePath = async (
     const realSourcePath = await realpath(absolutePath);
     const relativePath = relative(realProjectRoot, realSourcePath);
     if (relativePath.startsWith('..') || isAbsolute(relativePath)) return undefined;
+    // The declared path passed the policy, but it may be a symlink to a denied
+    // target inside the project (e.g. src/util.ts -> secrets/keys.json).
+    const resolvedRelative = relativePath.split(sep).join('/');
+    if (getContextPathExclusion(resolvedRelative, policy)) return undefined;
     return realSourcePath;
   } catch {
     return undefined;
@@ -336,9 +416,16 @@ const resolveSafeSourcePath = async (
 
 /**
  * Check if a manifest entry is still valid by comparing the stored hash with the current source file hash.
+ *
+ * Pass the vault's context-safety policy so entries covered by a
+ * vault-config allowlist are not misclassified as excluded (always stale).
  */
-export async function isEntryStale(entry: StubManifestEntry, projectRoot: string): Promise<boolean> {
-  const sourcePath = await resolveSafeSourcePath(projectRoot, entry.path, createContextSafetyPolicy());
+export async function isEntryStale(
+  entry: StubManifestEntry,
+  projectRoot: string,
+  policy: ContextSafetyPolicy = createContextSafetyPolicy(),
+): Promise<boolean> {
+  const sourcePath = await resolveSafeSourcePath(projectRoot, entry.path, policy);
   if (!sourcePath) return true;
   const content = await readFile(sourcePath, 'utf-8');
   const currentHash = createHash('sha256').update(content).digest('hex');
@@ -433,8 +520,7 @@ export async function generateStubForFile(
   const absoluteStubPath = resolve(vaultRoot, stubPathInVault);
   assertWithinVaultRoot(vaultRoot, absoluteStubPath);
 
-  await mkdir(join(vaultRoot, STUBS_DIR), { recursive: true });
-  await writeFile(absoluteStubPath, stubContent, 'utf-8');
+  await writeWithinStubsDir(vaultRoot, stubFilename, stubContent);
 
   // Update manifest
   if (manifest) {

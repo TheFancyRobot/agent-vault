@@ -436,4 +436,34 @@ describe('vault graph', () => {
     expect(nodesByCanonicalTarget.accessed.has('child-b')).toBe(true);
     expect(nodesByCanonicalTarget.accessed.has('child-c')).toBe(false);
   });
+
+
+  it('caches the obsidian fallback without swallowing its degradation warning', async () => {
+    const vaultRoot = await createTempVault();
+    // The repo has no unit-level seam for the obsidian CLI, so force the
+    // failure hermetically: execFile resolves `obsidian` via PATH, and this
+    // PATH entry contains only an obsidian shim that exits non-zero.
+    const fakeBin = await mkdtemp(join(tmpdir(), 'agent-vault-fakebin-'));
+    tempRoots.push(fakeBin);
+    const shimPath = join(fakeBin, 'obsidian');
+    await writeFile(shimPath, '#!/bin/sh\nexit 1\n', { mode: 0o755 });
+
+    // Run ensureVaultGraph with the shim PATH active.
+    const originalPath = process.env.PATH;
+    process.env.PATH = `${fakeBin}:${originalPath ?? ''}`;
+    try {
+      const { graph: firstGraph, warnings: firstWarnings } = await ensureVaultGraph(vaultRoot, 'obsidian');
+      expect(firstWarnings).toHaveLength(1);
+      expect(firstWarnings[0]).toMatch(/Obsidian CLI resolver failed/);
+      expect(firstGraph.resolver).toBe('filesystem');
+
+      // Second call must hit the cache: same fallback graph, same warning.
+      const { graph: secondGraph, warnings: secondWarnings } = await ensureVaultGraph(vaultRoot, 'obsidian');
+      expect(secondGraph.resolver).toBe('filesystem');
+      expect(secondWarnings).toEqual(firstWarnings);
+    } finally {
+      process.env.PATH = originalPath;
+    }
+  });
 });
+
