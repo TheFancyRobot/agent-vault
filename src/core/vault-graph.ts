@@ -391,7 +391,14 @@ export const ensureVaultGraph = async (
       return { graph, warnings: [] };
     } catch (error) {
       const fallbackGraph = buildFilesystemGraph(vaultRoot, parsedNotes, signature);
-      setGraphCache(`${vaultRoot}:filesystem:${policy.denylist.join('|')}:${policy.allowlist.join('|')}`, { signature, graph: fallbackGraph });
+      // Cache under the requested resolver key as well, so repeated
+      // 'obsidian' calls reuse this fallback until the vault signature
+      // changes instead of retrying (and re-warning) on every call.
+      const filesystemCacheKey = `${vaultRoot}:filesystem:${policy.denylist.join('|')}:${policy.allowlist.join('|')}`;
+      setGraphCache(cacheKey, { signature, graph: fallbackGraph });
+      if (filesystemCacheKey !== cacheKey) {
+        setGraphCache(filesystemCacheKey, { signature, graph: fallbackGraph });
+      }
       return {
         graph: fallbackGraph,
         warnings: [

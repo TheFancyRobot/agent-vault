@@ -10,7 +10,7 @@
 
 import { execFile as execFileCallback } from 'child_process';
 import { existsSync } from 'fs';
-import { readFile } from 'fs/promises';
+import { readFile, realpath } from 'fs/promises';
 import { isAbsolute, relative, resolve } from 'path';
 import { promisify } from 'util';
 import type { CodeGraphIndex } from './code-graph-lookup';
@@ -309,16 +309,24 @@ const renderVaultNote = async (
   }
 };
 
-const resolveProjectSourcePath = (
+const resolveProjectSourcePath = async (
   projectRoot: string,
   sourcePath: string,
   policy: ContextSafetyPolicy,
-): string => {
+): Promise<string> => {
   const safePath = assertContextPathAllowed(sourcePath, 'Source path', policy);
   const absolutePath = resolve(projectRoot, safePath);
   const rel = relative(resolve(projectRoot), absolutePath);
   if (rel.startsWith('..') || isAbsolute(rel)) {
     throw new Error(`Source path escapes the project root: ${sourcePath}`);
+  }
+  // Lexical containment can be defeated by an in-project symlink; require the
+  // symlink-resolved path to stay within the real project root as well.
+  const realRoot = await realpath(projectRoot);
+  const realSource = await realpath(absolutePath);
+  const realRel = relative(realRoot, realSource);
+  if (realRel.startsWith('..') || isAbsolute(realRel)) {
+    throw new Error(`Source path resolves outside the project root: ${sourcePath}`);
   }
   return absolutePath;
 };
@@ -331,7 +339,16 @@ const readStubWithinVault = async (
   const absoluteStubPath = resolve(vaultRoot, STUBS_DIR, safeStubPath);
   assertWithinVaultRoot(vaultRoot, absoluteStubPath);
   if (!existsSync(absoluteStubPath)) return undefined;
-  return await readFile(absoluteStubPath, 'utf-8');
+  // A stub file replaced with a symlink must not leak content from outside
+  // the vault root; treat an escaped (or vanished) target as no cache.
+  try {
+    const realVaultRoot = await realpath(vaultRoot);
+    const realStub = await realpath(absoluteStubPath);
+    assertWithinVaultRoot(realVaultRoot, realStub);
+    return await readFile(realStub, 'utf-8');
+  } catch {
+    return undefined;
+  }
 };
 
 const renderSourceStub = async (
@@ -367,7 +384,7 @@ const renderSourceStub = async (
 
   // Last resort: truncated source
   try {
-    const fullPath = resolveProjectSourcePath(projectRoot, sourcePath, policy);
+    const fullPath = await resolveProjectSourcePath(projectRoot, sourcePath, policy);
     const content = await readFile(fullPath, 'utf-8');
     const limit = 500;
     if (content.length <= limit) {
@@ -416,7 +433,7 @@ const renderSourceFile = async (
 
   if (item.renderMode === 'full' || item.renderMode === 'excerpt') {
     try {
-      const fullPath = resolveProjectSourcePath(projectRoot, item.path, policy);
+      const fullPath = await resolveProjectSourcePath(projectRoot, item.path, policy);
       const content = await readFile(fullPath, 'utf-8');
       if (item.renderMode === 'excerpt' && content.length > EXCERPT_CHAR_LIMIT) {
         return `${content.slice(0, EXCERPT_CHAR_LIMIT)}\n\n[truncated — excerpt render mode]`;

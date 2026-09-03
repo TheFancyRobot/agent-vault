@@ -19,7 +19,10 @@ export const DEFAULT_CONTEXT_DENYLIST = Object.freeze([
   'credentials/',
   'tokens/',
   '*.lock',
-  '*lock*',
+  'package-lock.json',
+  'npm-shrinkwrap.json',
+  'pnpm-lock.yaml',
+  'bun.lockb',
   '*secret*',
   '*credential*',
   '*token*',
@@ -65,8 +68,15 @@ const globToRegExp = (pattern: string): RegExp => {
     const character = pattern[index];
     if (character === '*') {
       if (pattern[index + 1] === '*') {
-        source += '.*';
-        index++;
+        // `**/` matches zero or more leading directories so patterns like
+        // `**/experimental/**` also cover root-level `experimental/...`.
+        if (pattern[index + 2] === '/') {
+          source += '(?:.*/)?';
+          index += 2;
+        } else {
+          source += '.*';
+          index++;
+        }
       } else {
         source += '[^/]*';
       }
@@ -84,7 +94,9 @@ const matchesPattern = (path: string, rawPattern: string): boolean => {
   const directoryPattern = pattern.endsWith('/');
   const patternWithoutSlash = directoryPattern ? pattern.slice(0, -1) : pattern;
   if (directoryPattern && !patternWithoutSlash.includes('*')) {
-    return path === patternWithoutSlash || path.startsWith(`${patternWithoutSlash}/`);
+    // Match complete path segments at any depth: `secrets/` must deny
+    // `secrets/a.md`, `packages/app/secrets/a.md`, and the directory itself.
+    return `/${path}/`.includes(`/${patternWithoutSlash}/`);
   }
 
   const matcher = globToRegExp(patternWithoutSlash);

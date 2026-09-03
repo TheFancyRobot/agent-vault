@@ -41,6 +41,35 @@ describe('context safety policy', () => {
     expect(() => assertContextPathAllowed('src/credentials.ts', 'Source path', policy)).not.toThrow();
     expect(() => assertContextPathAllowed('../credentials.ts', 'Source path', policy)).toThrow(/unsafe segment/);
   });
+
+  it('denies secret-like directories at every path depth', () => {
+    const policy = createContextSafetyPolicy();
+
+    for (const path of ['secrets/passwords.md', 'packages/app/secrets/passwords.md', 'src/generated/output.ts', 'a/b/credentials/x.ts']) {
+      expect(getContextPathExclusion(path, policy)).toBeDefined();
+    }
+    expect(getContextPathExclusion('myconfigs.md', policy)).toBeUndefined();
+    expect(getContextPathExclusion('src/generated-helpers.ts', policy)).toBeUndefined();
+  });
+
+  it('matches **/ patterns at the repository root and at depth', () => {
+    const policy = createContextSafetyPolicy({ denylist: ['**/experimental/**'] });
+
+    expect(getContextPathExclusion('experimental/file.ts', policy)).toBeDefined();
+    expect(getContextPathExclusion('src/experimental/nested/file.ts', policy)).toBeDefined();
+    expect(getContextPathExclusion('src/stable/file.ts', policy)).toBeUndefined();
+  });
+
+  it('denies lockfiles without hiding ordinary source files containing "lock"', () => {
+    const policy = createContextSafetyPolicy();
+
+    for (const path of ['package-lock.json', 'yarn.lock', 'Cargo.lock', 'pnpm-lock.yaml', 'bun.lockb', 'src/npm-shrinkwrap.json']) {
+      expect(getContextPathExclusion(path, policy)).toBeDefined();
+    }
+    for (const path of ['src/Clock.ts', 'src/BlockService.ts', 'src/locking.py', 'src/deadlock-detector.ts']) {
+      expect(getContextPathExclusion(path, policy)).toBeUndefined();
+    }
+  });
 });
 
 describe('context safety enforcement', () => {

@@ -1,6 +1,6 @@
 import { createHash } from 'crypto';
 import { existsSync } from 'fs';
-import { mkdir, readFile, realpath, rm, stat, writeFile } from 'fs/promises';
+import { lstat, mkdir, readFile, realpath, rm, stat, writeFile } from 'fs/promises';
 import { extname, join, relative, resolve, isAbsolute } from 'path';
 import {
   assertSafeRelativeContextPath,
@@ -298,10 +298,52 @@ export async function readStubManifest(vaultRoot: string): Promise<StubManifest 
   }
   try {
     const raw = await readFile(manifestPath, 'utf-8');
-    return JSON.parse(raw) as StubManifest;
+    const parsed: unknown = JSON.parse(raw);
+    return parseStubManifest(parsed);
   } catch {
     return undefined;
   }
+}
+
+/**
+ * Validate a parsed manifest so a corrupted or truncated file degrades to
+ * "no cache" instead of throwing on later field access.
+ */
+function parseStubManifest(value: unknown): StubManifest | undefined {
+  if (typeof value !== 'object' || value === null) return undefined;
+  const candidate = value as Record<string, unknown>;
+  if (candidate.version !== 1) return undefined;
+  if (typeof candidate.generatedAt !== 'string') return undefined;
+  if (!Array.isArray(candidate.entries)) return undefined;
+
+  const entries: StubManifestEntry[] = [];
+  for (const raw of candidate.entries) {
+    if (typeof raw !== 'object' || raw === null) return undefined;
+    const entry = raw as Record<string, unknown>;
+    if (typeof entry.path !== 'string') return undefined;
+    if (typeof entry.language !== 'string') return undefined;
+    if (typeof entry.size !== 'number') return undefined;
+    if (typeof entry.mtimeMs !== 'number') return undefined;
+    if (typeof entry.sha256 !== 'string') return undefined;
+    if (entry.stubVersion !== 1) return undefined;
+    if (typeof entry.parser !== 'string') return undefined;
+    if (typeof entry.stubPath !== 'string') return undefined;
+    if (entry.incomplete !== undefined && typeof entry.incomplete !== 'boolean') return undefined;
+
+    entries.push({
+      path: entry.path,
+      language: entry.language,
+      size: entry.size,
+      mtimeMs: entry.mtimeMs,
+      sha256: entry.sha256,
+      stubVersion: 1,
+      parser: entry.parser,
+      stubPath: entry.stubPath,
+      ...(entry.incomplete === undefined ? {} : { incomplete: entry.incomplete as boolean }),
+    });
+  }
+
+  return { version: 1, generatedAt: candidate.generatedAt, entries };
 }
 
 /**
@@ -336,9 +378,16 @@ const resolveSafeSourcePath = async (
 
 /**
  * Check if a manifest entry is still valid by comparing the stored hash with the current source file hash.
+ *
+ * Pass the vault's context-safety policy so entries covered by a
+ * vault-config allowlist are not misclassified as excluded (always stale).
  */
-export async function isEntryStale(entry: StubManifestEntry, projectRoot: string): Promise<boolean> {
-  const sourcePath = await resolveSafeSourcePath(projectRoot, entry.path, createContextSafetyPolicy());
+export async function isEntryStale(
+  entry: StubManifestEntry,
+  projectRoot: string,
+  policy: ContextSafetyPolicy = createContextSafetyPolicy(),
+): Promise<boolean> {
+  const sourcePath = await resolveSafeSourcePath(projectRoot, entry.path, policy);
   if (!sourcePath) return true;
   const content = await readFile(sourcePath, 'utf-8');
   const currentHash = createHash('sha256').update(content).digest('hex');
@@ -434,6 +483,17 @@ export async function generateStubForFile(
   assertWithinVaultRoot(vaultRoot, absoluteStubPath);
 
   await mkdir(join(vaultRoot, STUBS_DIR), { recursive: true });
+  // A tampered symlink at the stub target (or a symlinked stubs directory)
+  // must not redirect this write outside the vault root.
+  const existingTarget = await lstat(absoluteStubPath).catch((error: unknown) => {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') return undefined;
+    throw error;
+  });
+  if (existingTarget?.isSymbolicLink()) {
+    throw new Error(`Refusing to write stub through a symlink: ${stubPathInVault}`);
+  }
+  const realVaultRoot = await realpath(vaultRoot);
+  assertWithinVaultRoot(realVaultRoot, await realpath(join(vaultRoot, STUBS_DIR)));
   await writeFile(absoluteStubPath, stubContent, 'utf-8');
 
   // Update manifest

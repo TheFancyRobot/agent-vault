@@ -1,7 +1,7 @@
 import { createHash } from 'crypto';
 import { afterEach, describe, expect, it } from 'vitest';
 import { existsSync } from 'fs';
-import { mkdir, mkdtemp, rm, stat, writeFile } from 'fs/promises';
+import { mkdir, mkdtemp, rm, stat, symlink, writeFile } from 'fs/promises';
 import { tmpdir } from 'os';
 import { join } from 'path';
 import { prepareContext } from '../../src/core/vault-prepare-context';
@@ -190,5 +190,74 @@ describe('invalidateStub', () => {
     expect(existsSync(join(stubsDir, stubFilename))).toBe(false);
     const updated = await readStubManifest(vaultRoot);
     expect(updated?.entries).toHaveLength(0);
+  });
+});
+
+describe('prepareContext source safety', () => {
+  it('refuses to render an in-project symlink that resolves outside the project root', async () => {
+    const projectRoot = await createTempProject('symlink-escape');
+    const { vaultRoot } = await writeFixtureVault(projectRoot);
+
+    const outsideDir = await mkdtemp(join(tmpdir(), 'agent-vault-outside-'));
+    tempRoots.push(outsideDir);
+    const secretPath = join(outsideDir, 'secret.txt');
+    await writeFile(secretPath, 'OUTSIDE_ROOT_SECRET', 'utf-8');
+    await symlink(secretPath, join(projectRoot, 'src', 'leak.ts'));
+
+    const result = await prepareContext(vaultRoot, projectRoot, {
+      active_file: 'src/leak.ts',
+      source_mode: 'full',
+    });
+
+    expect(result.content).not.toContain('OUTSIDE_ROOT_SECRET');
+    expect(result.content).toContain('// Source unavailable: src/leak.ts');
+  });
+
+  it('treats a structurally invalid stub manifest as no cache', async () => {
+    const projectRoot = await createTempProject('invalid-manifest');
+    const vaultRoot = join(projectRoot, '.agent-vault');
+    const stubsDir = join(vaultRoot, 'code-stubs');
+    await mkdir(stubsDir, { recursive: true });
+    await writeFile(join(stubsDir, 'manifest.json'), JSON.stringify({ version: 1 }), 'utf-8');
+
+    expect(await readStubManifest(vaultRoot)).toBeUndefined();
+  });
+
+
+  it('does not read a stub artifact replaced with a symlink outside the vault', async () => {
+    const projectRoot = await createTempProject('stub-symlink-escape');
+    const { vaultRoot } = await writeFixtureVault(projectRoot);
+    const stubsDir = join(vaultRoot, 'code-stubs');
+    await mkdir(stubsDir, { recursive: true });
+
+    const outsideDir = await mkdtemp(join(tmpdir(), 'agent-vault-stub-outside-'));
+    tempRoots.push(outsideDir);
+    const secretPath = join(outsideDir, 'leaked.stub.ts');
+    await writeFile(secretPath, 'STUB_SYMLINK_SECRET', 'utf-8');
+    await symlink(secretPath, join(stubsDir, 'tampered.stub.ts'));
+
+    const manifest: StubManifest = {
+      version: 1,
+      generatedAt: '2026-07-05T00:00:00.000Z',
+      entries: [{
+        path: 'src/core/demo.ts',
+        language: 'TypeScript',
+        size: 1,
+        mtimeMs: 1,
+        sha256: '0'.repeat(64),
+        stubVersion: 1,
+        parser: 'typescript',
+        stubPath: 'tampered.stub.ts',
+      }],
+    };
+    await writeFile(join(stubsDir, 'manifest.json'), JSON.stringify(manifest, null, 2), 'utf-8');
+
+    const result = await prepareContext(vaultRoot, projectRoot, {
+      active_file: 'src/core/demo.ts',
+      source_mode: 'stub',
+    });
+
+    expect(result.content).not.toContain('STUB_SYMLINK_SECRET');
+    expect(result.content).toContain('demo');
   });
 });

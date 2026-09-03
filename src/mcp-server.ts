@@ -504,7 +504,7 @@ export async function startServer(): Promise<void> {
       phase: z.string().optional().describe('Phase ID or canonical target.'),
       step: z.string().optional().describe('Step ID or canonical target.'),
       mode: z.enum(['plan', 'edit', 'review', 'debug', 'resume']).default('edit').describe('Mode for weighting differences.'),
-      max_tokens: z.number().int().min(1).optional().describe('Token budget for the compiled context.'),
+      max_tokens: z.number().int().min(1).optional().describe('Token budget for the compiled context (default: 40000).'),
       include_source: z.boolean().default(true).describe('Whether to include source-file context.'),
       source_mode: z.enum(['summary', 'stub', 'excerpt', 'full']).default('stub').describe('Default source render mode.'),
       ranker: z.enum(['deterministic', 'local']).default('deterministic').describe('Ranker backend.'),

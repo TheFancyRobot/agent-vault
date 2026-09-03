@@ -413,7 +413,7 @@ Compiles task-specific context by gathering candidates from vault notes, source 
 - `root_note` — root vault note to start traversal from
 - `phase` / `step` — phase or step ID or canonical target
 - `mode` — weighting strategy: `plan`, `edit`, `review`, `debug`, `resume` (default: `edit`)
-- `max_tokens` — token budget for compiled context; omitted means no hard budget
+- `max_tokens` — token budget for compiled context (default: `40000`); larger contexts are pruned and truncated
 - `include_source` — whether to include source-file candidates (default: `true`)
 - `source_mode` — default source render mode: `summary`, `stub`, `excerpt`, `full` (default: `stub`)
 - `ranker` — `deterministic` (default) or `local`
