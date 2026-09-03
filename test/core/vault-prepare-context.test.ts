@@ -213,6 +213,25 @@ describe('prepareContext source safety', () => {
     expect(result.content).toContain('// Source unavailable: src/leak.ts');
   });
 
+  it('refuses to render an in-project symlink that resolves to an excluded target', async () => {
+    const projectRoot = await createTempProject('symlink-to-excluded');
+    const { vaultRoot } = await writeFixtureVault(projectRoot);
+
+    await mkdir(join(projectRoot, 'src', 'generated'), { recursive: true });
+    await writeFile(join(projectRoot, 'src', 'generated', 'output.ts'), 'EXCLUDED_TARGET_SECRET\n', 'utf-8');
+    await symlink(join(projectRoot, 'src', 'generated', 'output.ts'), join(projectRoot, 'src', 'util.ts'));
+
+    // The declared path (src/util.ts) is allowed and stays inside the project
+    // root; only the symlink-resolved target is denied.
+    const result = await prepareContext(vaultRoot, projectRoot, {
+      active_file: 'src/util.ts',
+      source_mode: 'full',
+    });
+
+    expect(result.content).not.toContain('EXCLUDED_TARGET_SECRET');
+    expect(result.content).toContain('// Source unavailable: src/util.ts');
+  });
+
   it('treats a structurally invalid stub manifest as no cache', async () => {
     const projectRoot = await createTempProject('invalid-manifest');
     const vaultRoot = join(projectRoot, '.agent-vault');

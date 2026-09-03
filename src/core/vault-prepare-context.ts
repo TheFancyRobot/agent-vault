@@ -11,7 +11,7 @@
 import { execFile as execFileCallback } from 'child_process';
 import { existsSync } from 'fs';
 import { readFile, realpath } from 'fs/promises';
-import { isAbsolute, relative, resolve } from 'path';
+import { isAbsolute, relative, resolve, sep } from 'path';
 import { promisify } from 'util';
 import type { CodeGraphIndex } from './code-graph-lookup';
 import { loadCodeGraphIndex } from './code-graph-lookup';
@@ -327,6 +327,11 @@ const resolveProjectSourcePath = async (
   const realRel = relative(realRoot, realSource);
   if (realRel.startsWith('..') || isAbsolute(realRel)) {
     throw new Error(`Source path resolves outside the project root: ${sourcePath}`);
+  }
+  // The declared path passed the policy, but it may be a symlink to a denied
+  // target inside the project (e.g. src/util.ts -> secrets/keys.json).
+  if (getContextPathExclusion(realRel.split(sep).join('/'), policy)) {
+    throw new Error(`Source path resolves to an excluded target: ${sourcePath}`);
   }
   return absolutePath;
 };

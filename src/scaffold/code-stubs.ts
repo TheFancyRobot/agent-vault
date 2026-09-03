@@ -1,6 +1,6 @@
-import { createHash } from 'crypto';
+import { createHash, randomUUID } from 'crypto';
 import { existsSync } from 'fs';
-import { lstat, mkdir, readFile, realpath, rm, stat, writeFile } from 'fs/promises';
+import { lstat, mkdir, readFile, realpath, rename, rm, stat, writeFile } from 'fs/promises';
 import { extname, join, relative, resolve, isAbsolute, sep } from 'path';
 import {
   assertSafeRelativeContextPath,
@@ -347,25 +347,45 @@ function parseStubManifest(value: unknown): StubManifest | undefined {
 }
 
 /**
- * Write the stub manifest through the same containment- and symlink-safe path
- * used for generated stubs, so a tampered symlink at `manifest.json` (or a
- * symlinked stubs directory) cannot redirect the write outside the vault root.
+ * Write a file inside the stubs directory through a containment- and
+ * symlink-safe path: the content goes to a unique temp file inside the
+ * verified real directory, then `rename` replaces the target directory entry.
+ * Neither a symlinked nor a hard-linked target can receive the bytes, and a
+ * symlinked stubs directory cannot redirect the write outside the vault root.
  */
-export async function writeStubManifest(vaultRoot: string, manifest: StubManifest): Promise<void> {
+const writeWithinStubsDir = async (vaultRoot: string, filename: string, content: string): Promise<void> => {
   const stubsDir = join(vaultRoot, STUBS_DIR);
-  const manifestPath = join(stubsDir, 'manifest.json');
   await mkdir(stubsDir, { recursive: true });
 
-  const existingTarget = await lstat(manifestPath).catch((error: unknown) => {
+  const realVaultRoot = await realpath(vaultRoot);
+  const realStubsDir = await realpath(stubsDir);
+  assertWithinVaultRoot(realVaultRoot, realStubsDir);
+
+  const targetPath = join(realStubsDir, filename);
+  const existingTarget = await lstat(targetPath).catch((error: unknown) => {
     if ((error as NodeJS.ErrnoException).code === 'ENOENT') return undefined;
     throw error;
   });
   if (existingTarget?.isSymbolicLink()) {
-    throw new Error(`Refusing to write manifest through a symlink: ${STUBS_DIR}/manifest.json`);
+    throw new Error(`Refusing to write through a symlink: ${STUBS_DIR}/${filename}`);
   }
-  const realVaultRoot = await realpath(vaultRoot);
-  assertWithinVaultRoot(realVaultRoot, await realpath(stubsDir));
-  await writeFile(manifestPath, JSON.stringify(manifest, null, 2) + '\n', 'utf-8');
+
+  const tempPath = join(realStubsDir, `.${filename}.${randomUUID()}.tmp`);
+  try {
+    await writeFile(tempPath, content, 'utf-8');
+    await rename(tempPath, targetPath);
+  } catch (error) {
+    await rm(tempPath, { force: true });
+    throw error;
+  }
+};
+
+/**
+ * Write the stub manifest through the containment- and symlink-safe stubs-dir
+ * writer.
+ */
+export async function writeStubManifest(vaultRoot: string, manifest: StubManifest): Promise<void> {
+  await writeWithinStubsDir(vaultRoot, 'manifest.json', JSON.stringify(manifest, null, 2) + '\n');
 }
 
 const resolveSafeSourcePath = async (
@@ -500,19 +520,7 @@ export async function generateStubForFile(
   const absoluteStubPath = resolve(vaultRoot, stubPathInVault);
   assertWithinVaultRoot(vaultRoot, absoluteStubPath);
 
-  await mkdir(join(vaultRoot, STUBS_DIR), { recursive: true });
-  // A tampered symlink at the stub target (or a symlinked stubs directory)
-  // must not redirect this write outside the vault root.
-  const existingTarget = await lstat(absoluteStubPath).catch((error: unknown) => {
-    if ((error as NodeJS.ErrnoException).code === 'ENOENT') return undefined;
-    throw error;
-  });
-  if (existingTarget?.isSymbolicLink()) {
-    throw new Error(`Refusing to write stub through a symlink: ${stubPathInVault}`);
-  }
-  const realVaultRoot = await realpath(vaultRoot);
-  assertWithinVaultRoot(realVaultRoot, await realpath(join(vaultRoot, STUBS_DIR)));
-  await writeFile(absoluteStubPath, stubContent, 'utf-8');
+  await writeWithinStubsDir(vaultRoot, stubFilename, stubContent);
 
   // Update manifest
   if (manifest) {
